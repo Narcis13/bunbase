@@ -1,0 +1,331 @@
+import { getDatabase } from "./database.ts";
+import { generateId } from "../utils/id.ts";
+import { createSystemFields } from "../types/record.ts";
+import { getFields, getCollection } from "./schema.ts";
+import { validateRecord, formatValidationErrors } from "./validation.ts";
+import type { Field } from "../types/collection.ts";
+
+/**
+ * Validate that relation fields reference existing records.
+ *
+ * @param fields - Array of field definitions
+ * @param data - Record data to validate
+ * @throws Error if any relation references a non-existent record
+ */
+function validateRelations(
+  fields: Field[],
+  data: Record<string, unknown>
+): void {
+  const db = getDatabase();
+
+  for (const field of fields) {
+    if (field.type !== "relation") continue;
+
+    const value = data[field.name];
+    if (value === null || value === undefined) continue;
+
+    const targetCollection = (field.options?.collection ||
+      field.options?.target) as string;
+    if (!targetCollection) {
+      throw new Error(
+        `Relation field "${field.name}" missing target collection in options`
+      );
+    }
+
+    // Check if target collection exists
+    const collection = getCollection(targetCollection);
+    if (!collection) {
+      throw new Error(
+        `Relation field "${field.name}" references non-existent collection "${targetCollection}"`
+      );
+    }
+
+    // Check if referenced record exists
+    const stmt = db.prepare(
+      `SELECT id FROM "${targetCollection}" WHERE id = $id`
+    );
+    const exists = stmt.get({ id: value });
+    if (!exists) {
+      throw new Error(
+        `Related record "${value}" not found in collection "${targetCollection}"`
+      );
+    }
+  }
+}
+
+/**
+ * Parse JSON fields from stored string format to objects.
+ *
+ * @param fields - Array of field definitions
+ * @param data - Raw record data from database
+ * @returns Record with JSON fields parsed
+ */
+function parseJsonFields(
+  fields: Field[],
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const result = { ...data };
+
+  for (const field of fields) {
+    if (field.type === "json" && typeof result[field.name] === "string") {
+      try {
+        result[field.name] = JSON.parse(result[field.name] as string);
+      } catch {
+        // If parsing fails, leave as-is
+      }
+    }
+    // Also handle boolean fields (stored as 0/1 in SQLite)
+    if (field.type === "boolean" && typeof result[field.name] === "number") {
+      result[field.name] = result[field.name] === 1;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Stringify JSON fields for storage.
+ *
+ * @param fields - Array of field definitions
+ * @param data - Record data to prepare
+ * @returns Record with JSON fields stringified
+ */
+function stringifyJsonFields(
+  fields: Field[],
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const result = { ...data };
+
+  for (const field of fields) {
+    const value = result[field.name];
+    if (field.type === "json" && value !== null && value !== undefined) {
+      if (typeof value === "object") {
+        result[field.name] = JSON.stringify(value);
+      }
+    }
+    // Convert boolean to 0/1 for SQLite
+    if (field.type === "boolean" && typeof value === "boolean") {
+      result[field.name] = value ? 1 : 0;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Create a new record in a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @param data - Record data (without system fields)
+ * @returns The created record with system fields
+ * @throws Error if collection not found or validation fails
+ */
+export function createRecord(
+  collectionName: string,
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const db = getDatabase();
+
+  // Get collection (throws if not found)
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  // Get fields for collection
+  const fields = getFields(collectionName);
+
+  // Validate data against fields
+  const validationResult = validateRecord(fields, data);
+  if (!validationResult.success) {
+    const errors = formatValidationErrors(validationResult.errors);
+    throw new Error(`Validation failed: ${errors.join(", ")}`);
+  }
+
+  // Validate relation fields reference existing records
+  validateRelations(fields, validationResult.data);
+
+  // Generate system fields
+  const systemFields = createSystemFields();
+
+  // Prepare data for storage (stringify JSON, convert boolean)
+  const preparedData = stringifyJsonFields(fields, validationResult.data);
+
+  // Merge system fields with validated data
+  const record = { ...systemFields, ...preparedData };
+
+  // Build INSERT SQL dynamically
+  const columns = ["id", "created_at", "updated_at", ...fields.map((f) => f.name)];
+  const placeholders = columns.map((c) => `$${c}`).join(", ");
+  const columnList = columns.map((c) => `"${c}"`).join(", ");
+
+  const insertSQL = `INSERT INTO "${collectionName}" (${columnList}) VALUES (${placeholders})`;
+
+  // Build params object
+  const params: Record<string, unknown> = {
+    id: record.id,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
+  };
+  for (const field of fields) {
+    params[field.name] = preparedData[field.name] ?? null;
+  }
+
+  db.prepare(insertSQL).run(params);
+
+  // Return the complete record with system fields (and parse JSON/boolean back)
+  return parseJsonFields(fields, record);
+}
+
+/**
+ * Get a record by ID from a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @returns The record or null if not found
+ */
+export function getRecord(
+  collectionName: string,
+  id: string
+): Record<string, unknown> | null {
+  const db = getDatabase();
+
+  // Verify collection exists
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  const fields = getFields(collectionName);
+
+  const stmt = db.prepare(`SELECT * FROM "${collectionName}" WHERE id = $id`);
+  const result = stmt.get({ id }) as Record<string, unknown> | null;
+
+  if (!result) {
+    return null;
+  }
+
+  // Parse JSON fields back to objects
+  return parseJsonFields(fields, result);
+}
+
+/**
+ * List all records in a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @returns Array of records
+ */
+export function listRecords(
+  collectionName: string
+): Record<string, unknown>[] {
+  const db = getDatabase();
+
+  // Verify collection exists
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  const fields = getFields(collectionName);
+
+  const stmt = db.prepare(`SELECT * FROM "${collectionName}"`);
+  const results = stmt.all() as Record<string, unknown>[];
+
+  // Parse JSON fields back to objects for each record
+  return results.map((record) => parseJsonFields(fields, record));
+}
+
+/**
+ * Update a record in a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @param data - Partial record data to update
+ * @returns The updated record
+ * @throws Error if record not found or validation fails
+ */
+export function updateRecord(
+  collectionName: string,
+  id: string,
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const db = getDatabase();
+
+  // Get existing record (throws if collection not found)
+  const existing = getRecord(collectionName, id);
+  if (!existing) {
+    throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
+  }
+
+  // Get fields
+  const fields = getFields(collectionName);
+
+  // Filter to only validate fields that are being updated
+  const updateFields = fields.filter((f) => f.name in data);
+
+  // For validation, we need to make required fields optional for partial updates
+  const partialFields = updateFields.map((f) => ({
+    ...f,
+    required: false, // Allow partial updates
+  }));
+
+  // Validate the update data
+  const validationResult = validateRecord(partialFields, data);
+  if (!validationResult.success) {
+    const errors = formatValidationErrors(validationResult.errors);
+    throw new Error(`Validation failed: ${errors.join(", ")}`);
+  }
+
+  // Validate relation fields in update data
+  validateRelations(updateFields, validationResult.data);
+
+  // Prepare data for storage
+  const preparedData = stringifyJsonFields(updateFields, validationResult.data);
+
+  // Set updated_at to current time
+  const updatedAt = new Date().toISOString();
+
+  // Build UPDATE SQL dynamically for provided fields + updated_at
+  const setClauses = ["updated_at = $updated_at"];
+  const params: Record<string, unknown> = {
+    id,
+    updated_at: updatedAt,
+  };
+
+  for (const [key, value] of Object.entries(preparedData)) {
+    setClauses.push(`"${key}" = $${key}`);
+    params[key] = value;
+  }
+
+  const updateSQL = `UPDATE "${collectionName}" SET ${setClauses.join(", ")} WHERE id = $id`;
+  db.prepare(updateSQL).run(params);
+
+  // Return updated record (re-fetch to get latest state)
+  return getRecord(collectionName, id)!;
+}
+
+/**
+ * Delete a record from a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @throws Error if record not found
+ */
+export function deleteRecord(collectionName: string, id: string): void {
+  const db = getDatabase();
+
+  // Verify collection exists
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  // Verify record exists
+  const stmt = db.prepare(`SELECT id FROM "${collectionName}" WHERE id = $id`);
+  const existing = stmt.get({ id });
+  if (!existing) {
+    throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
+  }
+
+  db.prepare(`DELETE FROM "${collectionName}" WHERE id = $id`).run({ id });
+}
