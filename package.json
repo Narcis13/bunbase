@@ -1,0 +1,23 @@
+{
+  "name": "bunbase",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build --compile src/index.ts --outfile bunbase",
+    "typecheck": "bun run --bun tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.30.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "nanoid": "^5.0.9",
+    "zod": "^3.24.0"
+  }
+}
