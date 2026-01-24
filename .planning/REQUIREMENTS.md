@@ -9,19 +9,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Schema Management
 
-- [ ] **SCHM-01**: Developer can create a collection with a name and field definitions
-- [ ] **SCHM-02**: Developer can read collection schema (fields, types, constraints)
-- [ ] **SCHM-03**: Developer can update collection schema (add/modify fields)
-- [ ] **SCHM-04**: Developer can delete a collection and all its records
-- [ ] **SCHM-05**: All records have auto-generated id, created_at, updated_at fields
-- [ ] **SCHM-06**: Schema supports text field type
-- [ ] **SCHM-07**: Schema supports number field type
-- [ ] **SCHM-08**: Schema supports boolean field type
-- [ ] **SCHM-09**: Schema supports datetime field type
-- [ ] **SCHM-10**: Schema supports JSON field type
-- [ ] **SCHM-11**: Schema supports relation field type (foreign key to another collection)
-- [ ] **SCHM-12**: Fields can be marked as required
-- [ ] **SCHM-13**: Field values are validated against their declared type
+- [x] **SCHM-01**: Developer can create a collection with a name and field definitions
+- [x] **SCHM-02**: Developer can read collection schema (fields, types, constraints)
+- [x] **SCHM-03**: Developer can update collection schema (add/modify fields)
+- [x] **SCHM-04**: Developer can delete a collection and all its records
+- [x] **SCHM-05**: All records have auto-generated id, created_at, updated_at fields
+- [x] **SCHM-06**: Schema supports text field type
+- [x] **SCHM-07**: Schema supports number field type
+- [x] **SCHM-08**: Schema supports boolean field type
+- [x] **SCHM-09**: Schema supports datetime field type
+- [x] **SCHM-10**: Schema supports JSON field type
+- [x] **SCHM-11**: Schema supports relation field type (foreign key to another collection)
+- [x] **SCHM-12**: Fields can be marked as required
+- [x] **SCHM-13**: Field values are validated against their declared type
 
 ### REST API Generation
 
@@ -122,19 +122,19 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHM-01 | 1 | Pending |
-| SCHM-02 | 1 | Pending |
-| SCHM-03 | 1 | Pending |
-| SCHM-04 | 1 | Pending |
-| SCHM-05 | 1 | Pending |
-| SCHM-06 | 1 | Pending |
-| SCHM-07 | 1 | Pending |
-| SCHM-08 | 1 | Pending |
-| SCHM-09 | 1 | Pending |
-| SCHM-10 | 1 | Pending |
-| SCHM-11 | 1 | Pending |
-| SCHM-12 | 1 | Pending |
-| SCHM-13 | 1 | Pending |
+| SCHM-01 | 1 | Complete |
+| SCHM-02 | 1 | Complete |
+| SCHM-03 | 1 | Complete |
+| SCHM-04 | 1 | Complete |
+| SCHM-05 | 1 | Complete |
+| SCHM-06 | 1 | Complete |
+| SCHM-07 | 1 | Complete |
+| SCHM-08 | 1 | Complete |
+| SCHM-09 | 1 | Complete |
+| SCHM-10 | 1 | Complete |
+| SCHM-11 | 1 | Complete |
+| SCHM-12 | 1 | Complete |
+| SCHM-13 | 1 | Complete |
 | API-01 | 2 | Pending |
 | API-02 | 2 | Pending |
 | API-03 | 2 | Pending |
@@ -178,4 +178,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-24 after roadmap creation*
+*Last updated: 2025-01-25 after Phase 1 completion*
