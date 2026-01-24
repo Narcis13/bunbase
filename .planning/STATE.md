@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2025-01-24)
 ## Current Position
 
 Phase: 1 of 8 (Core Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2025-01-25 - Completed 01-01-PLAN.md (Project Setup)
+Last activity: 2025-01-25 - Completed 01-02-PLAN.md (Schema Manager)
 
-Progress: [==                  ] 4% (1/24 plans)
+Progress: [====                ] 8% (2/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2m 29s
-- Total execution time: 2m 29s
+- Total plans completed: 2
+- Average duration: 3m 6s
+- Total execution time: 6m 13s
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-foundation | 1 | 2m 29s | 2m 29s |
+| 01-core-foundation | 2 | 6m 13s | 3m 6s |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2m 29s)
+- Last 5 plans: 01-01 (2m 29s), 01-02 (3m 44s)
 - Trend: -
 
 *Updated after each plan completion*
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - Store schema in _collections/_fields tables, not code files (schema-in-database pattern)
 - Use nanoid for 21-char URL-safe IDs instead of UUID
 - Map all field types to TEXT except number (REAL) and boolean (INTEGER)
+- Use 12-step shadow table migration for column removal and type changes
+- Integrate migrations module with schema manager (not inline SQL)
+- Throw errors for not-found resources rather than silent nulls
 
 ### Pending Todos
 
@@ -58,5 +61,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2025-01-25
-Stopped at: Completed 01-01-PLAN.md (Project Setup)
+Stopped at: Completed 01-02-PLAN.md (Schema Manager)
 Resume file: None
