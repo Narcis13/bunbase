@@ -44,7 +44,8 @@ function validateRelations(
     const stmt = db.prepare(
       `SELECT id FROM "${targetCollection}" WHERE id = $id`
     );
-    const exists = stmt.get({ id: value });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const exists = stmt.get({ id: value } as any);
     if (!exists) {
       throw new Error(
         `Related record "${value}" not found in collection "${targetCollection}"`
@@ -171,7 +172,8 @@ export function createRecord(
     params[field.name] = preparedData[field.name] ?? null;
   }
 
-  db.prepare(insertSQL).run(params);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db.prepare(insertSQL).run(params as any);
 
   // Return the complete record with system fields (and parse JSON/boolean back)
   return parseJsonFields(fields, record);
@@ -298,7 +300,8 @@ export function updateRecord(
   }
 
   const updateSQL = `UPDATE "${collectionName}" SET ${setClauses.join(", ")} WHERE id = $id`;
-  db.prepare(updateSQL).run(params);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db.prepare(updateSQL).run(params as any);
 
   // Return updated record (re-fetch to get latest state)
   return getRecord(collectionName, id)!;

@@ -176,11 +176,12 @@ export function updateCollection(name: string, newName: string): Collection {
   // Execute in transaction
   const transaction = db.transaction(() => {
     // Update metadata
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db.run("UPDATE _collections SET name = $newName, updated_at = $updated_at WHERE id = $id", {
       newName,
       updated_at: now,
       id: existing.id,
-    });
+    } as any);
 
     // Rename SQLite table
     if (name !== newName) {
@@ -339,10 +340,11 @@ export function addField(collectionName: string, field: FieldInput): Field {
     db.run(sql);
 
     // Update collection updated_at
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db.run("UPDATE _collections SET updated_at = $now WHERE id = $id", {
       now,
       id: collection.id,
-    });
+    } as any);
   });
 
   addFieldTx();
@@ -411,6 +413,7 @@ export function updateField(
   // Execute in transaction
   const transaction = db.transaction(() => {
     // Update metadata
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db.run(
       "UPDATE _fields SET name = $name, type = $type, required = $required, options = $options WHERE id = $id",
       {
@@ -419,7 +422,7 @@ export function updateField(
         required: updatedField.required ? 1 : 0,
         options: updatedField.options ? JSON.stringify(updatedField.options) : null,
         id: existingField.id,
-      }
+      } as any
     );
 
     // Handle table changes
@@ -436,10 +439,11 @@ export function updateField(
     }
 
     // Update collection updated_at
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db.run("UPDATE _collections SET updated_at = $now WHERE id = $id", {
       now,
       id: collection.id,
-    });
+    } as any);
   });
 
   transaction();
@@ -484,13 +488,15 @@ export function removeField(collectionName: string, fieldName: string): void {
     migrateTable(db, collectionName, remainingFields, allFields);
 
     // Delete field metadata
-    db.run("DELETE FROM _fields WHERE id = $id", { id: existingField.id });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    db.run("DELETE FROM _fields WHERE id = $id", { id: existingField.id } as any);
 
     // Update collection updated_at
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     db.run("UPDATE _collections SET updated_at = $now WHERE id = $id", {
       now,
       id: collection.id,
-    });
+    } as any);
   });
 
   transaction();

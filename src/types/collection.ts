@@ -14,7 +14,9 @@ export type FieldType =
  * Currently used for relation fields to specify the target collection.
  */
 export interface FieldOptions {
-  /** For relation fields: the target collection ID or name */
+  /** For relation fields: the target collection name (alias: target) */
+  collection?: string;
+  /** For relation fields: the target collection ID or name (alias: collection) */
   target?: string;
   /** For text fields: maximum length */
   maxLength?: number;
