@@ -35,12 +35,12 @@ BunBase delivers a backend-in-a-box alternative to PocketBase. The roadmap build
   3. Records automatically receive id, created_at, and updated_at fields without explicit definition
   4. Field values are rejected when they violate type constraints or required rules
   5. Relation fields reference records in other collections correctly
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md - Project setup, database initialization, and core type definitions
+- [ ] 01-02-PLAN.md - Schema manager for collection and field CRUD operations
+- [ ] 01-03-PLAN.md - Validation layer and record operations with system fields
 
 ---
 
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Foundation | 0/3 | Not started | - |
+| 1. Core Foundation | 0/3 | Planned | - |
 | 2. REST API Generation | 0/2 | Not started | - |
 | 3. Query Capabilities | 0/2 | Not started | - |
 | 4. Lifecycle Hooks | 0/2 | Not started | - |
@@ -249,3 +249,4 @@ All 44 requirements mapped: Yes
 
 ---
 *Roadmap created: 2025-01-24*
+*Phase 1 planned: 2025-01-25*
