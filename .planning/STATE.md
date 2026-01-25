@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-24)
 ## Current Position
 
 Phase: 3 of 8 (Query Capabilities)
-Plan: 0 of 2 in current phase (not started)
-Status: Ready to plan
-Last activity: 2025-01-25 - Phase 2 verified and complete
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2025-01-25 - Completed 03-01-PLAN.md (Query Builder)
 
-Progress: [=======             ] 17% (4/24 plans)
+Progress: [========            ] 21% (5/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 3m 9s
-- Total execution time: 12m 47s
+- Total plans completed: 5
+- Average duration: 3m 10s
+- Total execution time: 15m 58s
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [=======             ] 17% (4/24 plans)
 |-------|-------|-------|----------|
 | 01-core-foundation | 3 | 10m 47s | 3m 35s |
 | 02-rest-api-generation | 1 | 2m | 2m |
+| 03-query-capabilities | 1 | 3m 11s | 3m 11s |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2m 29s), 01-02 (3m 44s), 01-03 (4m 49s), 02-01 (2m)
-- Trend: Improving (fastest plan yet)
+- Last 5 plans: 01-02 (3m 44s), 01-03 (4m 49s), 02-01 (2m), 03-01 (3m 11s)
+- Trend: Stable around 3m per plan
 
 *Updated after each plan completion*
 
@@ -58,6 +59,11 @@ Recent decisions affecting current work:
 - Error mapping: not found->404, validation failed->400, already exists->409
 - List endpoint returns {items, totalItems} object format
 - DELETE returns 204 No Content with null body
+- URL operators parsed from key suffix (field> becomes operator >) due to URL splitting on =
+- System fields (id, created_at, updated_at) always valid for filtering/sorting
+- LIKE escapes %, _, \\ characters using ESCAPE '\\' clause
+- Pagination is 1-indexed with offset = (page - 1) * perPage
+- perPage bounded: min 1, max 500, default 30
 
 ### Pending Todos
 
@@ -70,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 02-01-PLAN.md (REST API CRUD Endpoints) - Phase 2 Complete
+Stopped at: Completed 03-01-PLAN.md (Query Builder)
 Resume file: None
