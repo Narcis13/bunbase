@@ -108,6 +108,14 @@ export class HookManager {
   }
 
   /**
+   * Clear all registered handlers.
+   * Useful for testing to reset state between tests.
+   */
+  clear(): void {
+    this.handlers = {};
+  }
+
+  /**
    * Trigger a hook event, executing all matching handlers.
    *
    * Handlers are filtered to include:

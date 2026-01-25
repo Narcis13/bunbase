@@ -43,7 +43,9 @@ function mapErrorToStatus(error: Error): number {
   if (msg.includes("invalid filter field")) return 400;
   if (msg.includes("invalid sort field")) return 400;
   if (msg.includes("already exists")) return 409;
-  return 500;
+  // Default to 400 for application errors (including hook cancellations)
+  // 500 is reserved for unexpected system errors
+  return 400;
 }
 
 /**
