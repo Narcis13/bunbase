@@ -15,6 +15,14 @@ import {
 } from "../core/records";
 import { parseQueryOptions } from "../core/query";
 import { HookManager } from "../core/hooks";
+import {
+  createAdmin,
+  verifyAdminPassword,
+  getAdminByEmail,
+  updateAdminPassword,
+} from "../auth/admin";
+import { createAdminToken } from "../auth/jwt";
+import { requireAdmin } from "../auth/middleware";
 
 // Re-export HookManager for external registration
 export { HookManager } from "../core/hooks";
@@ -152,6 +160,69 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
           }
         },
       },
+
+      // Admin authentication routes
+      "/_/api/auth/login": {
+        /**
+         * POST /_/api/auth/login
+         * Authenticate admin with email/password and return JWT token
+         */
+        POST: async (req) => {
+          try {
+            const { email, password } = await req.json();
+            if (!email || !password) {
+              return errorResponse("Email and password required", 400);
+            }
+            const admin = await verifyAdminPassword(email, password);
+            if (!admin) {
+              return errorResponse("Invalid credentials", 401);
+            }
+            const token = await createAdminToken(admin.id);
+            return Response.json({ token, admin });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, 400);
+          }
+        },
+      },
+
+      "/_/api/auth/password": {
+        /**
+         * POST /_/api/auth/password
+         * Change admin password (requires valid JWT)
+         */
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const admin = adminOrError;
+          try {
+            const { newPassword } = await req.json();
+            if (!newPassword || newPassword.length < 8) {
+              return errorResponse(
+                "Password must be at least 8 characters",
+                400
+              );
+            }
+            await updateAdminPassword(admin.id, newPassword);
+            return Response.json({ message: "Password updated" });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, 400);
+          }
+        },
+      },
+
+      "/_/api/auth/me": {
+        /**
+         * GET /_/api/auth/me
+         * Get current admin info (requires valid JWT)
+         */
+        GET: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          return Response.json(adminOrError);
+        },
+      },
     },
 
     /**
@@ -164,20 +235,50 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
 }
 
 /**
+ * Generate a random password for initial admin.
+ * Uses alphanumeric characters (excluding ambiguous ones like 0, O, l, 1)
+ *
+ * @returns A 16-character random password
+ */
+function generateRandomPassword(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let result = "";
+  for (let i = 0; i < 16; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+/**
  * Start the server with database initialization.
- * Convenience function for main entry point.
+ * Creates initial admin account if none exists.
  *
  * @param port - Port to listen on (default: 8090)
  * @param dbPath - Database file path (default: "bunbase.db")
  * @param hooks - Optional HookManager instance for lifecycle hooks
  * @returns The Bun.Server instance
  */
-export function startServer(
+export async function startServer(
   port: number = 8090,
   dbPath: string = "bunbase.db",
   hooks?: HookManager
 ) {
   initDatabase(dbPath);
+
+  // Create initial admin if none exists
+  const existingAdmin = getAdminByEmail("admin@bunbase.local");
+  if (!existingAdmin) {
+    const password = Bun.env.BUNBASE_ADMIN_PASSWORD || generateRandomPassword();
+    await createAdmin("admin@bunbase.local", password);
+    if (!Bun.env.BUNBASE_ADMIN_PASSWORD) {
+      console.log(`Initial admin created: admin@bunbase.local`);
+      console.log(`Generated password: ${password}`);
+      console.log(
+        `Set BUNBASE_ADMIN_PASSWORD env var to use a specific password.`
+      );
+    }
+  }
+
   const server = createServer(port, hooks);
   console.log(`BunBase running at http://localhost:${port}`);
   return server;
