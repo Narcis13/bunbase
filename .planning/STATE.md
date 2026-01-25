@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2025-01-24)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** Phase 5 complete - Ready for Phase 6
+**Current focus:** Phase 6 in progress - Admin UI Records
 
 ## Current Position
 
-Phase: 5 of 8 (Admin Authentication)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2025-01-25 - Completed 05-02-PLAN.md
+Phase: 6 of 8 (Admin UI Records)
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-01-25 - Completed 06-01-PLAN.md
 
-Progress: [=================== ] 42% (10/24 plans)
+Progress: [====================] 46% (11/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 3m 4s
-- Total execution time: 30m 38s
+- Total plans completed: 11
+- Average duration: 3m 20s
+- Total execution time: 37m 38s
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [=================== ] 42% (10/24 plans)
 | 03-query-capabilities | 2 | 6m 23s | 3m 11s |
 | 04-lifecycle-hooks | 2 | 6m 28s | 3m 14s |
 | 05-admin-authentication | 2 | 5m | 2m 30s |
+| 06-admin-ui-records | 1 | 7m | 7m |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (2m 28s), 04-02 (4m), 05-01 (2m), 05-02 (3m)
-- Trend: Stable around 2-4m per plan
+- Last 5 plans: 04-02 (4m), 05-01 (2m), 05-02 (3m), 06-01 (7m)
+- Trend: UI plan took longer due to many component files
 
 *Updated after each plan completion*
 
@@ -83,6 +84,10 @@ Recent decisions affecting current work:
 - requireAdmin returns Admin | Response union type for middleware pattern
 - Auth routes under /_/api/auth namespace
 - Initial admin: admin@bunbase.local with generated password if BUNBASE_ADMIN_PASSWORD not set
+- Use Tailwind CSS v4 with CSS-based configuration (not tailwind.config.js)
+- Use shadcn/ui copy-paste pattern (not npm package)
+- Use @/* path alias for component imports
+- Serve admin at /_/ routes to match existing auth routes
 
 ### Pending Todos
 
@@ -94,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2025-01-25
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-01-25
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
