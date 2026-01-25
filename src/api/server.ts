@@ -243,6 +243,26 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
       },
 
       // Collections API for admin UI
+      "/_/api/collections/:name/fields": {
+        /**
+         * GET /_/api/collections/:name/fields
+         * Get fields for a specific collection (requires admin auth)
+         */
+        GET: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+
+          const { name } = req.params;
+          try {
+            const fields = getFields(name);
+            return Response.json(fields);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
       "/_/api/collections": {
         /**
          * GET /_/api/collections
