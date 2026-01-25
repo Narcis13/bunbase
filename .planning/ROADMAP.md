@@ -18,7 +18,7 @@ BunBase delivers a backend-in-a-box alternative to PocketBase. The roadmap build
 - [x] **Phase 2: REST API Generation** - Auto-generated CRUD endpoints for collections
 - [x] **Phase 3: Query Capabilities** - Filtering, sorting, pagination, and relation expansion
 - [x] **Phase 4: Lifecycle Hooks** - Before/after CRUD hooks with cancellation support
-- [ ] **Phase 5: Admin Authentication** - JWT-based admin login and route protection
+- [x] **Phase 5: Admin Authentication** - JWT-based admin login and route protection
 - [ ] **Phase 6: Admin UI Records** - Collection browser with record CRUD operations
 - [ ] **Phase 7: Admin UI Schema Editor** - Runtime schema editing through web interface
 - [ ] **Phase 8: Single Binary Packaging** - Compile to standalone executable with embedded UI
@@ -107,7 +107,7 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md - Admin module with password hashing and JWT utilities
-- [ ] 05-02-PLAN.md - Route protection middleware and auth HTTP endpoints
+- [x] 05-02-PLAN.md - Route protection middleware and auth HTTP endpoints
 
 ---
 
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. REST API Generation | 1/1 | Complete | 2025-01-25 |
 | 3. Query Capabilities | 2/2 | Complete | 2025-01-25 |
 | 4. Lifecycle Hooks | 2/2 | Complete | 2025-01-25 |
-| 5. Admin Authentication | 1/2 | In progress | - |
+| 5. Admin Authentication | 2/2 | Complete | 2025-01-25 |
 | 6. Admin UI Records | 0/3 | Not started | - |
 | 7. Admin UI Schema Editor | 0/1 | Not started | - |
 | 8. Single Binary Packaging | 0/2 | Not started | - |
@@ -257,3 +257,4 @@ All 44 requirements mapped: Yes
 *Phase 4 planned: 2025-01-25*
 *Phase 4 complete: 2025-01-25*
 *Phase 5 planned: 2025-01-25*
+*Phase 5 complete: 2025-01-25*

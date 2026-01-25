@@ -48,10 +48,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin Authentication
 
-- [ ] **AUTH-01**: Admin can log in with password at `/_/login`
-- [ ] **AUTH-02**: System issues JWT token on successful admin login
-- [ ] **AUTH-03**: All admin UI routes require valid JWT
-- [ ] **AUTH-04**: Admin can change their password through settings
+- [x] **AUTH-01**: Admin can log in with password at `/_/login`
+- [x] **AUTH-02**: System issues JWT token on successful admin login
+- [x] **AUTH-03**: All admin UI routes require valid JWT
+- [x] **AUTH-04**: Admin can change their password through settings
 
 ### Admin UI
 
@@ -152,10 +152,10 @@ Which phases cover which requirements.
 | HOOK-06 | 4 | Complete |
 | HOOK-07 | 4 | Complete |
 | HOOK-08 | 4 | Complete |
-| AUTH-01 | 5 | Pending |
-| AUTH-02 | 5 | Pending |
-| AUTH-03 | 5 | Pending |
-| AUTH-04 | 5 | Pending |
+| AUTH-01 | 5 | Complete |
+| AUTH-02 | 5 | Complete |
+| AUTH-03 | 5 | Complete |
+| AUTH-04 | 5 | Complete |
 | UI-01 | 6 | Pending |
 | UI-02 | 6 | Pending |
 | UI-03 | 6 | Pending |
@@ -178,4 +178,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-25 after Phase 4 completion*
+*Last updated: 2025-01-25 after Phase 5 completion*
