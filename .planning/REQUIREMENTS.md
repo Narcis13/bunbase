@@ -37,14 +37,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Lifecycle Hooks
 
-- [ ] **HOOK-01**: Developer can register beforeCreate hook for a collection
-- [ ] **HOOK-02**: Developer can register afterCreate hook for a collection
-- [ ] **HOOK-03**: Developer can register beforeUpdate hook for a collection
-- [ ] **HOOK-04**: Developer can register afterUpdate hook for a collection
-- [ ] **HOOK-05**: Developer can register beforeDelete hook for a collection
-- [ ] **HOOK-06**: Developer can register afterDelete hook for a collection
-- [ ] **HOOK-07**: before* hooks can cancel the operation by throwing or returning error
-- [ ] **HOOK-08**: Hooks receive context with record data, collection info, and request details
+- [x] **HOOK-01**: Developer can register beforeCreate hook for a collection
+- [x] **HOOK-02**: Developer can register afterCreate hook for a collection
+- [x] **HOOK-03**: Developer can register beforeUpdate hook for a collection
+- [x] **HOOK-04**: Developer can register afterUpdate hook for a collection
+- [x] **HOOK-05**: Developer can register beforeDelete hook for a collection
+- [x] **HOOK-06**: Developer can register afterDelete hook for a collection
+- [x] **HOOK-07**: before* hooks can cancel the operation by throwing or returning error
+- [x] **HOOK-08**: Hooks receive context with record data, collection info, and request details
 
 ### Admin Authentication
 
@@ -144,14 +144,14 @@ Which phases cover which requirements.
 | API-07 | 3 | Complete |
 | API-08 | 3 | Complete |
 | API-09 | 3 | Complete |
-| HOOK-01 | 4 | Pending |
-| HOOK-02 | 4 | Pending |
-| HOOK-03 | 4 | Pending |
-| HOOK-04 | 4 | Pending |
-| HOOK-05 | 4 | Pending |
-| HOOK-06 | 4 | Pending |
-| HOOK-07 | 4 | Pending |
-| HOOK-08 | 4 | Pending |
+| HOOK-01 | 4 | Complete |
+| HOOK-02 | 4 | Complete |
+| HOOK-03 | 4 | Complete |
+| HOOK-04 | 4 | Complete |
+| HOOK-05 | 4 | Complete |
+| HOOK-06 | 4 | Complete |
+| HOOK-07 | 4 | Complete |
+| HOOK-08 | 4 | Complete |
 | AUTH-01 | 5 | Pending |
 | AUTH-02 | 5 | Pending |
 | AUTH-03 | 5 | Pending |
@@ -178,4 +178,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-25 after Phase 3 completion*
+*Last updated: 2025-01-25 after Phase 4 completion*
