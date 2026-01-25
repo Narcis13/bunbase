@@ -10,28 +10,29 @@ See: .planning/PROJECT.md (updated 2025-01-24)
 ## Current Position
 
 Phase: 2 of 8 (REST API Generation)
-Plan: 0 of 1 in current phase (planned)
-Status: Ready to execute
-Last activity: 2025-01-25 - Phase 2 planned (1 TDD plan)
+Plan: 1 of 1 in current phase (complete)
+Status: Phase 2 Complete
+Last activity: 2026-01-25 - Completed 02-01-PLAN.md (REST API CRUD Endpoints)
 
-Progress: [======              ] 12% (3/24 plans)
+Progress: [=======             ] 17% (4/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3m 35s
-- Total execution time: 10m 47s
+- Total plans completed: 4
+- Average duration: 3m 9s
+- Total execution time: 12m 47s
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-foundation | 3 | 10m 47s | 3m 35s |
+| 02-rest-api-generation | 1 | 2m | 2m |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2m 29s), 01-02 (3m 44s), 01-03 (4m 49s)
-- Trend: -
+- Last 5 plans: 01-01 (2m 29s), 01-02 (3m 44s), 01-03 (4m 49s), 02-01 (2m)
+- Trend: Improving (fastest plan yet)
 
 *Updated after each plan completion*
 
@@ -53,6 +54,10 @@ Recent decisions affecting current work:
 - Relation validation checks both collection and record existence
 - JSON fields stored as strings in SQLite for portability
 - Partial validation for updates (required fields made optional)
+- Use Bun.serve() routes object for declarative HTTP routing
+- Error mapping: not found->404, validation failed->400, already exists->409
+- List endpoint returns {items, totalItems} object format
+- DELETE returns 204 No Content with null body
 
 ### Pending Todos
 
@@ -64,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2025-01-25
-Stopped at: Completed 01-03-PLAN.md (Validation and Records) - Phase 1 Complete
+Last session: 2026-01-25
+Stopped at: Completed 02-01-PLAN.md (REST API CRUD Endpoints) - Phase 2 Complete
 Resume file: None
