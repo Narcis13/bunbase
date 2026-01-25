@@ -26,6 +26,14 @@ const INIT_METADATA_SQL = `
     created_at TEXT DEFAULT (datetime('now')),
     UNIQUE(collection_id, name)
   );
+
+  CREATE TABLE IF NOT EXISTS _admins (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `;
 
 /**
