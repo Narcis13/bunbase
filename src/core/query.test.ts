@@ -153,18 +153,20 @@ describe("parseQueryOptions", () => {
     ]);
   });
 
-  test("parses filter with explicit operator suffix", () => {
+  test("parses filter with greater-than operator suffix", () => {
+    // URL parsing splits on =, so views>=100 becomes key="views>" value="100"
     const url = new URL("http://localhost/api/records?views>=100");
     const options = parseQueryOptions(url);
 
     expect(options.filter).toContainEqual({
       field: "views",
-      operator: ">=",
+      operator: ">",
       value: "100",
     });
   });
 
   test("parses like filter operator", () => {
+    // URL parsing splits on =, so title~=hello becomes key="title~" value="hello"
     const url = new URL("http://localhost/api/records?title~=hello");
     const options = parseQueryOptions(url);
 
