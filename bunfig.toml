@@ -1,0 +1,5 @@
+# Bun configuration for admin UI with Tailwind CSS
+# Source: https://bun.com/docs/bundler/fullstack
+
+[serve.static]
+plugins = ["bun-plugin-tailwind"]
