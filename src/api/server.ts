@@ -14,6 +14,8 @@ import {
   updateRecordWithHooks,
   deleteRecordWithHooks,
 } from "../core/records";
+import { getAllCollections, getFields } from "../core/schema";
+import { getDatabase } from "../core/database";
 import { parseQueryOptions } from "../core/query";
 import { HookManager } from "../core/hooks";
 import {
@@ -58,6 +60,18 @@ function mapErrorToStatus(error: Error): number {
   // Default to 400 for application errors (including hook cancellations)
   // 500 is reserved for unexpected system errors
   return 400;
+}
+
+/**
+ * Get record count for a collection.
+ *
+ * @param collectionName - Name of the collection
+ * @returns Number of records in the collection
+ */
+function getRecordCount(collectionName: string): number {
+  const db = getDatabase();
+  const result = db.prepare(`SELECT COUNT(*) as count FROM ${collectionName}`).get() as { count: number };
+  return result.count;
 }
 
 /**
@@ -225,6 +239,31 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
           const adminOrError = await requireAdmin(req);
           if (adminOrError instanceof Response) return adminOrError;
           return Response.json(adminOrError);
+        },
+      },
+
+      // Collections API for admin UI
+      "/_/api/collections": {
+        /**
+         * GET /_/api/collections
+         * List all collections with field and record counts (requires admin auth)
+         */
+        GET: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+
+          try {
+            const collections = getAllCollections();
+            const result = collections.map((c) => ({
+              ...c,
+              fieldCount: getFields(c.name).length,
+              recordCount: getRecordCount(c.name),
+            }));
+            return Response.json(result);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
         },
       },
 
