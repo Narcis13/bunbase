@@ -30,10 +30,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **API-03**: System auto-generates create endpoint for each collection (`POST /api/collections/:name/records`)
 - [x] **API-04**: System auto-generates update endpoint for each collection (`PATCH /api/collections/:name/records/:id`)
 - [x] **API-05**: System auto-generates delete endpoint for each collection (`DELETE /api/collections/:name/records/:id`)
-- [ ] **API-06**: List endpoint supports filtering with `=`, `!=`, `>`, `<`, `~` operators
-- [ ] **API-07**: List endpoint supports sorting via `sort` parameter (prefix `-` for descending)
-- [ ] **API-08**: List endpoint supports pagination via `page` and `perPage` parameters
-- [ ] **API-09**: Endpoints support relation expansion via `expand` parameter
+- [x] **API-06**: List endpoint supports filtering with `=`, `!=`, `>`, `<`, `~` operators
+- [x] **API-07**: List endpoint supports sorting via `sort` parameter (prefix `-` for descending)
+- [x] **API-08**: List endpoint supports pagination via `page` and `perPage` parameters
+- [x] **API-09**: Endpoints support relation expansion via `expand` parameter
 
 ### Lifecycle Hooks
 
@@ -140,10 +140,10 @@ Which phases cover which requirements.
 | API-03 | 2 | Complete |
 | API-04 | 2 | Complete |
 | API-05 | 2 | Complete |
-| API-06 | 3 | Pending |
-| API-07 | 3 | Pending |
-| API-08 | 3 | Pending |
-| API-09 | 3 | Pending |
+| API-06 | 3 | Complete |
+| API-07 | 3 | Complete |
+| API-08 | 3 | Complete |
+| API-09 | 3 | Complete |
 | HOOK-01 | 4 | Pending |
 | HOOK-02 | 4 | Pending |
 | HOOK-03 | 4 | Pending |
@@ -178,4 +178,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-25 after Phase 2 completion*
+*Last updated: 2025-01-25 after Phase 3 completion*
