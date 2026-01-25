@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2025-01-24)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** Phase 4 - Lifecycle Hooks
+**Current focus:** Phase 4 complete - Ready for Phase 5
 
 ## Current Position
 
-Phase: 4 of 8 (Lifecycle Hooks)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 04-01-PLAN.md
+Phase: 4 of 8 (Lifecycle Hooks) - COMPLETE
+Plan: 2 of 2 in current phase - COMPLETE
+Status: Phase complete
+Last activity: 2025-01-25 - Completed 04-02-PLAN.md
 
-Progress: [==========          ] 29% (7/24 plans)
+Progress: [================    ] 33% (8/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 3m 5s
-- Total execution time: 21m 38s
+- Total plans completed: 8
+- Average duration: 3m 15s
+- Total execution time: 25m 38s
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [==========          ] 29% (7/24 plans)
 | 01-core-foundation | 3 | 10m 47s | 3m 35s |
 | 02-rest-api-generation | 1 | 2m | 2m |
 | 03-query-capabilities | 2 | 6m 23s | 3m 11s |
-| 04-lifecycle-hooks | 1 | 2m 28s | 2m 28s |
+| 04-lifecycle-hooks | 2 | 6m 28s | 3m 14s |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (2m), 03-01 (3m 11s), 03-02 (3m 12s), 04-01 (2m 28s)
-- Trend: Stable around 2-3m per plan
+- Last 5 plans: 03-01 (3m 11s), 03-02 (3m 12s), 04-01 (2m 28s), 04-02 (4m)
+- Trend: Stable around 2-4m per plan
 
 *Updated after each plan completion*
 
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - Handlers execute in registration order (FIFO)
 - Not calling next() silently stops chain (no error)
 - Throwing in handler stops chain and propagates error
+- Default error status 400 for application errors (was 500)
+- Request context built from Request (method, path, headers)
+- After hooks swallow errors (console.error only)
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-25
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2025-01-25
+Stopped at: Completed 04-02-PLAN.md (Phase 4 complete)
 Resume file: None
