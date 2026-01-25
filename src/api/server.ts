@@ -9,10 +9,11 @@ import { initDatabase } from "../core/database";
 import {
   createRecord,
   getRecord,
-  listRecords,
+  listRecordsWithQuery,
   updateRecord,
   deleteRecord,
 } from "../core/records";
+import { parseQueryOptions } from "../core/query";
 
 /**
  * Create an error response with consistent format.
@@ -35,6 +36,8 @@ function mapErrorToStatus(error: Error): number {
   const msg = error.message.toLowerCase();
   if (msg.includes("not found")) return 404;
   if (msg.includes("validation failed")) return 400;
+  if (msg.includes("invalid filter field")) return 400;
+  if (msg.includes("invalid sort field")) return 400;
   if (msg.includes("already exists")) return 409;
   return 500;
 }
@@ -53,16 +56,15 @@ export function createServer(port: number = 8090) {
       "/api/collections/:name/records": {
         /**
          * GET /api/collections/:name/records
-         * List all records in a collection
+         * List records with query support (filter, sort, pagination, expand)
          */
         GET: (req) => {
           try {
             const { name } = req.params;
-            const items = listRecords(name);
-            return Response.json({
-              items,
-              totalItems: items.length,
-            });
+            const url = new URL(req.url);
+            const options = parseQueryOptions(url);
+            const result = listRecordsWithQuery(name, options);
+            return Response.json(result);
           } catch (error) {
             const err = error as Error;
             return errorResponse(err.message, mapErrorToStatus(err));

@@ -21,10 +21,16 @@ describe("REST API CRUD Endpoints", () => {
     // Initialize test database
     initDatabase(":memory:");
 
-    // Create test collection "posts" with title (required) and content (optional)
+    // Create test collection "authors" for relation testing
+    createCollection("authors", [
+      { name: "name", type: "text", required: true },
+    ]);
+
+    // Create test collection "posts" with title (required), content (optional), author (relation)
     createCollection("posts", [
       { name: "title", type: "text", required: true },
       { name: "content", type: "text", required: false },
+      { name: "author", type: "relation", required: false, options: { collection: "authors" } },
     ]);
 
     // Start server
@@ -38,16 +44,18 @@ describe("REST API CRUD Endpoints", () => {
     // Clean up
     try {
       deleteCollection("posts");
+      deleteCollection("authors");
     } catch {
-      // Collection may already be deleted
+      // Collections may already be deleted
     }
     closeDatabase();
   });
 
   beforeEach(() => {
-    // Clear all records from posts table
+    // Clear all records from posts and authors tables
     const db = getDatabase();
     db.run('DELETE FROM "posts"');
+    db.run('DELETE FROM "authors"');
   });
 
   // ============================================================================
@@ -63,6 +71,10 @@ describe("REST API CRUD Endpoints", () => {
       expect(data.items).toBeArray();
       expect(data.items).toHaveLength(0);
       expect(data.totalItems).toBe(0);
+      // Check pagination metadata
+      expect(data.page).toBe(1);
+      expect(data.perPage).toBe(30);
+      expect(data.totalPages).toBe(0);
     });
 
     test("returns 200 with items array containing records", async () => {
@@ -71,13 +83,14 @@ describe("REST API CRUD Endpoints", () => {
       const id = "test-id-123";
       const now = new Date().toISOString();
       db.run(
-        'INSERT INTO "posts" (id, created_at, updated_at, title, content) VALUES ($id, $created_at, $updated_at, $title, $content)',
+        'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
         {
           id,
           created_at: now,
           updated_at: now,
           title: "Test Post",
           content: "Test content",
+          author: null,
         }
       );
 
@@ -96,13 +109,14 @@ describe("REST API CRUD Endpoints", () => {
       const now = new Date().toISOString();
       for (let i = 0; i < 3; i++) {
         db.run(
-          'INSERT INTO "posts" (id, created_at, updated_at, title, content) VALUES ($id, $created_at, $updated_at, $title, $content)',
+          'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
           {
             id: `test-id-${i}`,
             created_at: now,
             updated_at: now,
             title: `Post ${i}`,
             content: `Content ${i}`,
+            author: null,
           }
         );
       }
@@ -123,6 +137,297 @@ describe("REST API CRUD Endpoints", () => {
 
       const data = await res.json();
       expect(data.error).toBeDefined();
+    });
+  });
+
+  // ============================================================================
+  // Query Capabilities Tests
+  // ============================================================================
+
+  describe("Query Capabilities", () => {
+    // Helper to create test records
+    async function createTestRecords() {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+      const records = [
+        { id: "post-1", title: "Alpha Post", content: "First content" },
+        { id: "post-2", title: "Beta Post", content: "Second content" },
+        { id: "post-3", title: "Gamma Post", content: "Third content" },
+        { id: "post-4", title: "Delta Post", content: "Fourth content" },
+        { id: "post-5", title: "Epsilon Post", content: "Fifth content" },
+      ];
+      for (const rec of records) {
+        db.run(
+          'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
+          {
+            id: rec.id,
+            created_at: now,
+            updated_at: now,
+            title: rec.title,
+            content: rec.content,
+            author: null,
+          }
+        );
+      }
+    }
+
+    // Pagination tests
+    test("pagination: returns correct page with perPage limit", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?page=1&perPage=2`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(2);
+      expect(data.page).toBe(1);
+      expect(data.perPage).toBe(2);
+      expect(data.totalItems).toBe(5);
+      expect(data.totalPages).toBe(3);
+    });
+
+    test("pagination: returns second page correctly", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?page=2&perPage=2`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(2);
+      expect(data.page).toBe(2);
+    });
+
+    test("pagination: returns empty items for page beyond data", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?page=10&perPage=2`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(0);
+      expect(data.totalItems).toBe(5);
+    });
+
+    // Sort tests
+    test("sort: ascending by title", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?sort=title`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items[0].title).toBe("Alpha Post");
+      // Alphabetical order: Alpha, Beta, Delta, Epsilon, Gamma
+      expect(data.items[4].title).toBe("Gamma Post");
+    });
+
+    test("sort: descending by title with - prefix", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?sort=-title`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items[0].title).toBe("Gamma Post");
+      expect(data.items[4].title).toBe("Alpha Post");
+    });
+
+    // Filter tests
+    test("filter: equals operator", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?title=Alpha%20Post`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(1);
+      expect(data.items[0].title).toBe("Alpha Post");
+      expect(data.totalItems).toBe(1);
+    });
+
+    test("filter: not equals operator", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?title!=Alpha%20Post`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(4);
+      expect(data.totalItems).toBe(4);
+    });
+
+    test("filter: like operator (contains)", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?title~=Post`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(5);
+    });
+
+    test("filter: returns 400 for invalid field name", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?invalid_field=value`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.error).toContain("Invalid filter field");
+    });
+
+    test("sort: returns 400 for invalid sort field", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?sort=invalid_field`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.error).toContain("Invalid sort field");
+    });
+
+    // Expand tests
+    test("expand: includes related record in expand object", async () => {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+
+      // Create an author
+      db.run(
+        'INSERT INTO "authors" (id, created_at, updated_at, name) VALUES ($id, $created_at, $updated_at, $name)',
+        {
+          id: "author-1",
+          created_at: now,
+          updated_at: now,
+          name: "John Doe",
+        }
+      );
+
+      // Create a post with author relation
+      db.run(
+        'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
+        {
+          id: "post-with-author",
+          created_at: now,
+          updated_at: now,
+          title: "Post With Author",
+          content: "Content",
+          author: "author-1",
+        }
+      );
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?expand=author`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(1);
+      expect(data.items[0].expand).toBeDefined();
+      expect(data.items[0].expand.author).toBeDefined();
+      expect(data.items[0].expand.author.name).toBe("John Doe");
+    });
+
+    test("expand: skips gracefully when relation is null", async () => {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+
+      // Create a post without author
+      db.run(
+        'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
+        {
+          id: "post-no-author",
+          created_at: now,
+          updated_at: now,
+          title: "Post Without Author",
+          content: "Content",
+          author: null,
+        }
+      );
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?expand=author`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(1);
+      // No expand object should be present since relation is null
+      expect(data.items[0].expand).toBeUndefined();
+    });
+
+    // Combined query test
+    test("combined: filter + sort + pagination work together", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?title~=Post&sort=-title&page=1&perPage=2`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(2);
+      expect(data.items[0].title).toBe("Gamma Post"); // Descending
+      expect(data.page).toBe(1);
+      expect(data.perPage).toBe(2);
+      expect(data.totalItems).toBe(5);
+    });
+
+    // System field tests
+    test("filter by system field id works", async () => {
+      await createTestRecords();
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?id=post-1`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items).toHaveLength(1);
+      expect(data.items[0].id).toBe("post-1");
+    });
+
+    test("sort by system field created_at works", async () => {
+      const db = getDatabase();
+      const now = new Date().toISOString();
+      const later = new Date(Date.now() + 1000).toISOString();
+
+      db.run(
+        'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
+        { id: "old-post", created_at: now, updated_at: now, title: "Old", content: "Old", author: null }
+      );
+      db.run(
+        'INSERT INTO "posts" (id, created_at, updated_at, title, content, author) VALUES ($id, $created_at, $updated_at, $title, $content, $author)',
+        { id: "new-post", created_at: later, updated_at: later, title: "New", content: "New", author: null }
+      );
+
+      const res = await fetch(
+        `${BASE_URL}/api/collections/posts/records?sort=-created_at`
+      );
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.items[0].id).toBe("new-post");
+      expect(data.items[1].id).toBe("old-post");
     });
   });
 

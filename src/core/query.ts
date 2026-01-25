@@ -95,6 +95,10 @@ export function parseQueryOptions(url: URL): QueryOptions {
     } else if (key.endsWith("<")) {
       field = key.slice(0, -1);
       operator = "<";
+    } else if (key.endsWith("!")) {
+      // Handle != operator (URL splits on =, so title!=value becomes key=title!, value=value)
+      field = key.slice(0, -1);
+      operator = "!=";
     } else {
       field = key;
       operator = "=";
