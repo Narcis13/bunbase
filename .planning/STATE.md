@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-24)
 ## Current Position
 
 Phase: 6 of 8 (Admin UI Records)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 06-01-PLAN.md
+Last activity: 2026-01-26 - Completed 06-02-PLAN.md
 
-Progress: [====================] 46% (11/24 plans)
+Progress: [=========================] 50% (12/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 3m 20s
-- Total execution time: 37m 38s
+- Total plans completed: 12
+- Average duration: 3m 18s
+- Total execution time: 39m 38s
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [====================] 46% (11/24 plans)
 | 03-query-capabilities | 2 | 6m 23s | 3m 11s |
 | 04-lifecycle-hooks | 2 | 6m 28s | 3m 14s |
 | 05-admin-authentication | 2 | 5m | 2m 30s |
-| 06-admin-ui-records | 1 | 7m | 7m |
+| 06-admin-ui-records | 2 | 9m | 4m 30s |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (4m), 05-01 (2m), 05-02 (3m), 06-01 (7m)
-- Trend: UI plan took longer due to many component files
+- Last 5 plans: 05-01 (2m), 05-02 (3m), 06-01 (7m), 06-02 (2m)
+- Trend: Fast execution with established patterns
 
 *Updated after each plan completion*
 
@@ -88,6 +88,9 @@ Recent decisions affecting current work:
 - Use shadcn/ui copy-paste pattern (not npm package)
 - Use @/* path alias for component imports
 - Serve admin at /_/ routes to match existing auth routes
+- State-based routing using React useState instead of router library
+- Collections grouped as system (prefixed with _) vs user in sidebar
+- Record count displayed as badge on each collection in sidebar
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-25
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-01-26
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
