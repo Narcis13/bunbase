@@ -3,6 +3,7 @@
  *
  * Exposes CRUD operations for collection records via HTTP endpoints.
  * Uses Bun.serve() with route definitions following PocketBase conventions.
+ * Serves admin UI at /_/ routes via Bun HTML imports.
  */
 
 import { initDatabase } from "../core/database";
@@ -23,6 +24,9 @@ import {
 } from "../auth/admin";
 import { createAdminToken } from "../auth/jwt";
 import { requireAdmin } from "../auth/middleware";
+
+// Admin UI HTML import - Bun bundles React, Tailwind, and components automatically
+import adminHtml from "../admin/index.html";
 
 // Re-export HookManager for external registration
 export { HookManager } from "../core/hooks";
@@ -223,6 +227,10 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
           return Response.json(adminOrError);
         },
       },
+
+      // Admin UI routes - Bun serves the React SPA
+      "/_/": adminHtml,
+      "/_/*": adminHtml, // Catch-all for SPA client-side routing
     },
 
     /**
