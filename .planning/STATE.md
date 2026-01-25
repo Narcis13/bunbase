@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2025-01-24)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** Phase 5 - Admin Authentication (in progress)
+**Current focus:** Phase 5 - Admin Authentication (complete)
 
 ## Current Position
 
 Phase: 5 of 8 (Admin Authentication)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2025-01-25 - Completed 05-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2025-01-25 - Completed 05-02-PLAN.md
 
-Progress: [=================   ] 37% (9/24 plans)
+Progress: [=================== ] 42% (10/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 3m 4s
-- Total execution time: 27m 38s
+- Total execution time: 30m 38s
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [=================   ] 37% (9/24 plans)
 | 02-rest-api-generation | 1 | 2m | 2m |
 | 03-query-capabilities | 2 | 6m 23s | 3m 11s |
 | 04-lifecycle-hooks | 2 | 6m 28s | 3m 14s |
-| 05-admin-authentication | 1 | 2m | 2m |
+| 05-admin-authentication | 2 | 5m | 2m 30s |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (3m 12s), 04-01 (2m 28s), 04-02 (4m), 05-01 (2m)
+- Last 5 plans: 04-01 (2m 28s), 04-02 (4m), 05-01 (2m), 05-02 (3m)
 - Trend: Stable around 2-4m per plan
 
 *Updated after each plan completion*
@@ -80,6 +80,9 @@ Recent decisions affecting current work:
 - Use Bun.password.hash with argon2id algorithm for admin passwords
 - JWT tokens use HS256 with 24h expiry via jose library
 - JWT_SECRET environment variable required (fail fast if missing)
+- requireAdmin returns Admin | Response union type for middleware pattern
+- Auth routes under /_/api/auth namespace
+- Initial admin: admin@bunbase.local with generated password if BUNBASE_ADMIN_PASSWORD not set
 
 ### Pending Todos
 
@@ -92,5 +95,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2025-01-25
-Stopped at: Completed 05-01-PLAN.md
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
