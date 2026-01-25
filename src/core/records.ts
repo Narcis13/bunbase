@@ -5,8 +5,17 @@ import { getFields, getCollection } from "./schema.ts";
 import { validateRecord, formatValidationErrors } from "./validation.ts";
 import { buildListQuery } from "./query.ts";
 import { expandRelations } from "./expand.ts";
+import { HookManager } from "./hooks.ts";
 import type { Field } from "../types/collection.ts";
 import type { QueryOptions, PaginatedResponse } from "../types/query.ts";
+import type {
+  BeforeCreateContext,
+  AfterCreateContext,
+  BeforeUpdateContext,
+  AfterUpdateContext,
+  BeforeDeleteContext,
+  AfterDeleteContext,
+} from "../types/hooks.ts";
 
 /**
  * Validate that relation fields reference existing records.
@@ -392,4 +401,186 @@ export function listRecordsWithQuery(
     totalPages,
     items,
   };
+}
+
+// ============================================================================
+// Hook-aware record operations
+// ============================================================================
+
+/**
+ * Build request context from a Request object for hooks.
+ *
+ * @param req - Optional HTTP Request object
+ * @returns Request context with method, path, and headers, or undefined if no request
+ */
+function buildRequestContext(
+  req?: Request
+): { method: string; path: string; headers: Headers } | undefined {
+  if (!req) return undefined;
+  return {
+    method: req.method,
+    path: new URL(req.url).pathname,
+    headers: req.headers,
+  };
+}
+
+/**
+ * Create a new record with lifecycle hook support.
+ *
+ * Executes beforeCreate hooks before insertion (can modify data or cancel).
+ * Executes afterCreate hooks after insertion (errors are logged, not thrown).
+ *
+ * @param collectionName - Name of the collection
+ * @param data - Record data (without system fields)
+ * @param hooks - HookManager instance for triggering hooks
+ * @param request - Optional HTTP request for context
+ * @returns The created record with system fields
+ * @throws Error if collection not found, validation fails, or beforeCreate hook throws
+ */
+export async function createRecordWithHooks(
+  collectionName: string,
+  data: Record<string, unknown>,
+  hooks: HookManager,
+  request?: Request
+): Promise<Record<string, unknown>> {
+  // Build beforeCreate context with copy of data to allow safe mutation
+  const beforeContext: BeforeCreateContext = {
+    collection: collectionName,
+    data: { ...data },
+    request: buildRequestContext(request),
+  };
+
+  // Execute beforeCreate hooks (may modify data or throw to cancel)
+  await hooks.trigger("beforeCreate", beforeContext);
+
+  // Create record using potentially modified data from hooks
+  const record = createRecord(collectionName, beforeContext.data);
+
+  // Build afterCreate context
+  const afterContext: AfterCreateContext = {
+    collection: collectionName,
+    record,
+    request: buildRequestContext(request),
+  };
+
+  // Execute afterCreate hooks (swallow errors, log only)
+  try {
+    await hooks.trigger("afterCreate", afterContext);
+  } catch (error) {
+    console.error("afterCreate hook error:", error);
+  }
+
+  return record;
+}
+
+/**
+ * Update a record with lifecycle hook support.
+ *
+ * Executes beforeUpdate hooks before update (can modify data or cancel).
+ * Executes afterUpdate hooks after update (errors are logged, not thrown).
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @param data - Partial record data to update
+ * @param hooks - HookManager instance for triggering hooks
+ * @param request - Optional HTTP request for context
+ * @returns The updated record
+ * @throws Error if record not found, validation fails, or beforeUpdate hook throws
+ */
+export async function updateRecordWithHooks(
+  collectionName: string,
+  id: string,
+  data: Record<string, unknown>,
+  hooks: HookManager,
+  request?: Request
+): Promise<Record<string, unknown>> {
+  // Fetch existing record first
+  const existing = getRecord(collectionName, id);
+  if (!existing) {
+    throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
+  }
+
+  // Build beforeUpdate context with copy of data to allow safe mutation
+  const beforeContext: BeforeUpdateContext = {
+    collection: collectionName,
+    id,
+    data: { ...data },
+    existing,
+    request: buildRequestContext(request),
+  };
+
+  // Execute beforeUpdate hooks (may modify data or throw to cancel)
+  await hooks.trigger("beforeUpdate", beforeContext);
+
+  // Update record using potentially modified data from hooks
+  const record = updateRecord(collectionName, id, beforeContext.data);
+
+  // Build afterUpdate context
+  const afterContext: AfterUpdateContext = {
+    collection: collectionName,
+    record,
+    request: buildRequestContext(request),
+  };
+
+  // Execute afterUpdate hooks (swallow errors, log only)
+  try {
+    await hooks.trigger("afterUpdate", afterContext);
+  } catch (error) {
+    console.error("afterUpdate hook error:", error);
+  }
+
+  return record;
+}
+
+/**
+ * Delete a record with lifecycle hook support.
+ *
+ * Executes beforeDelete hooks before deletion (can throw to cancel).
+ * Executes afterDelete hooks after deletion (errors are logged, not thrown).
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @param hooks - HookManager instance for triggering hooks
+ * @param request - Optional HTTP request for context
+ * @throws Error if record not found or beforeDelete hook throws
+ */
+export async function deleteRecordWithHooks(
+  collectionName: string,
+  id: string,
+  hooks: HookManager,
+  request?: Request
+): Promise<void> {
+  // Fetch existing record first
+  const existing = getRecord(collectionName, id);
+  if (!existing) {
+    throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
+  }
+
+  // Build beforeDelete context
+  const beforeContext: BeforeDeleteContext = {
+    collection: collectionName,
+    id,
+    existing,
+    request: buildRequestContext(request),
+  };
+
+  // Execute beforeDelete hooks (may throw to cancel)
+  await hooks.trigger("beforeDelete", beforeContext);
+
+  // Delete the record
+  deleteRecord(collectionName, id);
+
+  // Build afterDelete context
+  const afterContext: AfterDeleteContext = {
+    collection: collectionName,
+    id,
+    request: buildRequestContext(request),
+  };
+
+  // Execute afterDelete hooks (swallow errors, log only)
+  try {
+    await hooks.trigger("afterDelete", afterContext);
+  } catch (error) {
+    console.error("afterDelete hook error:", error);
+  }
 }
