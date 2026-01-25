@@ -3,7 +3,10 @@ import { generateId } from "../utils/id.ts";
 import { createSystemFields } from "../types/record.ts";
 import { getFields, getCollection } from "./schema.ts";
 import { validateRecord, formatValidationErrors } from "./validation.ts";
+import { buildListQuery } from "./query.ts";
+import { expandRelations } from "./expand.ts";
 import type { Field } from "../types/collection.ts";
+import type { QueryOptions, PaginatedResponse } from "../types/query.ts";
 
 /**
  * Validate that relation fields reference existing records.
@@ -61,7 +64,7 @@ function validateRelations(
  * @param data - Raw record data from database
  * @returns Record with JSON fields parsed
  */
-function parseJsonFields(
+export function parseJsonFields(
   fields: Field[],
   data: Record<string, unknown>
 ): Record<string, unknown> {
@@ -331,4 +334,62 @@ export function deleteRecord(collectionName: string, id: string): void {
   }
 
   db.prepare(`DELETE FROM "${collectionName}" WHERE id = $id`).run({ id });
+}
+
+/**
+ * List records with query options (filter, sort, pagination, expand).
+ *
+ * @param collectionName - Name of the collection
+ * @param options - Query options for filtering, sorting, pagination, and expansion
+ * @returns Paginated response with items and metadata
+ * @throws Error if collection not found or invalid field names in query
+ */
+export function listRecordsWithQuery(
+  collectionName: string,
+  options: QueryOptions
+): PaginatedResponse<Record<string, unknown>> {
+  const db = getDatabase();
+
+  // Verify collection exists
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  const fields = getFields(collectionName);
+
+  // Build parameterized query (validates field names, throws on invalid)
+  const { sql, countSql, params } = buildListQuery(collectionName, options, fields);
+
+  // Execute count query first for pagination metadata
+  const countStmt = db.prepare(countSql);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countResult = countStmt.get(params as any) as { count: number };
+  const totalItems = countResult.count;
+
+  // Execute data query
+  const dataStmt = db.prepare(sql);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawResults = dataStmt.all(params as any) as Record<string, unknown>[];
+
+  // Parse JSON/boolean fields
+  let items = rawResults.map((record) => parseJsonFields(fields, record));
+
+  // Expand relations if requested
+  if (options.expand && options.expand.length > 0) {
+    items = expandRelations(items, fields, options.expand);
+  }
+
+  // Calculate pagination metadata
+  const page = options.page || 1;
+  const perPage = options.perPage || 30;
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  return {
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    items,
+  };
 }
