@@ -1,0 +1,118 @@
+/**
+ * Dashboard component for admin UI.
+ * Displays collection overview with statistics cards.
+ */
+
+import { useCollections } from "@/hooks/useCollections";
+import { CollectionCard } from "./CollectionCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Database } from "lucide-react";
+
+interface DashboardProps {
+  onNavigateToCollection: (collection: string) => void;
+}
+
+/**
+ * Dashboard displays an overview of all collections.
+ * Shows summary statistics and a grid of collection cards.
+ */
+export function Dashboard({ onNavigateToCollection }: DashboardProps) {
+  const { collections, loading, error } = useCollections();
+
+  // Filter out system collections for the main grid
+  const userCollections = collections.filter((c) => !c.name.startsWith("_"));
+  const systemCollections = collections.filter((c) => c.name.startsWith("_"));
+
+  // Calculate totals
+  const totalRecords = collections.reduce((sum, c) => sum + c.recordCount, 0);
+  const totalCollections = userCollections.length;
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive">Error loading collections: {error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Summary stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm font-medium text-muted-foreground">
+            Total Collections
+          </div>
+          <div className="mt-1 text-2xl font-bold">
+            {loading ? <Skeleton className="h-8 w-16" /> : totalCollections}
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm font-medium text-muted-foreground">
+            Total Records
+          </div>
+          <div className="mt-1 text-2xl font-bold">
+            {loading ? <Skeleton className="h-8 w-16" /> : totalRecords}
+          </div>
+        </div>
+      </div>
+
+      {/* Collections grid */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Collections</h2>
+        {loading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        ) : userCollections.length === 0 ? (
+          <div className="text-center py-12 border rounded-lg bg-muted/50">
+            <Database className="h-12 w-12 mx-auto text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-medium">No collections yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Collections will appear here once created
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {userCollections.map((collection) => (
+              <CollectionCard
+                key={collection.id}
+                name={collection.name}
+                recordCount={collection.recordCount}
+                fieldCount={collection.fieldCount}
+                updatedAt={collection.updated_at}
+                onClick={() => onNavigateToCollection(collection.name)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* System collections (smaller, less prominent) */}
+      {systemCollections.length > 0 && (
+        <div>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">
+            System Collections
+          </h2>
+          <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-4">
+            {systemCollections.map((collection) => (
+              <button
+                key={collection.id}
+                onClick={() => onNavigateToCollection(collection.name)}
+                className="flex items-center gap-2 rounded-md border p-2 text-left text-sm hover:bg-accent transition-colors"
+              >
+                <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium">{collection.name}</span>
+                <span className="ml-auto text-muted-foreground">
+                  {collection.recordCount}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
