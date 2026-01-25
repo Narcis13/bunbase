@@ -7,13 +7,17 @@
 
 import { initDatabase } from "../core/database";
 import {
-  createRecord,
   getRecord,
   listRecordsWithQuery,
-  updateRecord,
-  deleteRecord,
+  createRecordWithHooks,
+  updateRecordWithHooks,
+  deleteRecordWithHooks,
 } from "../core/records";
 import { parseQueryOptions } from "../core/query";
+import { HookManager } from "../core/hooks";
+
+// Re-export HookManager for external registration
+export { HookManager } from "../core/hooks";
 
 /**
  * Create an error response with consistent format.
@@ -46,9 +50,13 @@ function mapErrorToStatus(error: Error): number {
  * Create the HTTP server with all CRUD routes.
  *
  * @param port - Port to listen on (default: 8090)
+ * @param hooks - Optional HookManager instance for lifecycle hooks
  * @returns The Bun.Server instance
  */
-export function createServer(port: number = 8090) {
+export function createServer(port: number = 8090, hooks?: HookManager) {
+  // Create default hooks instance if not provided
+  const hookManager = hooks ?? new HookManager();
+
   return Bun.serve({
     port,
     routes: {
@@ -73,13 +81,13 @@ export function createServer(port: number = 8090) {
 
         /**
          * POST /api/collections/:name/records
-         * Create a new record in a collection
+         * Create a new record in a collection (with lifecycle hooks)
          */
         POST: async (req) => {
           try {
             const { name } = req.params;
             const body = await req.json();
-            const record = createRecord(name, body);
+            const record = await createRecordWithHooks(name, body, hookManager, req);
             return Response.json(record, { status: 201 });
           } catch (error) {
             const err = error as Error;
@@ -113,13 +121,13 @@ export function createServer(port: number = 8090) {
 
         /**
          * PATCH /api/collections/:name/records/:id
-         * Update a record by ID
+         * Update a record by ID (with lifecycle hooks)
          */
         PATCH: async (req) => {
           try {
             const { name, id } = req.params;
             const body = await req.json();
-            const record = updateRecord(name, id, body);
+            const record = await updateRecordWithHooks(name, id, body, hookManager, req);
             return Response.json(record);
           } catch (error) {
             const err = error as Error;
@@ -129,12 +137,12 @@ export function createServer(port: number = 8090) {
 
         /**
          * DELETE /api/collections/:name/records/:id
-         * Delete a record by ID
+         * Delete a record by ID (with lifecycle hooks)
          */
-        DELETE: (req) => {
+        DELETE: async (req) => {
           try {
             const { name, id } = req.params;
-            deleteRecord(name, id);
+            await deleteRecordWithHooks(name, id, hookManager, req);
             return new Response(null, { status: 204 });
           } catch (error) {
             const err = error as Error;
@@ -159,11 +167,16 @@ export function createServer(port: number = 8090) {
  *
  * @param port - Port to listen on (default: 8090)
  * @param dbPath - Database file path (default: "bunbase.db")
+ * @param hooks - Optional HookManager instance for lifecycle hooks
  * @returns The Bun.Server instance
  */
-export function startServer(port: number = 8090, dbPath: string = "bunbase.db") {
+export function startServer(
+  port: number = 8090,
+  dbPath: string = "bunbase.db",
+  hooks?: HookManager
+) {
   initDatabase(dbPath);
-  const server = createServer(port);
+  const server = createServer(port, hooks);
   console.log(`BunBase running at http://localhost:${port}`);
   return server;
 }
