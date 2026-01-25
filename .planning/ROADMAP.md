@@ -70,11 +70,11 @@ Plans:
   2. Developer can sort results ascending or descending by any field
   3. Developer can paginate through large result sets with page/perPage parameters
   4. Developer can expand relation fields to include full related records in response
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md - Query builder with filtering, sorting, pagination (TDD)
+- [ ] 03-02-PLAN.md - Relation expansion and server integration
 
 ---
 
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Core Foundation | 3/3 | Complete | 2025-01-25 |
 | 2. REST API Generation | 1/1 | Complete | 2025-01-25 |
-| 3. Query Capabilities | 0/2 | Not started | - |
+| 3. Query Capabilities | 0/2 | Planned | - |
 | 4. Lifecycle Hooks | 0/2 | Not started | - |
 | 5. Admin Authentication | 0/1 | Not started | - |
 | 6. Admin UI Records | 0/3 | Not started | - |
@@ -251,3 +251,4 @@ All 44 requirements mapped: Yes
 *Phase 1 planned: 2025-01-25*
 *Phase 1 complete: 2025-01-25*
 *Phase 2 complete: 2025-01-25*
+*Phase 3 planned: 2025-01-25*
