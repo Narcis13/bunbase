@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginPage } from "@/components/views/LoginPage";
-import { DashboardPlaceholder } from "@/components/views/DashboardPlaceholder";
+import { Dashboard } from "@/components/dashboard/Dashboard";
 import { CollectionPlaceholder } from "@/components/views/CollectionPlaceholder";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -48,7 +48,13 @@ export default function App() {
       currentCollection={view.type === "collection" ? view.collection : undefined}
       onNavigate={handleNavigate}
     >
-      {view.type === "dashboard" && <DashboardPlaceholder />}
+      {view.type === "dashboard" && (
+        <Dashboard
+          onNavigateToCollection={(collection) =>
+            setView({ type: "collection", collection })
+          }
+        />
+      )}
       {view.type === "collection" && (
         <CollectionPlaceholder collection={view.collection} />
       )}
