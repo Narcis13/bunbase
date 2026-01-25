@@ -15,7 +15,7 @@ BunBase delivers a backend-in-a-box alternative to PocketBase. The roadmap build
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Core Foundation** - Database layer, schema manager, and all field types
-- [ ] **Phase 2: REST API Generation** - Auto-generated CRUD endpoints for collections
+- [x] **Phase 2: REST API Generation** - Auto-generated CRUD endpoints for collections
 - [ ] **Phase 3: Query Capabilities** - Filtering, sorting, pagination, and relation expansion
 - [ ] **Phase 4: Lifecycle Hooks** - Before/after CRUD hooks with cancellation support
 - [ ] **Phase 5: Admin Authentication** - JWT-based admin login and route protection
@@ -57,7 +57,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md - HTTP server with CRUD endpoints (TDD)
+- [x] 02-01-PLAN.md - HTTP server with CRUD endpoints (TDD)
 
 ---
 
@@ -170,7 +170,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Foundation | 3/3 | Complete | 2025-01-25 |
-| 2. REST API Generation | 0/1 | Planned | - |
+| 2. REST API Generation | 1/1 | Complete | 2025-01-25 |
 | 3. Query Capabilities | 0/2 | Not started | - |
 | 4. Lifecycle Hooks | 0/2 | Not started | - |
 | 5. Admin Authentication | 0/1 | Not started | - |
@@ -250,3 +250,4 @@ All 44 requirements mapped: Yes
 *Roadmap created: 2025-01-24*
 *Phase 1 planned: 2025-01-25*
 *Phase 1 complete: 2025-01-25*
+*Phase 2 complete: 2025-01-25*

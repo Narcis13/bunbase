@@ -25,11 +25,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### REST API Generation
 
-- [ ] **API-01**: System auto-generates list endpoint for each collection (`GET /api/collections/:name/records`)
-- [ ] **API-02**: System auto-generates get endpoint for each collection (`GET /api/collections/:name/records/:id`)
-- [ ] **API-03**: System auto-generates create endpoint for each collection (`POST /api/collections/:name/records`)
-- [ ] **API-04**: System auto-generates update endpoint for each collection (`PATCH /api/collections/:name/records/:id`)
-- [ ] **API-05**: System auto-generates delete endpoint for each collection (`DELETE /api/collections/:name/records/:id`)
+- [x] **API-01**: System auto-generates list endpoint for each collection (`GET /api/collections/:name/records`)
+- [x] **API-02**: System auto-generates get endpoint for each collection (`GET /api/collections/:name/records/:id`)
+- [x] **API-03**: System auto-generates create endpoint for each collection (`POST /api/collections/:name/records`)
+- [x] **API-04**: System auto-generates update endpoint for each collection (`PATCH /api/collections/:name/records/:id`)
+- [x] **API-05**: System auto-generates delete endpoint for each collection (`DELETE /api/collections/:name/records/:id`)
 - [ ] **API-06**: List endpoint supports filtering with `=`, `!=`, `>`, `<`, `~` operators
 - [ ] **API-07**: List endpoint supports sorting via `sort` parameter (prefix `-` for descending)
 - [ ] **API-08**: List endpoint supports pagination via `page` and `perPage` parameters
@@ -135,11 +135,11 @@ Which phases cover which requirements.
 | SCHM-11 | 1 | Complete |
 | SCHM-12 | 1 | Complete |
 | SCHM-13 | 1 | Complete |
-| API-01 | 2 | Pending |
-| API-02 | 2 | Pending |
-| API-03 | 2 | Pending |
-| API-04 | 2 | Pending |
-| API-05 | 2 | Pending |
+| API-01 | 2 | Complete |
+| API-02 | 2 | Complete |
+| API-03 | 2 | Complete |
+| API-04 | 2 | Complete |
+| API-05 | 2 | Complete |
 | API-06 | 3 | Pending |
 | API-07 | 3 | Pending |
 | API-08 | 3 | Pending |
@@ -178,4 +178,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-25 after Phase 1 completion*
+*Last updated: 2025-01-25 after Phase 2 completion*
