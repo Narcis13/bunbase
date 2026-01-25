@@ -106,7 +106,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md - Admin module with password hashing and JWT utilities
+- [x] 05-01-PLAN.md - Admin module with password hashing and JWT utilities
 - [ ] 05-02-PLAN.md - Route protection middleware and auth HTTP endpoints
 
 ---
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. REST API Generation | 1/1 | Complete | 2025-01-25 |
 | 3. Query Capabilities | 2/2 | Complete | 2025-01-25 |
 | 4. Lifecycle Hooks | 2/2 | Complete | 2025-01-25 |
-| 5. Admin Authentication | 0/2 | Not started | - |
+| 5. Admin Authentication | 1/2 | In progress | - |
 | 6. Admin UI Records | 0/3 | Not started | - |
 | 7. Admin UI Schema Editor | 0/1 | Not started | - |
 | 8. Single Binary Packaging | 0/2 | Not started | - |
