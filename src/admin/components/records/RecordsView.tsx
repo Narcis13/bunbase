@@ -1,37 +1,30 @@
 /**
- * Records view component with table and pagination controls.
- * Container component for browsing collection records.
+ * Records view component with table, pagination, and CRUD forms.
+ * Container component for browsing and managing collection records.
  */
 
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { RecordsTable } from "./RecordsTable";
+import { RecordSheet } from "./RecordSheet";
+import { DeleteConfirmation } from "./DeleteConfirmation";
 import { useRecords } from "@/hooks/useRecords";
 import { useCollectionFields } from "@/hooks/useCollectionFields";
+import { fetchWithAuth } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 interface RecordsViewProps {
   collection: string;
-  onCreateRecord: () => void;
-  onEditRecord: (record: Record<string, unknown>) => void;
-  onDeleteRecord: (record: Record<string, unknown>) => void;
 }
 
 /**
- * RecordsView displays a collection's records with pagination.
- * Integrates data fetching hooks and RecordsTable component.
+ * RecordsView displays a collection's records with full CRUD capabilities.
+ * Integrates data fetching, table display, forms, and pagination.
  *
  * @param collection - Name of the collection to display
- * @param onCreateRecord - Callback when create button is clicked
- * @param onEditRecord - Callback when record is selected for editing
- * @param onDeleteRecord - Callback when record is selected for deletion
  */
-export function RecordsView({
-  collection,
-  onCreateRecord,
-  onEditRecord,
-  onDeleteRecord,
-}: RecordsViewProps) {
+export function RecordsView({ collection }: RecordsViewProps) {
   const [page, setPage] = useState(1);
   const perPage = 30;
 
@@ -41,7 +34,95 @@ export function RecordsView({
   );
   const { fields, loading: fieldsLoading } = useCollectionFields(collection);
 
+  // Sheet state
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Delete dialog state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingRecord, setDeletingRecord] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const totalPages = Math.ceil(totalItems / perPage);
+
+  // Handle create
+  const handleCreate = () => {
+    setEditingRecord(null);
+    setSheetOpen(true);
+  };
+
+  // Handle edit
+  const handleEdit = (record: Record<string, unknown>) => {
+    setEditingRecord(record);
+    setSheetOpen(true);
+  };
+
+  // Handle delete click
+  const handleDeleteClick = (record: Record<string, unknown>) => {
+    setDeletingRecord(record);
+    setDeleteOpen(true);
+  };
+
+  // Submit create/edit
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    setSaving(true);
+    try {
+      if (editingRecord) {
+        // Update existing record
+        await fetchWithAuth(
+          `/api/collections/${collection}/records/${editingRecord.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(data),
+          }
+        );
+        toast.success("Record updated successfully");
+      } else {
+        // Create new record
+        await fetchWithAuth(`/api/collections/${collection}/records`, {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+        toast.success("Record created successfully");
+      }
+      setSheetOpen(false);
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Confirm delete
+  const handleDeleteConfirm = async () => {
+    if (!deletingRecord) return;
+
+    setDeleting(true);
+    try {
+      await fetchWithAuth(
+        `/api/collections/${collection}/records/${deletingRecord.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      toast.success("Record deleted successfully");
+      setDeleteOpen(false);
+      setDeletingRecord(null);
+      refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (error) {
     return (
@@ -67,7 +148,7 @@ export function RecordsView({
             </>
           )}
         </div>
-        <Button onClick={onCreateRecord}>
+        <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
           New Record
         </Button>
@@ -78,9 +159,9 @@ export function RecordsView({
         records={records}
         fields={fields}
         loading={loading || fieldsLoading}
-        onEdit={onEditRecord}
-        onDelete={onDeleteRecord}
-        onRowClick={onEditRecord}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+        onRowClick={handleEdit}
       />
 
       {/* Pagination */}
@@ -111,6 +192,27 @@ export function RecordsView({
           </div>
         </div>
       )}
+
+      {/* Record form sheet */}
+      <RecordSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        collection={collection}
+        fields={fields}
+        fieldsLoading={fieldsLoading}
+        record={editingRecord}
+        onSubmit={handleSubmit}
+        loading={saving}
+      />
+
+      {/* Delete confirmation */}
+      <DeleteConfirmation
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={handleDeleteConfirm}
+        recordId={(deletingRecord?.id as string) ?? ""}
+        loading={deleting}
+      />
     </div>
   );
 }

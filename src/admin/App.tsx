@@ -10,7 +10,6 @@ import { LoginPage } from "@/components/views/LoginPage";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { RecordsView } from "@/components/records/RecordsView";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 
 type View = { type: "dashboard" } | { type: "collection"; collection: string };
 
@@ -44,19 +43,6 @@ export default function App() {
     }
   };
 
-  // Record action handlers (placeholders for now)
-  const handleCreateRecord = () => {
-    toast.info("Create record form coming in next plan");
-  };
-
-  const handleEditRecord = (record: Record<string, unknown>) => {
-    toast.info(`Edit record ${record.id} - coming in next plan`);
-  };
-
-  const handleDeleteRecord = (record: Record<string, unknown>) => {
-    toast.info(`Delete record ${record.id} - coming in next plan`);
-  };
-
   return (
     <Layout
       currentCollection={view.type === "collection" ? view.collection : undefined}
@@ -70,12 +56,7 @@ export default function App() {
         />
       )}
       {view.type === "collection" && (
-        <RecordsView
-          collection={view.collection}
-          onCreateRecord={handleCreateRecord}
-          onEditRecord={handleEditRecord}
-          onDeleteRecord={handleDeleteRecord}
-        />
+        <RecordsView collection={view.collection} />
       )}
     </Layout>
   );
