@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2025-01-24)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** Phase 3 - Query Capabilities
+**Current focus:** Phase 4 - CLI Tooling (phase 3 complete)
 
 ## Current Position
 
-Phase: 3 of 8 (Query Capabilities)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2025-01-25 - Completed 03-01-PLAN.md (Query Builder)
+Phase: 3 of 8 (Query Capabilities) - COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-25 - Completed 03-02-PLAN.md (Query Integration)
 
-Progress: [========            ] 21% (5/24 plans)
+Progress: [=========           ] 25% (6/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 3m 10s
-- Total execution time: 15m 58s
+- Total execution time: 19m 10s
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [========            ] 21% (5/24 plans)
 |-------|-------|-------|----------|
 | 01-core-foundation | 3 | 10m 47s | 3m 35s |
 | 02-rest-api-generation | 1 | 2m | 2m |
-| 03-query-capabilities | 1 | 3m 11s | 3m 11s |
+| 03-query-capabilities | 2 | 6m 23s | 3m 11s |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3m 44s), 01-03 (4m 49s), 02-01 (2m), 03-01 (3m 11s)
+- Last 5 plans: 01-03 (4m 49s), 02-01 (2m), 03-01 (3m 11s), 03-02 (3m 12s)
 - Trend: Stable around 3m per plan
 
 *Updated after each plan completion*
@@ -64,6 +64,9 @@ Recent decisions affecting current work:
 - LIKE escapes %, _, \\ characters using ESCAPE '\\' clause
 - Pagination is 1-indexed with offset = (page - 1) * perPage
 - perPage bounded: min 1, max 500, default 30
+- Expand object only added to records that have expanded relations (not empty)
+- Single ! suffix handles != operator due to URL splitting on =
+- Graceful skip for missing collections/records during expansion
 
 ### Pending Todos
 
@@ -76,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 03-01-PLAN.md (Query Builder)
+Stopped at: Completed 03-02-PLAN.md (Query Integration) - Phase 3 complete
 Resume file: None
