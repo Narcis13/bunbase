@@ -140,10 +140,13 @@ Plans:
   1. Admin can create a new collection with fields through the UI
   2. Admin can add, edit, and remove fields on existing collections through the UI
   3. Schema changes take effect immediately without restart
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 07-01: TBD
+- [ ] 07-01-PLAN.md - Backend API routes for schema mutation (POST/PATCH/DELETE collections and fields)
+- [ ] 07-02-PLAN.md - Select component, schema API functions, and useSchema hook
+- [ ] 07-03-PLAN.md - Schema UI components (FieldsTable, FieldForm, FieldSheet, SchemaView)
+- [ ] 07-04-PLAN.md - App integration with navigation and create collection sheet
 
 ---
 
@@ -178,7 +181,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Lifecycle Hooks | 2/2 | Complete | 2025-01-25 |
 | 5. Admin Authentication | 2/2 | Complete | 2025-01-25 |
 | 6. Admin UI Records | 5/5 | Complete | 2026-01-26 |
-| 7. Admin UI Schema Editor | 0/1 | Not started | - |
+| 7. Admin UI Schema Editor | 0/4 | Planned | - |
 | 8. Single Binary Packaging | 0/2 | Not started | - |
 
 ---
@@ -262,3 +265,4 @@ All 44 requirements mapped: Yes
 *Phase 5 complete: 2025-01-25*
 *Phase 6 planned: 2025-01-25*
 *Phase 6 complete: 2026-01-26*
+*Phase 7 planned: 2026-01-26*
