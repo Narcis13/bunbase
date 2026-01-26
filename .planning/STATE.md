@@ -2,149 +2,71 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2025-01-24)
+See: .planning/PROJECT.md (updated 2026-01-26)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** PROJECT COMPLETE
+**Current focus:** v0.1 SHIPPED — Planning next milestone
 
 ## Current Position
 
-Phase: 8 of 8 (Single Binary Packaging)
-Plan: 2 of 2 in current phase
-Status: COMPLETE
-Last activity: 2026-01-26 - Completed 08-02-PLAN.md
+Phase: v0.1 complete
+Plan: All 21 plans complete
+Status: MILESTONE SHIPPED
+Last activity: 2026-01-26 — v0.1 milestone archived
 
-Progress: [========================================] 100% (21/21 plans)
+Progress: [========================================] 100% (v0.1: 8 phases, 21 plans)
 
-## Performance Metrics
+## v0.1 Milestone Summary
 
-**Velocity:**
-- Total plans completed: 21
-- Average duration: 2m 43s
-- Total execution time: 57m 17s
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-core-foundation | 3 | 10m 47s | 3m 35s |
-| 02-rest-api-generation | 1 | 2m | 2m |
-| 03-query-capabilities | 2 | 6m 23s | 3m 11s |
-| 04-lifecycle-hooks | 2 | 6m 28s | 3m 14s |
-| 05-admin-authentication | 2 | 5m | 2m 30s |
-| 06-admin-ui-records | 5 | 14m 18s | 2m 51s |
-| 07-admin-ui-schema-editor | 4 | 9m 18s | 2m 19s |
-| 08-single-binary-packaging | 2 | 3m 3s | 1m 31s |
-
-**Recent Trend:**
-- Last 5 plans: 07-03 (2m 33s), 07-04 (3m), 08-01 (1m 3s), 08-02 (2m)
-- Trend: Fast execution throughout
-
-*Project complete*
-
-## Accumulated Context
-
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Use bun:sqlite directly with strict: true for parameter safety
-- Store schema in _collections/_fields tables, not code files (schema-in-database pattern)
-- Use nanoid for 21-char URL-safe IDs instead of UUID
-- Map all field types to TEXT except number (REAL) and boolean (INTEGER)
-- Use 12-step shadow table migration for column removal and type changes
-- Integrate migrations module with schema manager (not inline SQL)
-- Throw errors for not-found resources rather than silent nulls
-- Validators exclude system fields (handled by records module)
-- Relation validation checks both collection and record existence
-- JSON fields stored as strings in SQLite for portability
-- Partial validation for updates (required fields made optional)
-- Use Bun.serve() routes object for declarative HTTP routing
-- Error mapping: not found->404, validation failed->400, already exists->409
-- List endpoint returns {items, totalItems} object format
-- DELETE returns 204 No Content with null body
-- URL operators parsed from key suffix (field> becomes operator >) due to URL splitting on =
-- System fields (id, created_at, updated_at) always valid for filtering/sorting
-- LIKE escapes %, _, \\ characters using ESCAPE '\\' clause
-- Pagination is 1-indexed with offset = (page - 1) * perPage
-- perPage bounded: min 1, max 500, default 30
-- Expand object only added to records that have expanded relations (not empty)
-- Single ! suffix handles != operator due to URL splitting on =
-- Graceful skip for missing collections/records during expansion
-- Use PocketBase-style middleware pattern with next() for hook chaining
-- Global handlers (undefined collection) run for all collections
-- Handlers execute in registration order (FIFO)
-- Not calling next() silently stops chain (no error)
-- Throwing in handler stops chain and propagates error
-- Default error status 400 for application errors (was 500)
-- Request context built from Request (method, path, headers)
-- After hooks swallow errors (console.error only)
-- Use Bun.password.hash with argon2id algorithm for admin passwords
-- JWT tokens use HS256 with 24h expiry via jose library
-- JWT_SECRET environment variable required (fail fast if missing)
-- requireAdmin returns Admin | Response union type for middleware pattern
-- Auth routes under /_/api/auth namespace
-- Initial admin: admin@bunbase.local with generated password if BUNBASE_ADMIN_PASSWORD not set
-- Use Tailwind CSS v4 with CSS-based configuration (not tailwind.config.js)
-- Use shadcn/ui copy-paste pattern (not npm package)
-- Use @/* path alias for component imports
-- Serve admin at /_/ routes to match existing auth routes
-- State-based routing using React useState instead of router library
-- Collections grouped as system (prefixed with _) vs user in sidebar
-- Record count displayed as badge on each collection in sidebar
-- Dashboard separates system collections (smaller section at bottom) from user collections (main grid)
-- Dashboard uses navigation callback prop for collection card clicks
-- TanStack Table for headless data table with dynamic columns
-- Fields fetched via separate endpoint for column generation
-- 30 records per page default with pagination controls
-- DynamicField handles all 6 field types with appropriate inputs
-- RecordSheet contains RecordForm in slide-over panel
-- RecordsView self-contained for all CRUD operations
-- Select component follows shadcn copy-paste pattern with Radix primitives
-- Schema API functions use existing fetchWithAuth pattern
-- useSchema hook provides fields/loading/error/refetch interface
-- Field type badges use color coding for visual distinction
-- FieldForm validates reserved names (id, created_at, updated_at)
-- Relation target selector filters out current collection
-- onRefreshCollections callback pattern for sidebar updates after field mutations
-- CreateCollectionSheet validates collection name (alphanumeric + underscore, no _ prefix)
-- Settings icon shows on collection hover for schema editor access
-- Creating collection navigates directly to schema editor
-- Schema view state added to App.tsx routing
-- Use Node's util.parseArgs for zero-dependency CLI argument parsing
-- Use Bun.argv.slice(2) for argument array (skip bun and script path)
-- Exit code 1 for invalid arguments with clean error message
-- Build script uses src/cli.ts entry point with --minify flag
-- Binary output named 'bunbase' without extension
-
-### Pending Todos
-
-None - project complete.
-
-### Blockers/Concerns
-
-None - all requirements verified.
-
-## Session Continuity
-
-Last session: 2026-01-26
-Stopped at: PROJECT COMPLETE - All 8 phases executed
-Resume file: None
-
-## Project Completion Summary
-
-BunBase is now a fully functional backend-in-a-box:
+BunBase v0.1 shipped as a fully functional backend-in-a-box:
 
 1. **Build:** `bun run build` produces 56MB single binary
 2. **Deploy:** Copy single file to any server
 3. **Run:** `./bunbase --port 8090 --db app.db`
 4. **Admin:** Access at http://localhost:8090/_/
 
-Features delivered:
+**Features delivered:**
 - Schema-in-database with dynamic REST API generation
 - Full CRUD with filtering, sorting, pagination, expansion
 - Lifecycle hooks (before/after create/update/delete)
 - JWT admin authentication with argon2id passwords
 - React admin UI with schema editor and record management
 - Single binary deployment with zero runtime dependencies
+
+**Stats:**
+- 44/44 requirements shipped
+- 209 automated tests
+- 8 phases, 21 plans
+- 3 days from init to ship
+
+## Accumulated Context
+
+### Decisions
+
+Full decision log in PROJECT.md Key Decisions table.
+All v0.1 decisions marked as ✓ Good.
+
+### Pending Todos
+
+None for v0.1.
+
+### Blockers/Concerns
+
+None — milestone complete.
+
+## Session Continuity
+
+Last session: 2026-01-26
+Stopped at: v0.1 MILESTONE COMPLETE
+Resume file: None
+
+## Next Steps
+
+Start next milestone with `/gsd:new-milestone`:
+- User authentication (email/password)
+- OAuth integration
+- Realtime/SSE subscriptions
+- File uploads
+
+---
+*State updated: 2026-01-26 after v0.1 milestone completion*
