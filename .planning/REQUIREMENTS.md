@@ -120,53 +120,53 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMAIL-01 | TBD | Pending |
-| EMAIL-02 | TBD | Pending |
-| EMAIL-03 | TBD | Pending |
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| AUTH-05 | TBD | Pending |
-| AUTH-06 | TBD | Pending |
-| AUTH-07 | TBD | Pending |
-| AUTH-08 | TBD | Pending |
-| AUTH-09 | TBD | Pending |
-| AUTH-10 | TBD | Pending |
-| AUTH-11 | TBD | Pending |
-| FILE-01 | TBD | Pending |
-| FILE-02 | TBD | Pending |
-| FILE-03 | TBD | Pending |
-| FILE-04 | TBD | Pending |
-| FILE-05 | TBD | Pending |
-| FILE-06 | TBD | Pending |
-| FILE-07 | TBD | Pending |
-| FILE-08 | TBD | Pending |
-| FILE-09 | TBD | Pending |
-| FILE-10 | TBD | Pending |
-| SSE-01 | TBD | Pending |
-| SSE-02 | TBD | Pending |
-| SSE-03 | TBD | Pending |
-| SSE-04 | TBD | Pending |
-| SSE-05 | TBD | Pending |
-| SSE-06 | TBD | Pending |
-| SSE-07 | TBD | Pending |
-| SSE-08 | TBD | Pending |
-| SSE-09 | TBD | Pending |
-| SSE-10 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
-| UI-05 | TBD | Pending |
-| UI-06 | TBD | Pending |
-| UI-07 | TBD | Pending |
+| EMAIL-01 | Phase 9 | Pending |
+| EMAIL-02 | Phase 9 | Pending |
+| EMAIL-03 | Phase 9 | Pending |
+| AUTH-01 | Phase 10 | Pending |
+| AUTH-02 | Phase 10 | Pending |
+| AUTH-03 | Phase 10 | Pending |
+| AUTH-04 | Phase 10 | Pending |
+| AUTH-05 | Phase 10 | Pending |
+| AUTH-06 | Phase 10 | Pending |
+| AUTH-07 | Phase 10 | Pending |
+| AUTH-08 | Phase 10 | Pending |
+| AUTH-09 | Phase 10 | Pending |
+| AUTH-10 | Phase 10 | Pending |
+| AUTH-11 | Phase 10 | Pending |
+| FILE-01 | Phase 11 | Pending |
+| FILE-02 | Phase 11 | Pending |
+| FILE-03 | Phase 11 | Pending |
+| FILE-04 | Phase 11 | Pending |
+| FILE-05 | Phase 11 | Pending |
+| FILE-06 | Phase 11 | Pending |
+| FILE-07 | Phase 11 | Pending |
+| FILE-08 | Phase 11 | Pending |
+| FILE-09 | Phase 11 | Pending |
+| FILE-10 | Phase 11 | Pending |
+| SSE-01 | Phase 12 | Pending |
+| SSE-02 | Phase 12 | Pending |
+| SSE-03 | Phase 12 | Pending |
+| SSE-04 | Phase 12 | Pending |
+| SSE-05 | Phase 12 | Pending |
+| SSE-06 | Phase 12 | Pending |
+| SSE-07 | Phase 12 | Pending |
+| SSE-08 | Phase 12 | Pending |
+| SSE-09 | Phase 12 | Pending |
+| SSE-10 | Phase 12 | Pending |
+| UI-01 | Phase 13 | Pending |
+| UI-02 | Phase 13 | Pending |
+| UI-03 | Phase 13 | Pending |
+| UI-04 | Phase 13 | Pending |
+| UI-05 | Phase 13 | Pending |
+| UI-06 | Phase 13 | Pending |
+| UI-07 | Phase 13 | Pending |
 
 **Coverage:**
-- v0.2 requirements: 38 total
-- Mapped to phases: 0
-- Unmapped: 38 (pending roadmap)
+- v0.2 requirements: 41 total
+- Mapped to phases: 41
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-26*
-*Last updated: 2026-01-26 after initial definition*
+*Last updated: 2026-01-26 after roadmap creation*
