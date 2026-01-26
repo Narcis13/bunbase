@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-24)
 ## Current Position
 
 Phase: 8 of 8 (Single Binary Packaging)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-01-26 - Phase 7 complete
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-26 - Completed 08-01-PLAN.md
 
-Progress: [===================================] 79% (19/24 plans)
+Progress: [====================================] 83% (20/24 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19
-- Average duration: 2m 51s
-- Total execution time: 54m 14s
+- Total plans completed: 20
+- Average duration: 2m 45s
+- Total execution time: 55m 17s
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [===================================] 79% (19/24 plans)
 | 05-admin-authentication | 2 | 5m | 2m 30s |
 | 06-admin-ui-records | 5 | 14m 18s | 2m 51s |
 | 07-admin-ui-schema-editor | 4 | 9m 18s | 2m 19s |
+| 08-single-binary-packaging | 1 | 1m 3s | 1m 3s |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (2m), 07-02 (1m 45s), 07-03 (2m 33s), 07-04 (3m)
-- Trend: Consistent fast execution, Phase 7 complete
+- Last 5 plans: 07-02 (1m 45s), 07-03 (2m 33s), 07-04 (3m), 08-01 (1m 3s)
+- Trend: Fast execution continues
 
 *Updated after each plan completion*
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - Settings icon shows on collection hover for schema editor access
 - Creating collection navigates directly to schema editor
 - Schema view state added to App.tsx routing
+- Use Node's util.parseArgs for zero-dependency CLI argument parsing
+- Use Bun.argv.slice(2) for argument array (skip bun and script path)
+- Exit code 1 for invalid arguments with clean error message
 
 ### Pending Todos
 
@@ -123,5 +127,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 07-04-PLAN.md (schema editor integration) - Phase 7 complete
+Stopped at: Completed 08-01-PLAN.md (CLI entry point)
 Resume file: None
