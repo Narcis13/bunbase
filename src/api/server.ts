@@ -478,3 +478,8 @@ export async function startServer(
   console.log(`BunBase running at http://localhost:${port}`);
   return server;
 }
+
+// Start server when run directly
+if (import.meta.main) {
+  startServer();
+}
