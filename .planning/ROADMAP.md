@@ -160,11 +160,11 @@ Plans:
   3. Binary runs standalone with no runtime dependencies
   4. Server starts on port 8090 by default (configurable via --port flag)
   5. SQLite database file is created automatically on first run
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md - CLI entry point with argument parsing (--port, --db, --help)
+- [ ] 08-02-PLAN.md - Build configuration and binary verification
 
 ---
 
