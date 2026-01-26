@@ -24,6 +24,13 @@
 
 **Dependencies:** None (foundational for Phase 10)
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Config types and template utilities
+- [ ] 09-02-PLAN.md — Nodemailer transport and sendEmail function
+- [ ] 09-03-PLAN.md — CLI integration and tests
+
 **Requirements:**
 - EMAIL-01: SMTP configuration (host, port, user, password) via CLI flags or env vars
 - EMAIL-02: Send email function with to, subject, body (HTML and plain text)
@@ -169,3 +176,4 @@ Phase 9 (Email) ──┐
 
 ---
 *Roadmap created: 2026-01-26*
+*Phase 9 planned: 2026-01-27*
