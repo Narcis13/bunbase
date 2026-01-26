@@ -1,0 +1,172 @@
+# Requirements: BunBase v0.2
+
+**Defined:** 2026-01-26
+**Core Value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
+
+## v0.2 Requirements
+
+Requirements for User Authentication, Files & Realtime milestone. Each maps to roadmap phases.
+
+### Email Service
+
+- [ ] **EMAIL-01**: SMTP configuration (host, port, user, password) via CLI flags or env vars
+- [ ] **EMAIL-02**: Send email function with to, subject, body (HTML and plain text)
+- [ ] **EMAIL-03**: Template placeholders for tokens/links in email body
+
+### User Authentication
+
+- [ ] **AUTH-01**: Auth collection type with special fields (email, password_hash, verified, created, updated)
+- [ ] **AUTH-02**: User can sign up with email and password
+- [ ] **AUTH-03**: User can log in with email and password, receives JWT token
+- [ ] **AUTH-04**: User can refresh token to extend session
+- [ ] **AUTH-05**: User can request email verification (sends verification email)
+- [ ] **AUTH-06**: User can confirm email verification with token
+- [ ] **AUTH-07**: User can request password reset (sends reset email)
+- [ ] **AUTH-08**: User can confirm password reset with token and new password
+- [ ] **AUTH-09**: Password validation (minimum length, complexity rules)
+- [ ] **AUTH-10**: Auth middleware for user routes (verify user JWT)
+- [ ] **AUTH-11**: Collection-level auth rules (who can create, read, update, delete records)
+
+### File Uploads
+
+- [ ] **FILE-01**: File field type in schema definition
+- [ ] **FILE-02**: Multipart upload via records API (create and update)
+- [ ] **FILE-03**: Local filesystem storage in `{data_dir}/storage/{collection}/{record}/`
+- [ ] **FILE-04**: File serving endpoint `GET /api/files/{collection}/{record}/{filename}`
+- [ ] **FILE-05**: Filename sanitization (remove special chars, add random suffix)
+- [ ] **FILE-06**: Configurable file size limit (default 10MB)
+- [ ] **FILE-07**: MIME type validation (allowed types per field)
+- [ ] **FILE-08**: Multiple files per field support
+- [ ] **FILE-09**: File deletion when record is deleted (cleanup via hook)
+- [ ] **FILE-10**: File URL generation helper in API responses
+
+### Realtime/SSE
+
+- [ ] **SSE-01**: SSE connection endpoint `GET /api/realtime`
+- [ ] **SSE-02**: Client ID assignment sent on connect (`PB_CONNECT` event)
+- [ ] **SSE-03**: Subscribe to collection changes (`POST /api/realtime` with subscriptions)
+- [ ] **SSE-04**: Subscribe to specific record changes
+- [ ] **SSE-05**: Create events broadcast to subscribers
+- [ ] **SSE-06**: Update events broadcast to subscribers
+- [ ] **SSE-07**: Delete events broadcast to subscribers
+- [ ] **SSE-08**: Unsubscribe from topics
+- [ ] **SSE-09**: Connection keep-alive (periodic ping)
+- [ ] **SSE-10**: Auto-disconnect inactive connections (5 min timeout)
+
+### UI Polish
+
+- [ ] **UI-01**: Loading states with spinners during async operations
+- [ ] **UI-02**: Error toast notifications on failures
+- [ ] **UI-03**: Success toast confirmations on actions
+- [ ] **UI-04**: Form validation feedback with inline errors
+- [ ] **UI-05**: Consistent spacing throughout admin UI
+- [ ] **UI-06**: Keyboard navigation for forms and tables
+- [ ] **UI-07**: Responsive layout refinements for tablet/mobile
+
+## Future Requirements (v0.3+)
+
+Deferred to later milestones. Tracked but not in current roadmap.
+
+### OAuth
+
+- **OAUTH-01**: Google OAuth login
+- **OAUTH-02**: GitHub OAuth login
+- **OAUTH-03**: OAuth provider configuration in admin UI
+
+### Advanced Files
+
+- **AFILE-01**: Image thumbnail generation
+- **AFILE-02**: Protected files (require auth token)
+- **AFILE-03**: S3-compatible storage backend
+
+### Advanced Realtime
+
+- **ASSE-01**: Auth-aware subscriptions (filter by user permissions)
+- **ASSE-02**: Custom event broadcast API from hooks
+- **ASSE-03**: WebSocket alternative
+
+### Advanced Auth
+
+- **AAUTH-01**: Username + password login
+- **AAUTH-02**: Magic link authentication
+- **AAUTH-03**: Session management UI
+- **AAUTH-04**: User impersonation
+
+### Additional Field Types
+
+- **FIELD-01**: Unique field constraint
+- **FIELD-02**: Select field type (predefined options)
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| MFA/TOTP | Advanced security feature, overkill for v0.2 |
+| SAML/SSO | Enterprise feature, complex setup |
+| SMS/phone auth | Requires SMS gateway, email sufficient |
+| Video transcoding | Heavy processing, ffmpeg dependency |
+| Chunked uploads | Use file size limits instead |
+| Message queuing for SSE | Direct dispatch sufficient for v0.2 |
+| Presence detection | App-level feature, not core BaaS |
+| Theme customization | Single dark theme sufficient |
+| Multi-language i18n | English only for v0.2 |
+| Dashboard charts/widgets | Simple stats sufficient |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| EMAIL-01 | TBD | Pending |
+| EMAIL-02 | TBD | Pending |
+| EMAIL-03 | TBD | Pending |
+| AUTH-01 | TBD | Pending |
+| AUTH-02 | TBD | Pending |
+| AUTH-03 | TBD | Pending |
+| AUTH-04 | TBD | Pending |
+| AUTH-05 | TBD | Pending |
+| AUTH-06 | TBD | Pending |
+| AUTH-07 | TBD | Pending |
+| AUTH-08 | TBD | Pending |
+| AUTH-09 | TBD | Pending |
+| AUTH-10 | TBD | Pending |
+| AUTH-11 | TBD | Pending |
+| FILE-01 | TBD | Pending |
+| FILE-02 | TBD | Pending |
+| FILE-03 | TBD | Pending |
+| FILE-04 | TBD | Pending |
+| FILE-05 | TBD | Pending |
+| FILE-06 | TBD | Pending |
+| FILE-07 | TBD | Pending |
+| FILE-08 | TBD | Pending |
+| FILE-09 | TBD | Pending |
+| FILE-10 | TBD | Pending |
+| SSE-01 | TBD | Pending |
+| SSE-02 | TBD | Pending |
+| SSE-03 | TBD | Pending |
+| SSE-04 | TBD | Pending |
+| SSE-05 | TBD | Pending |
+| SSE-06 | TBD | Pending |
+| SSE-07 | TBD | Pending |
+| SSE-08 | TBD | Pending |
+| SSE-09 | TBD | Pending |
+| SSE-10 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+| UI-04 | TBD | Pending |
+| UI-05 | TBD | Pending |
+| UI-06 | TBD | Pending |
+| UI-07 | TBD | Pending |
+
+**Coverage:**
+- v0.2 requirements: 38 total
+- Mapped to phases: 0
+- Unmapped: 38 (pending roadmap)
+
+---
+*Requirements defined: 2026-01-26*
+*Last updated: 2026-01-26 after initial definition*
