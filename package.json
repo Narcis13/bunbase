@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build --compile src/index.ts --outfile bunbase",
+    "build": "bun build --compile --minify src/cli.ts --outfile bunbase",
     "typecheck": "bun run --bun tsc --noEmit"
   },
   "devDependencies": {
