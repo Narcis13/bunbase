@@ -24,10 +24,16 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 
 ### Active
 
-- [ ] User authentication (email/password sign up/login)
+**Current Milestone: v0.2 — User Authentication, Files & Realtime**
+
+- [ ] User authentication (email/password signup, login, password reset, sessions)
+- [ ] File uploads with local filesystem storage
+- [ ] Realtime/SSE subscriptions for record changes
+- [ ] Admin UI visual polish (styling, animations, responsive design)
+
+**Deferred to v0.3+:**
+
 - [ ] OAuth login (Google, GitHub)
-- [ ] Realtime/SSE subscriptions
-- [ ] File/image uploads with local storage
 - [ ] Unique field constraints
 - [ ] Select field type (predefined options)
 
@@ -95,4 +101,4 @@ Minor items to address in v0.2:
 - CSS warnings during build (cosmetic, no functional impact)
 
 ---
-*Last updated: 2026-01-26 after v0.1 milestone*
+*Last updated: 2026-01-26 after starting v0.2 milestone*
