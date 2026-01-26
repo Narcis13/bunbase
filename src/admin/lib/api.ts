@@ -89,3 +89,174 @@ export function logout(): void {
 export function isAuthenticated(): boolean {
   return !!localStorage.getItem("bunbase_token");
 }
+
+// ============================================================================
+// Schema API Functions
+// ============================================================================
+
+/**
+ * Field input type for creating/updating fields.
+ */
+export interface FieldInput {
+  name: string;
+  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation";
+  required?: boolean;
+  options?: { target?: string } | null;
+}
+
+/**
+ * Field type returned from API.
+ */
+export interface Field {
+  id: string;
+  collection_id: string;
+  name: string;
+  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation";
+  required: boolean;
+  options: { target?: string } | null;
+  created_at: string;
+}
+
+/**
+ * Collection type returned from API.
+ */
+export interface Collection {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  fieldCount?: number;
+  recordCount?: number;
+}
+
+/**
+ * Create a new collection with optional fields.
+ *
+ * @param name - Collection name (must start with letter, alphanumeric + underscore)
+ * @param fields - Optional array of field definitions
+ * @returns Created collection
+ */
+export async function createCollection(
+  name: string,
+  fields: FieldInput[] = []
+): Promise<Collection> {
+  const response = await fetchWithAuth("/_/api/collections", {
+    method: "POST",
+    body: JSON.stringify({ name, fields }),
+  });
+  return response.json();
+}
+
+/**
+ * Rename a collection.
+ *
+ * @param name - Current collection name
+ * @param newName - New collection name
+ * @returns Updated collection
+ */
+export async function renameCollection(
+  name: string,
+  newName: string
+): Promise<Collection> {
+  const response = await fetchWithAuth(`/_/api/collections/${name}`, {
+    method: "PATCH",
+    body: JSON.stringify({ newName }),
+  });
+  return response.json();
+}
+
+/**
+ * Delete a collection and all its records.
+ *
+ * @param name - Collection name
+ */
+export async function deleteCollection(name: string): Promise<void> {
+  await fetchWithAuth(`/_/api/collections/${name}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Add a field to a collection.
+ *
+ * @param collection - Collection name
+ * @param field - Field definition
+ * @returns Created field
+ */
+export async function addField(
+  collection: string,
+  field: FieldInput
+): Promise<Field> {
+  const response = await fetchWithAuth(
+    `/_/api/collections/${collection}/fields`,
+    {
+      method: "POST",
+      body: JSON.stringify(field),
+    }
+  );
+  return response.json();
+}
+
+/**
+ * Update a field in a collection.
+ *
+ * @param collection - Collection name
+ * @param fieldName - Current field name
+ * @param updates - Fields to update
+ * @returns Updated field
+ */
+export async function updateField(
+  collection: string,
+  fieldName: string,
+  updates: Partial<FieldInput>
+): Promise<Field> {
+  const response = await fetchWithAuth(
+    `/_/api/collections/${collection}/fields/${fieldName}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    }
+  );
+  return response.json();
+}
+
+/**
+ * Delete a field from a collection.
+ *
+ * @param collection - Collection name
+ * @param fieldName - Field name
+ */
+export async function deleteField(
+  collection: string,
+  fieldName: string
+): Promise<void> {
+  await fetchWithAuth(
+    `/_/api/collections/${collection}/fields/${fieldName}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+/**
+ * Fetch fields for a collection.
+ *
+ * @param collection - Collection name
+ * @returns Array of fields
+ */
+export async function fetchFields(collection: string): Promise<Field[]> {
+  const response = await fetchWithAuth(
+    `/_/api/collections/${collection}/fields`
+  );
+  return response.json();
+}
+
+/**
+ * Fetch all collections.
+ *
+ * @returns Array of collections with field and record counts
+ */
+export async function fetchCollections(): Promise<Collection[]> {
+  const response = await fetchWithAuth("/_/api/collections");
+  return response.json();
+}
