@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build --compile --minify src/cli.ts --outfile bunbase",
+    "build:admin": "bun scripts/build-admin.ts",
+    "build": "bun run build:admin && bun build --compile --minify src/cli.ts --outfile bunbase",
     "typecheck": "bun run --bun tsc --noEmit"
   },
   "devDependencies": {
