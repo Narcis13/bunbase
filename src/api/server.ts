@@ -14,7 +14,16 @@ import {
   updateRecordWithHooks,
   deleteRecordWithHooks,
 } from "../core/records";
-import { getAllCollections, getFields } from "../core/schema";
+import {
+  getAllCollections,
+  getFields,
+  createCollection,
+  updateCollection,
+  deleteCollection,
+  addField,
+  updateField,
+  removeField,
+} from "../core/schema";
 import { getDatabase } from "../core/database";
 import { parseQueryOptions } from "../core/query";
 import { HookManager } from "../core/hooks";
@@ -243,6 +252,42 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
       },
 
       // Collections API for admin UI
+      "/_/api/collections/:name/fields/:fieldName": {
+        /**
+         * PATCH /_/api/collections/:name/fields/:fieldName
+         * Update a field in a collection (requires admin auth)
+         */
+        PATCH: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name, fieldName } = req.params;
+          try {
+            const updates = await req.json();
+            const field = updateField(name, fieldName, updates);
+            return Response.json(field);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+        /**
+         * DELETE /_/api/collections/:name/fields/:fieldName
+         * Remove a field from a collection (requires admin auth)
+         */
+        DELETE: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name, fieldName } = req.params;
+          try {
+            removeField(name, fieldName);
+            return new Response(null, { status: 204 });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
       "/_/api/collections/:name/fields": {
         /**
          * GET /_/api/collections/:name/fields
@@ -256,6 +301,70 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
           try {
             const fields = getFields(name);
             return Response.json(fields);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+        /**
+         * POST /_/api/collections/:name/fields
+         * Add a field to a collection (requires admin auth)
+         */
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            const fieldData = await req.json();
+            if (!fieldData.name || !fieldData.type) {
+              return errorResponse("Field name and type are required", 400);
+            }
+            const field = addField(name, {
+              name: fieldData.name,
+              type: fieldData.type,
+              required: fieldData.required ?? false,
+              options: fieldData.options ?? null,
+            });
+            return Response.json(field, { status: 201 });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
+      "/_/api/collections/:name": {
+        /**
+         * PATCH /_/api/collections/:name
+         * Rename a collection (requires admin auth)
+         */
+        PATCH: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            const { newName } = await req.json();
+            if (!newName || typeof newName !== "string") {
+              return errorResponse("New collection name is required", 400);
+            }
+            const collection = updateCollection(name, newName);
+            return Response.json(collection);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+        /**
+         * DELETE /_/api/collections/:name
+         * Delete a collection and its data (requires admin auth)
+         */
+        DELETE: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            deleteCollection(name);
+            return new Response(null, { status: 204 });
           } catch (error) {
             const err = error as Error;
             return errorResponse(err.message, mapErrorToStatus(err));
@@ -280,6 +389,25 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
               recordCount: getRecordCount(c.name),
             }));
             return Response.json(result);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+        /**
+         * POST /_/api/collections
+         * Create a new collection with optional fields (requires admin auth)
+         */
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          try {
+            const { name, fields } = await req.json();
+            if (!name || typeof name !== "string") {
+              return errorResponse("Collection name is required", 400);
+            }
+            const collection = createCollection(name, fields || []);
+            return Response.json(collection, { status: 201 });
           } catch (error) {
             const err = error as Error;
             return errorResponse(err.message, mapErrorToStatus(err));
