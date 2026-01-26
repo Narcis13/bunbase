@@ -20,7 +20,7 @@ BunBase delivers a backend-in-a-box alternative to PocketBase. The roadmap build
 - [x] **Phase 4: Lifecycle Hooks** - Before/after CRUD hooks with cancellation support
 - [x] **Phase 5: Admin Authentication** - JWT-based admin login and route protection
 - [x] **Phase 6: Admin UI Records** - Collection browser with record CRUD operations
-- [ ] **Phase 7: Admin UI Schema Editor** - Runtime schema editing through web interface
+- [x] **Phase 7: Admin UI Schema Editor** - Runtime schema editing through web interface
 - [ ] **Phase 8: Single Binary Packaging** - Compile to standalone executable with embedded UI
 
 ## Phase Details
@@ -143,10 +143,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 07-01-PLAN.md - Backend API routes for schema mutation (POST/PATCH/DELETE collections and fields)
-- [ ] 07-02-PLAN.md - Select component, schema API functions, and useSchema hook
-- [ ] 07-03-PLAN.md - Schema UI components (FieldsTable, FieldForm, FieldSheet, SchemaView)
-- [ ] 07-04-PLAN.md - App integration with navigation and create collection sheet
+- [x] 07-01-PLAN.md - Backend API routes for schema mutation (POST/PATCH/DELETE collections and fields)
+- [x] 07-02-PLAN.md - Select component, schema API functions, and useSchema hook
+- [x] 07-03-PLAN.md - Schema UI components (FieldsTable, FieldForm, FieldSheet, SchemaView)
+- [x] 07-04-PLAN.md - App integration with navigation and create collection sheet
 
 ---
 
@@ -181,7 +181,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Lifecycle Hooks | 2/2 | Complete | 2025-01-25 |
 | 5. Admin Authentication | 2/2 | Complete | 2025-01-25 |
 | 6. Admin UI Records | 5/5 | Complete | 2026-01-26 |
-| 7. Admin UI Schema Editor | 0/4 | Planned | - |
+| 7. Admin UI Schema Editor | 4/4 | Complete | 2026-01-26 |
 | 8. Single Binary Packaging | 0/2 | Not started | - |
 
 ---
@@ -266,3 +266,4 @@ All 44 requirements mapped: Yes
 *Phase 6 planned: 2025-01-25*
 *Phase 6 complete: 2026-01-26*
 *Phase 7 planned: 2026-01-26*
+*Phase 7 complete: 2026-01-26*
