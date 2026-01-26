@@ -1,260 +1,353 @@
-# Research Summary: BunBase
+# Research Summary: BunBase v0.2
 
-## One-Liner
-Build a single-binary, PocketBase alternative using Bun's native SQLite and TypeScript ecosystem to deliver auto-generated REST APIs with an embedded React admin UI—zero external dependencies.
+**Project:** BunBase v0.2 - User Authentication, File Uploads, Realtime/SSE
+**Domain:** Backend-in-a-box (BaaS) - extending validated v0.1 foundation
+**Researched:** 2026-01-26
+**Confidence:** HIGH
 
-## Stack (from STACK.md)
-**Runtime:** Bun 1.3.6+ (native SQLite, password hashing, single-binary compilation)
-**Framework:** Hono 4.11.4 (ultrafast router, built-in JWT middleware)
-**Database:** bun:sqlite with Drizzle ORM 0.45.1 (type-safe, zero deps, 3-6x faster than better-sqlite3)
-**Admin UI:** React 19 + Vite 6 + TanStack Router/Query + Tailwind 4 (embedded via make-vfs)
-**Auth:** Bun.password (argon2id) + hono/jwt
-**Validation:** Zod 3.24 + @hono/zod-validator
-**IDs:** nanoid 5.0.9 (21 chars, URL-safe, collision-resistant)
+## Executive Summary
 
-## Table Stakes Features
+BunBase v0.2 builds on a validated foundation (schema-in-database, dynamic REST API, admin auth, single binary) by adding three critical BaaS capabilities: user authentication, file uploads, and realtime subscriptions. Research reveals that Bun's native APIs eliminate the need for most external dependencies, with only nodemailer required for password reset emails. The recommended approach follows PocketBase's proven patterns while leveraging Bun-native features for multipart parsing, file operations, and SSE streaming.
 
-### Schema & Collections
-- Collection CRUD (create, read, update, delete collections)
-- System fields (id, created_at, updated_at)
-- Basic field types: text, number, boolean, datetime, JSON, relation
-- Field validation (required, unique)
-- Indexes for performance
-- Migration system with SQLite-aware shadow table patterns
+The path forward prioritizes user authentication first (foundation for authorization), file uploads second (standalone feature), and realtime/SSE third (most complex, requires hooks integration). This ordering matches dependency chains discovered in architecture research and avoids critical pitfalls around token confusion, file storage paths, and memory leaks. The existing admin auth pattern and lifecycle hooks infrastructure provide solid extension points.
 
-### Auto-Generated REST API
-- CRUD endpoints for all collections (`/api/collections/:collection/records`)
-- List with pagination (page, perPage params)
-- Filtering with operators (`=`, `!=`, `>`, `<`, `~` like, `&&`, `||`)
-- Sorting (ASC/DESC with `-field` prefix)
-- Field selection (return only requested fields)
-- Relation expansion (auto-fetch related records)
+Key risk: BunBase's single-binary architecture requires careful separation of embedded assets (admin UI) from external user data (uploads). File storage must use absolute external paths, never embedded filesystem. Security requires JWT token type discrimination to prevent admin/user token confusion, timing-safe authentication to prevent user enumeration, and permission filtering on realtime events to prevent data leakage.
 
-### Admin UI
-- Collection browser with pagination
-- Record create/edit/delete forms (auto-generated from schema)
-- Schema editor (add/edit/remove fields dynamically)
-- Settings page for app configuration
-- Responsive design
-- Dashboard overview with stats
+## Key Findings
 
-### Authentication (Admin-Only v0.1)
-- Admin login with JWT
-- Session/token management
-- Protected API routes
-- Password change capability
+### Recommended Stack
 
-### Hooks System
-- beforeCreate, afterCreate, beforeUpdate, afterUpdate, beforeDelete, afterDelete
-- Collection-specific hooks
-- Async hook support
-- Middleware-style chain execution
-- Priority-based ordering
+**Minimal additions maximize Bun's native capabilities.** Only one new production dependency is needed: nodemailer for SMTP email delivery (password resets, verification). Everything else leverages Bun's built-in APIs.
 
-## Build Order
+**Stack additions:**
+- **nodemailer ^6.9.0** - Password reset/verification emails via SMTP (user-configurable)
 
-Based on dependency analysis from ARCHITECTURE.md, these phases minimize rework:
+**Bun native features (zero dependencies):**
+- **Request.formData()** - Multipart file upload parsing (no multer needed)
+- **Bun.write() / Bun.file()** - File system operations (native async I/O)
+- **ReadableStream** - SSE streaming (no framework needed)
+- **crypto.randomBytes()** - Reset token generation
+- **Bun.password.hash()** - Extends existing argon2id pattern to users
 
-1. **Database & Schema Foundation** - Core SQLite wrapper, SchemaManager, internal tables (`_collections`, `_fields`, `_migrations`). Enables programmatic collection creation.
+**Existing dependencies (no changes):**
+- **jose ^6.1.3** - JWT tokens (add user token type alongside admin)
+- **nanoid ^5.0.9** - File name generation
+- **zod ^3.24.0** - File validation schemas
 
-2. **Migration System** - Schema evolution with SQLite-aware shadow table pattern (create new, copy data, drop old, rename). Critical to get right early.
+**Explicitly NOT adding:**
+- Hono (v0.1 shipped successfully with raw Bun.serve)
+- multer (Bun native multipart parsing)
+- Redis (in-process pub/sub sufficient)
+- S3/cloud storage (local filesystem for v0.2)
 
-3. **REST API Generator** - Auto-generate CRUD endpoints from schema. Basic list/get/create/update/delete without filters yet. Core value proposition.
+### Expected Features
 
-4. **Filtering, Sorting, Pagination** - Query parameter support (`filter`, `sort`, `page`, `perPage`). Makes API production-ready.
+Research analyzed PocketBase, Supabase, and Appwrite to identify table stakes vs differentiators.
 
-5. **Relation Expansion** - Auto-fetch related records via `expand` parameter. High complexity but expected feature.
+**Must have (table stakes):**
+- Email/password signup and login with JWT sessions
+- Token refresh for persistent login
+- Email verification flow (request + confirm)
+- Password reset flow (request + confirm)
+- File field type with multipart upload
+- Local filesystem storage with serving endpoint
+- File size/type validation
+- SSE connection with collection/record subscriptions
+- Create/update/delete events broadcast to subscribers
+- Automatic reconnection and connection cleanup
 
-6. **Hook Manager + Model Hooks** - Lifecycle hooks (before/after CRUD). Enable extensibility without touching generated code.
+**Should have (differentiators):**
+- Auth-aware subscriptions (apply collection rules to events)
+- Protected files with auth token checking
+- Multiple files per field
+- Loading/transition animations in admin UI
+- Username + email login flexibility
 
-7. **Admin Authentication** - JWT-based admin login, `requireAdmin()` middleware. Secures the system before adding UI.
+**Defer to v0.3+:**
+- OAuth2 providers (significant complexity)
+- S3/cloud storage (adds external dependencies)
+- Image thumbnail generation (requires processing library)
+- WebSocket (SSE sufficient for unidirectional notifications)
+- MFA/TOTP (advanced security)
 
-8. **Admin UI (Collection Browser)** - React app with collection list, record browser, CRUD forms. First visual interface.
+### Architecture Approach
 
-9. **Admin UI (Schema Editor)** - Runtime schema changes through UI. Completes the backend-in-a-box vision.
+**Separation of concerns through system tables and new modules.** User auth follows the proven admin auth pattern with separate `_users` table and distinct JWT token types. File storage uses per-record directories mirroring PocketBase's proven structure. Realtime integrates via existing lifecycle hooks, broadcasting events after successful operations.
 
-10. **Single Binary Compilation** - Embed React assets via make-vfs, compile with `bun build --compile`. Final distribution format.
+**New components:**
+1. **src/auth/users.ts** - User CRUD with timing-safe verification
+2. **src/auth/user-jwt.ts** - User tokens with `type: "user"` claim (prevents admin token confusion)
+3. **src/auth/user-middleware.ts** - requireUser() parallel to requireAdmin()
+4. **src/files/storage.ts** - Local filesystem operations with absolute paths
+5. **src/realtime/sse.ts** - SSE connection management with cleanup
+6. **src/realtime/subscriptions.ts** - In-process pub/sub broker
 
-## Top 5 Pitfalls to Avoid
+**Modified components:**
+- **src/core/database.ts** - Add `_users` table to initialization
+- **src/types/collection.ts** - Add `file` to FieldType enum
+- **src/core/records.ts** - Trigger realtime broadcasts in afterCreate/Update/Delete hooks
+- **src/api/server.ts** - Add user auth routes, file routes, SSE endpoint
 
-1. **SQLite ALTER TABLE Limitations** (High Risk - Phase 1)
-   Prevention: Build migration system with shadow table pattern from day one. Wrap in transactions, generate warnings, implement automatic backups.
+**Data flow after v0.2:**
+```
+Client -> API -> requireAuth() -> records.ts -> database
+              |                             |-> lifecycle hooks -> realtime broadcast
+              |                             |-> file storage (multipart)
+              |
+              +-> /api/realtime (SSE) -> subscription broker
+```
 
-2. **Hook Execution Order Chaos** (High Risk - Phase 6)
-   Prevention: Implement explicit priority system (numeric, lower = first). Require `next()` calls. Log execution order in debug mode.
+### Critical Pitfalls
 
-3. **Embedded Directory Inconsistencies** (High Risk - Phase 10)
-   Prevention: Test compiled binary in isolation. Use explicit file imports with `import ... with { type: "file" }`. Create test suite verifying all assets accessible post-compile.
+Research identified 24 pitfalls across user auth, file uploads, realtime, and integration. Top 5 by risk level:
 
-4. **Hook Error Handling Ambiguity** (High Risk - Phase 6)
-   Prevention: Define clear semantics—`before*` errors cancel operation and rollback; `after*` errors log but operation committed. Provide `ctx.fail(message)` for clean failures.
+1. **JWT Token Type Confusion (HIGH)** - Admin and user tokens must have distinct `type` claims. Without this, user tokens could access admin endpoints if middleware only checks "valid JWT". Prevention: Add `{ type: "admin" | "user" }` to payloads, validate in middleware.
 
-5. **Binary Size Bloat** (High Risk - Phase 1)
-   Prevention: Track binary size from day one in CI. Minify/tree-shake React aggressively. Profile bundles with `bun build --analyze`. Target <80MB for v0.1.
+2. **Relative Path Storage Breaks Binary (HIGH)** - If files stored with relative paths, location depends on working directory. Single binary run from different paths breaks. Prevention: Resolve storage path to absolute on startup, validate it's external filesystem (not `$bunfs`).
 
-## Key Decision Points
+3. **SSE Memory Leak from Unclosed Connections (HIGH)** - Clients disconnect without cleanup leave subscribers in memory. Over time causes OOM. Prevention: Listen to `req.signal` abort event, implement heartbeat cleanup for stale connections.
 
-### During Implementation
+4. **Realtime Events Leak Private Data (HIGH)** - Broadcasting full records without permission checks bypasses API rules. Prevention: Apply same collection rules to SSE events, only send record ID (client fetches with proper auth).
 
-1. **Schema Storage Strategy** - Store schema in database (`_collections`, `_fields` tables), not code files. Enables runtime changes through admin UI.
+5. **Timing Attack on User Enumeration (HIGH)** - Login returns faster for "user not found" vs "wrong password", revealing valid emails. Prevention: Always hash password even when user doesn't exist (dummy hash), return identical error messages.
 
-2. **Synchronous vs Async DB Operations** - Use Bun's synchronous SQLite API (simpler code, faster for single-server). Keep hooks async for external calls.
+Additional critical pitfalls: multipart parsing issues in Bun (use native formData), file type validation (check magic bytes), HTTP/1.1 SSE connection limits (document HTTP/2 requirement), and hook auth context missing (extend BaseHookContext with admin/user).
 
-3. **API Generation Timing** - Generate routes at runtime from database schema, not build time. Prevents schema-code drift.
+## Implications for Roadmap
 
-4. **ID Generation** - Use nanoid (21 chars, URL-safe) for all record IDs. Shorter than UUID, same collision resistance.
+Based on dependency analysis and architecture patterns, recommend 3-phase build order.
 
-5. **Admin UI Embedding** - Use make-vfs to pack React build into single .ts file, then compile. Avoid Bun's beta glob embed patterns.
+### Phase 1: User Authentication (Foundation)
 
-6. **Migration Locking** - Implement optimistic locking with timeouts. Store lock PID/timestamp, expire stale locks. Provide `--force-unlock` CLI.
+**Rationale:** File uploads and realtime both need user context for authorization. Auth provides the foundation for permission-based access. Extends existing admin auth pattern with minimal new concepts.
 
-7. **Cross-Platform Builds** - Build binaries natively on each platform in CI (darwin-arm64, darwin-x64, linux-arm64, linux-x64). Don't rely on cross-compilation.
+**Delivers:**
+- Users can register with email/password
+- Login returns JWT access tokens
+- Email verification flow with SMTP
+- Password reset flow
+- Token refresh for persistent sessions
+- System `_users` table separate from user collections
 
-### Deferred to v0.2+
+**Addresses features:**
+- Email/password signup and login (table stakes)
+- JWT sessions with refresh (table stakes)
+- Email verification request/confirm (table stakes)
+- Password reset request/confirm (table stakes)
 
-- File/image uploads (requires storage layer)
-- User authentication (email/password, OAuth)
-- Realtime/SSE subscriptions (WebSocket infrastructure)
-- Email sending (SMTP config, templates)
-- Select, Editor, Autodate field types
-- View collections (SQL-based)
-- Batch operations
+**Avoids pitfalls:**
+- Token type confusion (design JWT payload with type field upfront)
+- Timing attack on enumeration (implement dummy hash pattern)
+- Users collection confusion (use `_users` system table)
+- Hook auth context missing (extend context with admin/user)
 
-### Out of Scope v0.1
+**Build steps:**
+1. Add `_users` table to database.ts INIT_METADATA_SQL
+2. Create src/auth/users.ts (parallel to admin.ts)
+3. Create src/auth/user-jwt.ts with `type: "user"` claim
+4. Create src/auth/user-middleware.ts (requireUser)
+5. Add user auth routes to server.ts
+6. Install nodemailer, implement email service
+7. Extend BaseHookContext with auth field
 
-- GraphQL API
-- PostgreSQL support
-- Multi-tenancy
-- MFA/OTP
-- CLI scaffolding tool
+**Research flags:** Standard patterns, skip deep research. Reference PocketBase auth and OWASP guidelines.
+
+### Phase 2: File Uploads (Standalone)
+
+**Rationale:** Simpler than realtime, provides immediate visible value. File operations are independent of SSE complexity. Bun native APIs eliminate need for multer or other libraries.
+
+**Delivers:**
+- File field type in schema
+- Multipart upload via native formData()
+- Local filesystem storage at pb_data/storage/{collection}/{record}/
+- File serving endpoint with auth checks
+- File metadata in database
+- Automatic cleanup on record delete
+- File size and type validation
+
+**Addresses features:**
+- File field type (table stakes)
+- Multipart upload (table stakes)
+- Local filesystem storage (table stakes)
+- File serving endpoint (table stakes)
+- File deletion on record delete (table stakes)
+
+**Avoids pitfalls:**
+- Relative path storage (resolve to absolute on startup)
+- Embedded files in binary (validate storage path is external)
+- Multipart parsing issues (use Bun native formData)
+- File type validation missing (check magic bytes, not just MIME)
+- File deletion not implemented (add afterDelete hook)
+
+**Build steps:**
+1. Add `file` to FieldType enum in types/collection.ts
+2. Add `_files` table to database.ts
+3. Create src/files/storage.ts with absolute path resolution
+4. Add file validation to validation.ts (Zod schemas)
+5. Modify record create/update to handle multipart
+6. Add file download route /api/files/{collection}/{record}/{filename}
+7. Register afterDelete hook for file cleanup
+8. Add --storage-path CLI flag with default
+
+**Research flags:** Standard patterns for file handling. Watch for Bun-specific multipart issues (test extensively).
+
+### Phase 3: Realtime/SSE (Complex Integration)
+
+**Rationale:** Most complex feature, requires integration with existing hooks infrastructure. Builds on auth foundation for permission filtering. SSE chosen over WebSocket for simplicity and automatic reconnection.
+
+**Delivers:**
+- SSE endpoint at /api/realtime
+- Client ID assignment on connect
+- Subscribe to collection/* or collection/record
+- Broadcast create/update/delete events
+- Auth-aware event filtering
+- Connection lifecycle management
+- Heartbeat and cleanup for stale connections
+
+**Addresses features:**
+- SSE connection endpoint (table stakes)
+- Collection/record subscriptions (table stakes)
+- Create/update/delete events (table stakes)
+- Connection keep-alive and cleanup (table stakes)
+- Auth-aware subscriptions (differentiator)
+
+**Avoids pitfalls:**
+- SSE memory leak (cleanup on disconnect, heartbeat for stale)
+- Connection limit issues (document HTTP/2 requirement)
+- Raw SQL misses events (document hooks requirement)
+- Data leakage in events (apply collection rules to broadcasts)
+- Backpressure issues (implement event queue limits)
+
+**Build steps:**
+1. Create src/realtime/sse.ts (connection management, TransformStream)
+2. Create src/realtime/subscriptions.ts (in-process pub/sub)
+3. Add SSE GET/POST routes to server.ts
+4. Register global hooks: afterCreate/Update/Delete -> broadcast()
+5. Implement permission filtering on events
+6. Add connection cleanup on disconnect (req.signal.abort)
+7. Implement heartbeat interval for stale connection removal
+8. Add event ID for reconnection recovery
+
+**Research flags:** SSE implementation well-documented for Bun. Test connection cleanup extensively to prevent memory leaks.
+
+### Phase 4: Integration Testing & UI Polish
+
+**Rationale:** Validate combined features work together. Add polish without scope creep.
+
+**Delivers:**
+- User auth + file uploads integration tests
+- User auth + realtime integration tests
+- File changes trigger realtime events
+- Loading states and animations in admin UI
+- Responsive layout refinements
+
+**Avoids pitfalls:**
+- Single binary size explosion (verify only admin UI embedded)
+- API rules applied inconsistently (test with admin/user/anonymous)
+- File fields not cascade delete (verify cleanup works)
+
+### Phase Ordering Rationale
+
+**Why authentication first:**
+- File serving needs auth checks for protected files
+- Realtime needs auth context for permission-filtered events
+- Hooks need auth information in context
+- Foundation pattern established in v0.1 (admin auth)
+
+**Why files second:**
+- Independent feature (no realtime dependency)
+- Simpler than SSE (fewer moving parts)
+- Visible value (developers test uploads immediately)
+- No complex state management
+
+**Why realtime third:**
+- Most complex (connection management, cleanup, broadcasting)
+- Depends on hooks infrastructure (already built)
+- Benefits from auth context (permission filtering)
+- SSE over WebSocket reduces complexity
+
+**Dependency chain validation:**
+```
+Phase 1 (Auth) -> Phase 2 (Files) - auth enables protected file serving
+Phase 1 (Auth) -> Phase 3 (SSE) - auth enables permission filtering
+Phase 2 (Files) + Phase 3 (SSE) - file changes trigger realtime events
+```
+
+### Research Flags
+
+**Phases with standard patterns (skip deep research):**
+- **Phase 1 (Auth):** PocketBase auth patterns well-documented, OWASP guidelines comprehensive
+- **Phase 2 (Files):** Bun file handling documented, PocketBase storage structure proven
+- **Phase 3 (SSE):** Bun TransformStream examples available, MDN SSE spec clear
+
+**Phases needing testing focus (not research):**
+- **Phase 2 (Files):** Bun has known multipart issues - extensive testing needed
+- **Phase 3 (SSE):** Memory leak prevention requires load testing
+
+**No phases need `/gsd:research-phase` during planning.** All patterns are well-established.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| **Stack** | High | Bun 1.3.x is stable, Hono proven, Drizzle mature. All dependencies actively maintained. |
-| **Features** | High | PocketBase provides clear reference implementation. Feature set well-scoped for v0.1. |
-| **Architecture** | High | Component boundaries clean, dependency graph acyclic. Build order validated against PocketBase patterns. |
-| **Pitfalls** | Medium | Bun compilation is beta, some edge cases. SQLite migration gotchas well-documented but require careful implementation. |
+| Stack | HIGH | Bun native APIs proven, nodemailer has official support since v0.6.13 |
+| Features | HIGH | PocketBase patterns validated at scale, clear table stakes identified |
+| Architecture | HIGH | Extends existing v0.1 patterns (admin auth, hooks), separation of concerns clear |
+| Pitfalls | HIGH | 24 pitfalls identified from authoritative sources, prevention strategies concrete |
+
+**Overall confidence:** HIGH
+
+All major components have proven patterns (PocketBase) or official Bun support. The single-binary architecture is already validated in v0.1. Research uncovered specific Bun quirks (multipart parsing, embedded filesystem) with clear mitigation strategies.
 
 ### Gaps to Address
 
-- **Binary embedding strategy**: make-vfs vs Bun's native embed needs production validation. Plan: Build POC in Phase 10 to test both approaches.
-- **Hook priority API design**: Numeric priorities vs named phases (before/after/default)? Research PocketBase hook ordering implementation.
-- **Migration rollback**: SQLite has no transactions across DDL. Accept this limitation or implement application-level rollback?
-- **Admin UI state management**: TanStack Query sufficient or need additional state layer? Validate during Phase 8.
+**During Phase 1 (Auth):**
+- Token expiration strategy (15min access + 7day refresh vs 24h access only) - decide based on UX preference
+- Token revocation approach (blacklist vs tokenVersion column) - can defer to post-v0.2 if needed
+- Email templates design (plain text vs HTML) - start with plain text, upgrade later
 
-## Implications for Roadmap
+**During Phase 2 (Files):**
+- Thumbnail generation strategy - confirm defer to v0.3, or add basic image resize if time permits
+- File storage location default - validate `./pb_data/storage` matches deployment expectations
+- Max file size default - choose reasonable default (10MB suggested), make configurable
 
-### Suggested Phase Structure
+**During Phase 3 (SSE):**
+- HTTP/2 requirement enforcement - document clearly, consider startup warning if HTTP/1.1
+- Event history retention - decide if events stored for replay or client refetches on reconnect
+- Connection limit per user - decide if unlimited or rate-limited
 
-**Phase 1: Core Foundation (Database + Schema)**
-Rationale: Everything depends on database layer and schema definitions. Establishes vocabulary for entire system.
-Delivers: Programmatic collection creation, schema persistence to SQLite.
-Features: SchemaManager, migration tracking tables, basic field types.
-Pitfalls: Binary size tracking, SQLite limitations, migration locking.
-Research: No additional research needed (well-documented patterns).
-
-**Phase 2: API Auto-Generation**
-Rationale: Core value proposition. With schema + API, you have a working backend.
-Delivers: REST CRUD endpoints for any collection.
-Features: APIGenerator, basic list/get/create/update/delete.
-Pitfalls: Schema-code drift prevention.
-Research: No additional research needed.
-
-**Phase 3: Query Capabilities**
-Rationale: Makes API production-ready. Filtering/sorting are table stakes.
-Delivers: Full query parameter support.
-Features: Filter operators, sorting, pagination, field selection, relation expansion.
-Pitfalls: SQL injection via filter syntax (use parameterized queries).
-Research: Possibly—filter syntax parsing can be complex. Consider `/gsd:research-phase` for filter language design.
-
-**Phase 4: Extensibility (Hooks)**
-Rationale: Enables customization without touching generated code.
-Delivers: Lifecycle hooks for CRUD operations.
-Features: HookManager, before/after hooks, priority system.
-Pitfalls: Hook execution order chaos, error handling ambiguity.
-Research: No additional research needed (PocketBase pattern clear).
-
-**Phase 5: Security (Admin Auth)**
-Rationale: Must secure system before adding UI.
-Delivers: JWT-based admin authentication.
-Features: AuthManager, login endpoint, `requireAdmin()` middleware.
-Pitfalls: Session fixation, cookie flags, predictable IDs.
-Research: No additional research needed (OWASP documented).
-
-**Phase 6: Admin UI (Browser)**
-Rationale: First visual interface. Requires full backend working.
-Delivers: Collection/record browsing through web UI.
-Features: React app, collection list, record browser, CRUD forms.
-Pitfalls: Dev vs production mode differences.
-Research: Possibly—React state management architecture. Standard patterns likely sufficient.
-
-**Phase 7: Admin UI (Schema Editor)**
-Rationale: Completes backend-in-a-box vision with runtime schema changes.
-Delivers: Dynamic schema editing through UI.
-Features: Field add/edit/remove, migration preview, validation.
-Pitfalls: Schema editor generating unsafe migrations.
-Research: Possibly—migration preview UX and safety validations.
-
-**Phase 8: Single Binary Packaging**
-Rationale: Final distribution format. Validates entire stack.
-Delivers: `./bunbase` executable with embedded UI.
-Features: make-vfs asset embedding, compile script, cross-platform builds.
-Pitfalls: Embedded directory inconsistencies, binary size bloat, cross-platform issues.
-Research: Possibly—embedding strategy POC if make-vfs insufficient.
-
-### Research Flags
-
-**Needs `/gsd:research-phase`:**
-- Phase 3 (Query): Filter language parsing if complex syntax needed
-- Phase 7 (Schema Editor): Migration safety validations
-- Phase 8 (Packaging): Embedding strategy if make-vfs fails
-
-**Standard Patterns (Skip Research):**
-- Phase 1: Schema manager patterns well-documented
-- Phase 2: REST API generation straightforward
-- Phase 4: PocketBase hook system provides clear blueprint
-- Phase 5: OWASP authentication patterns established
-- Phase 6: React CRUD UI is standard problem
-
-### Critical Path
-
-1. Phase 1 (Foundation) must complete before all others—it's the keystone
-2. Phase 2 (API) depends on Phase 1 but blocks Phase 3-4
-3. Phase 5 (Auth) must complete before Phase 6-7 (Admin UI)
-4. Phase 8 (Packaging) requires all phases complete
-
-Parallel opportunities:
-- Phase 4 (Hooks) and Phase 5 (Auth) can develop concurrently after Phase 2
-- Phase 6 (Browser UI) and Phase 7 (Schema Editor UI) share React foundation
+**None of these gaps block implementation.** All have reasonable defaults or documented workarounds.
 
 ## Sources
 
 ### Stack Research
-- [Bun Official Documentation](https://bun.com/docs)
-- [Bun 1.3 Release Blog](https://bun.com/blog/bun-v1.3)
-- [Hono Official Documentation](https://hono.dev)
-- [Drizzle ORM Bun SQLite](https://orm.drizzle.team/docs/connect-bun-sqlite)
-- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [Bun File Uploads Guide](https://bun.com/docs/guides/http/file-uploads) - Native multipart parsing
+- [Bun WebSocket API](https://bun.com/docs/api/websockets) - Native WebSocket (deferred to v0.3)
+- [jose npm package](https://www.npmjs.com/package/jose) - v6.1.3 JWT implementation
+- [Nodemailer Bun Compatibility](https://bun.sh/blog/bun-v0.6.13) - Official support announcement
+- [OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) - Reset token best practices
 
 ### Features Research
-- [PocketBase Documentation](https://pocketbase.io/docs/)
-- [PocketBase API Collections Reference](https://pocketbase.io/docs/api-collections/)
-- [PocketBase Event Hooks](https://pocketbase.io/docs/go-event-hooks/)
+- [PocketBase Authentication Documentation](https://pocketbase.io/docs/authentication/) - Proven BaaS auth patterns
+- [PocketBase Files Handling](https://pocketbase.io/docs/files-handling/) - Storage structure
+- [PocketBase API Realtime](https://pocketbase.io/docs/api-realtime/) - SSE protocol
+- [JWT Security Best Practices - Curity](https://curity.io/resources/learn/jwt-best-practices/) - Token design
+- [MDN Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) - SSE spec
 
 ### Architecture Research
-- [PocketBase GitHub Repository](https://github.com/pocketbase/pocketbase)
-- [PocketBase DeepWiki - Core Architecture](https://deepwiki.com/pocketbase/pocketbase)
-- [Hono Best Practices](https://hono.dev/docs/guides/best-practices)
+- [Bun Single-File Executables](https://bun.com/docs/bundler/executables) - Embedded filesystem constraints
+- [Bun SSE Implementation - GitHub Gist](https://gist.github.com/gtrabanco/7908bff2516a67e708509d5b224d822b) - TransformStream pattern
+- [PocketBase Auth Discussion](https://github.com/pocketbase/pocketbase/discussions/169) - Token architecture insights
 
 ### Pitfalls Research
-- [Bun Single-file Executable Docs](https://bun.com/docs/bundler/executables)
-- [Bun Embed Directory Issue #5445](https://github.com/oven-sh/bun/issues/5445)
-- [EF Core SQLite Limitations](https://learn.microsoft.com/en-us/ef/core/providers/sqlite/limitations)
-- [PocketBase Hook System (DeepWiki)](https://deepwiki.com/pocketbase/pocketbase/2.3-hook-system)
-- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
+- [JWT Authorization: Avoiding Common Pitfalls - AuthZed](https://authzed.com/blog/pitfalls-of-jwt-authorization) - Token type confusion
+- [Understanding Timing Attacks - PropelAuth](https://blog.propelauth.com/understanding-timing-attacks-with-code/) - User enumeration prevention
+- [Password Hashing Guide 2025-2026](https://guptadeepak.com/the-complete-guide-to-password-hashing-argon2-vs-bcrypt-vs-scrypt-vs-pbkdf2-2026/) - Work factor recommendations
+- [Multipart Form Data Issues in Bun - GitHub](https://github.com/oven-sh/bun/issues/21467) - Known Bun bugs
+- [File Upload Vulnerabilities - Vaadata](https://www.vaadata.com/blog/file-upload-vulnerabilities-and-security-best-practices/) - Magic byte validation
+- [SSE Comprehensive Guide - Medium](https://medium.com/@moali314/server-sent-events-a-comprehensive-guide-e4b15d147576) - Backpressure handling
+- [PocketBase Realtime Discussion - GitHub](https://github.com/pocketbase/pocketbase/discussions/4427) - Hooks-based events
 
 ---
-
-*Research synthesized from 4 parallel research threads on 2026-01-24*
+*Research completed: 2026-01-26*
+*Ready for roadmap: yes*

@@ -1,440 +1,375 @@
-# Stack Research: BunBase
+# Stack Additions: v0.2
 
-> Research Date: January 2025
-> Purpose: Define the optimal stack for building a PocketBase alternative as a single-binary backend-in-a-box
+> Research Date: January 2026
+> Purpose: Define stack additions for user authentication, file uploads, and realtime/SSE
 
-## Executive Summary
+## Existing Stack (Validated in v0.1)
 
-BunBase will leverage Bun 1.3.x as an all-in-one runtime with native SQLite, Hono for HTTP routing, and embedded React admin UI compiled into a single executable. The stack prioritizes zero external dependencies at runtime while maintaining excellent developer experience.
+| Component | Technology | Notes |
+|-----------|------------|-------|
+| Runtime | Bun 1.3.6+ | Native SQLite, password hashing, single-binary |
+| HTTP Server | Bun.serve() | Raw Bun routes (NOT Hono) |
+| Database | bun:sqlite | Direct usage, no ORM |
+| Auth (admin) | Bun.password + jose JWT | argon2id, HS256 tokens |
+| Validation | Zod | Schema validation |
+| IDs | nanoid | 21-char URL-safe IDs |
+| Admin UI | React 19 + Tailwind CSS v4 + shadcn/ui | Embedded in binary |
 
 ---
 
-## Recommended Stack
+## User Authentication
 
-### Runtime: Bun 1.3.6+
+### What's Already There
 
-**Version:** `1.3.6` (latest stable as of January 2025)
+The admin auth system in v0.1 provides a solid foundation:
+- `Bun.password.hash()` with argon2id (OWASP recommended)
+- `jose` library for JWT (HS256, 24h expiry)
+- Bearer token middleware pattern
 
-**Why Bun:**
-- **Single binary compilation**: `bun build --compile` creates standalone executables with embedded runtime (~90MB base)
-- **Native SQLite**: `bun:sqlite` is 3-6x faster than better-sqlite3, built directly into the runtime
-- **Native password hashing**: `Bun.password` supports argon2id and bcrypt without external deps
-- **TypeScript-first**: No transpilation step needed, runs .ts files directly
-- **All-in-one**: Runtime + bundler + test runner + package manager eliminates toolchain complexity
+### New Requirements for User Auth
 
-**Key Bun 1.3 Features Used:**
-- Full-stack executable compilation (v1.2.17+)
-- `with { type: "file" }` import attribute for embedding assets
-- `$bunfs/` virtual filesystem for embedded files
-- Unified SQL API improvements
-- 10-30% memory reduction vs previous versions
+| Capability | Approach | Rationale |
+|------------|----------|-----------|
+| User registration | Reuse `Bun.password.hash()` pattern | Consistent with admin auth |
+| User login | Reuse JWT pattern from admin | Same token flow |
+| Session management | Short-lived access + refresh tokens | Balance security/UX |
+| Password reset | Time-limited tokens + email | Industry standard |
+| Email sending | External SMTP (nodemailer) | User-provided config |
+
+### Stack Addition: nodemailer
+
+**Version:** `^6.9.0` (latest stable)
+
+**Why nodemailer:**
+- Bun added official support in v0.6.13
+- Most widely used Node.js email library
+- Works with any SMTP provider
+- Users configure their own SMTP (keeps binary dependency-free)
+
+**Why NOT alternatives:**
+- `@sendgrid/mail`, `resend`, etc. require API keys and vendor lock-in
+- Built-in `fetch()` to email APIs could work but loses SMTP flexibility
+- Cross-runtime libraries like Upyo are less mature
+
+**Known Issues:**
+- Historical loop-sending issues in Bun (connection drops) - use connection pooling
+- Doesn't work in edge functions (not relevant - we run as server)
 
 **Installation:**
 ```bash
-curl -fsSL https://bun.sh/install | bash
+bun add nodemailer@^6.9.0
+bun add -D @types/nodemailer@^6.4.0
 ```
 
----
-
-### HTTP Framework: Hono 4.11.x
-
-**Version:** `4.11.4` (latest as of January 2025)
-
-**Why Hono:**
-- **Ultrafast**: Benchmarks show Hono as the fastest router for Bun
-- **Tiny footprint**: `hono/tiny` preset is under 12kB with zero dependencies
-- **Web Standards**: Built on fetch API, works identically across all JS runtimes
-- **First-class Bun support**: Official adapter with optimized performance
-- **Batteries included**: Built-in JWT middleware, validation, CORS, etc.
-
-**Alternatives Considered:**
-| Framework | Why Not |
-|-----------|---------|
-| Elysia | More opinionated, heavier runtime overhead, less mature ecosystem |
-| Express | Not designed for Bun, requires adapter, slower |
-| Fastify | Node.js-centric, plugin system adds complexity |
-
-**Key Hono Features Used:**
-- `hono/jwt` - JWT authentication middleware
-- `hono/cors` - CORS handling
-- `hono/logger` - Request logging
-- `hono/etag` - Response caching
-- `hono/compress` - Gzip compression
-
-**Installation:**
-```bash
-bun add hono@^4.11.4
-```
-
----
-
-### Database: bun:sqlite (Native)
-
-**Pattern:** Direct bun:sqlite with Drizzle ORM for type-safety
-
-**Why bun:sqlite:**
-- **Zero dependencies**: Built into Bun runtime
-- **Fastest available**: 3-6x faster than better-sqlite3, 8-9x faster than Deno sqlite
-- **Synchronous API**: Matches SQLite's synchronous nature, simpler code
-- **Full SQLite feature set**: FTS5, JSON, window functions, etc.
-
-**Why Drizzle ORM (0.45.1):**
-- **Type-safe**: Full TypeScript inference from schema to queries
-- **Lightweight**: ~7.4kb minified+gzipped, zero dependencies
-- **SQL-first**: Generates readable SQL, no magic
-- **Native bun:sqlite support**: First-class integration
-
-**Database Configuration:**
+**Configuration Pattern:**
 ```typescript
-import { Database } from "bun:sqlite";
-import { drizzle } from "drizzle-orm/bun-sqlite";
-
-const sqlite = new Database("bunbase.db", { strict: true });
-sqlite.run("PRAGMA journal_mode = WAL");      // Better concurrency
-sqlite.run("PRAGMA synchronous = NORMAL");    // Balanced durability/speed
-sqlite.run("PRAGMA foreign_keys = ON");       // Enforce FK constraints
-sqlite.run("PRAGMA cache_size = -64000");     // 64MB cache
-
-export const db = drizzle(sqlite);
-```
-
-**Migrations:**
-```bash
-bun add drizzle-orm@^0.45.1
-bun add -D drizzle-kit@^0.30.0
-```
-
----
-
-### Admin UI: React + Vite (Embedded)
-
-**Approach:** Pre-build React app, embed via Virtual File System (VFS)
-
-**Why This Approach:**
-- **Single binary**: VFS bundles all assets into the executable
-- **No runtime filesystem**: Admin UI served from memory
-- **Standard React tooling**: Familiar DX for contributors
-
-**Stack:**
-- **React 19.x**: Latest stable with improved performance
-- **Vite 6.x**: Fast builds, excellent HMR for development
-- **TanStack Router**: Type-safe routing without React Router bloat
-- **TanStack Query**: Server state management for API calls
-- **Tailwind CSS 4.x**: Utility-first styling, tree-shakes unused styles
-
-**Embedding Strategy:**
-
-1. **Development**: Vite dev server with proxy to Bun backend
-2. **Production Build**:
-   ```bash
-   # Build React app
-   cd admin && bun run build
-
-   # Generate VFS from dist
-   bunx make-vfs --dir ./admin/dist --content-format string --outfile ./src/admin-vfs.ts
-   ```
-
-3. **Serve from VFS:**
-   ```typescript
-   import { adminFiles } from "./admin-vfs";
-
-   app.get("/admin/*", (c) => {
-     const path = c.req.path.replace("/admin", "") || "/index.html";
-     const file = adminFiles[path];
-     if (!file) return c.notFound();
-     return c.body(file, { headers: { "Content-Type": getMimeType(path) } });
-   });
-   ```
-
-**Dependencies:**
-```bash
-# Admin UI
-bun add react@^19.0.0 react-dom@^19.0.0
-bun add @tanstack/react-router@^1.95.0 @tanstack/react-query@^5.64.0
-bun add -D vite@^6.0.0 @vitejs/plugin-react@^4.3.0 tailwindcss@^4.0.0
-
-# VFS generation
-bun add -D make-vfs@^1.0.0
-```
-
----
-
-### Authentication
-
-**JWT Handling:** Hono built-in + jose for advanced cases
-
-**Why:**
-- `hono/jwt` covers 90% of use cases with zero config
-- `jose` (JOSE/JWT library) for JWK, JWE, or complex token scenarios
-- No external auth service dependency
-
-**Password Hashing:** Bun.password (Native)
-
-**Configuration:**
-```typescript
-// Hash with argon2id (OWASP recommended)
-const hash = await Bun.password.hash(password, {
-  algorithm: "argon2id",
-  memoryCost: 19456,  // 19 MiB (OWASP minimum)
-  timeCost: 2,        // iterations
-});
-
-// Verify (auto-detects algorithm from hash)
-const valid = await Bun.password.verify(password, hash);
-```
-
-**Why argon2id over bcrypt:**
-- Winner of Password Hashing Competition (2015)
-- Resistant to GPU/ASIC attacks
-- Memory-hard (configurable)
-- OWASP 2025 recommendation
-
-**JWT Middleware:**
-```typescript
-import { jwt } from "hono/jwt";
-
-app.use("/api/*", jwt({ secret: process.env.JWT_SECRET! }));
-```
-
----
-
-### ID Generation: nanoid
-
-**Version:** `5.0.9`
-
-**Why nanoid over UUID:**
-- **Shorter**: 21 chars vs 36 chars (40% smaller)
-- **URL-safe**: No encoding needed
-- **Same collision probability**: 126 random bits vs UUID's 122
-- **Smaller index sizes**: 15-25% faster database queries
-
-**Usage:**
-```typescript
-import { nanoid } from "nanoid";
-
-const id = nanoid(); // "V1StGXR8_Z5jdHi6B-myT"
-```
-
----
-
-### Validation: Zod + @hono/zod-validator
-
-**Versions:**
-- `zod@^3.24.0`
-- `@hono/zod-validator@^0.7.6`
-
-**Why Zod:**
-- TypeScript-first with excellent inference
-- Standard Schema compliant (industry standard)
-- Works seamlessly with Hono middleware
-
-**Usage:**
-```typescript
-import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
-
-const createUserSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
-
-app.post("/users", zValidator("json", createUserSchema), async (c) => {
-  const { email, password } = c.req.valid("json");
-  // Type-safe: email is string, password is string
+// User-provided SMTP config (stored in _settings table)
+const transporter = nodemailer.createTransport({
+  host: settings.smtp_host,
+  port: settings.smtp_port,
+  secure: settings.smtp_secure,
+  auth: {
+    user: settings.smtp_user,
+    pass: settings.smtp_pass,
+  },
 });
 ```
 
+### Password Reset Token Strategy
+
+Based on [OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html):
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Token generation | `crypto.randomBytes(32).toString('hex')` - 64 chars |
+| Token storage | Store HASHED token (Bun.password.hash not needed, SHA-256 sufficient) |
+| Token expiration | 1 hour maximum |
+| Single use | Delete token after use |
+| Rate limiting | Max 3 requests per email per hour |
+
+**No new dependencies needed** - use Bun's built-in `crypto` module.
+
+### JWT Token Strategy
+
+Extend existing jose setup:
+
+| Token Type | Expiry | Purpose |
+|------------|--------|---------|
+| Access token | 15 minutes | API access |
+| Refresh token | 7 days | Renew access tokens |
+| Reset token | 1 hour | Password reset (not JWT) |
+
+**No new dependencies needed** - jose ^6.1.3 already installed.
+
 ---
 
-### Development
+## File Uploads
 
-**TypeScript Configuration:**
-```json
-{
-  "compilerOptions": {
-    "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "types": ["bun-types"]
-  }
-}
+### Bun Native Approach
+
+Bun has built-in multipart/form-data parsing. **No additional libraries needed.**
+
+**Key APIs:**
+- `Request.formData()` - Parse multipart request
+- `FormData.get()` - Extract file as `Blob`
+- `Bun.write(path, blob)` - Write to filesystem
+
+### File Handling Strategy
+
+| Concern | Approach |
+|---------|----------|
+| Parse uploads | `await req.formData()` (native) |
+| Extract file | `formData.get('file')` returns Blob |
+| Save to disk | `await Bun.write(filepath, blob)` |
+| Storage location | `./pb_data/storage/{collection}/{record_id}/` |
+| Filename generation | `{nanoid()}.{originalExtension}` |
+| Metadata storage | JSON field in record |
+
+### File Validation
+
+Use existing Zod for validation:
+
+```typescript
+const fileSchema = z.object({
+  maxSize: z.number().default(5 * 1024 * 1024), // 5MB default
+  allowedTypes: z.array(z.string()).default(['image/*', 'application/pdf']),
+});
 ```
 
-**Testing:** `bun test` (Native)
+**No new dependencies needed.**
 
-**Why:**
-- Built into Bun, zero setup
-- Jest-compatible API
-- 10-30x faster than Jest
-- Automatic GitHub Actions integration
+### Known Issues with Bun File Uploads
 
-**Test Structure:**
+From research:
+- Some users report intermittent "Stream ended unexpectedly" errors
+- Recommendation: Add request timeout handling and retry logic
+- FormData's non-standard `toJSON` can cause issues with other libraries
+
+**Mitigation:** Keep file handling simple, use native APIs only.
+
+---
+
+## Realtime/SSE
+
+### SSE vs WebSockets Decision
+
+| Feature | SSE | WebSocket |
+|---------|-----|-----------|
+| Direction | Server -> Client | Bidirectional |
+| Reconnection | Automatic | Manual |
+| Complexity | Lower | Higher |
+| Use case | Notifications, updates | Chat, gaming |
+
+**Recommendation: SSE for record change subscriptions**
+
+Why:
+- Clients only need to receive updates (server -> client)
+- Built-in automatic reconnection
+- Simpler implementation
+- HTTP/2 multiplexing friendly
+
+### Implementation Approach
+
+Use native Bun.serve with ReadableStream. **No framework needed.**
+
 ```typescript
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+// SSE endpoint
+"/api/realtime": {
+  GET: (req) => {
+    const stream = new ReadableStream({
+      start(controller) {
+        // Subscribe to changes
+        const unsubscribe = subscribeToChanges((event) => {
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`)
+          );
+        });
 
-describe("users API", () => {
-  test("creates user", async () => {
-    const res = await app.request("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ email: "test@example.com", password: "password123" }),
+        req.signal.addEventListener('abort', () => {
+          unsubscribe();
+          controller.close();
+        });
+      }
     });
-    expect(res.status).toBe(201);
-  });
-});
-```
 
-**Development Server:**
-```bash
-# Hot reload (soft reload, preserves state)
-bun --hot src/index.ts
-
-# Watch mode (full restart on change)
-bun --watch src/index.ts
-```
-
----
-
-### Build & Compile
-
-**Single Binary Build:**
-```bash
-# Development build
-bun build --compile --minify --sourcemap ./src/index.ts --outfile bunbase
-
-# Cross-compile for Linux
-bun build --compile --minify --target=bun-linux-x64 ./src/index.ts --outfile bunbase-linux
-
-# Cross-compile for macOS ARM
-bun build --compile --minify --target=bun-darwin-arm64 ./src/index.ts --outfile bunbase-macos
-```
-
-**Build Script (package.json):**
-```json
-{
-  "scripts": {
-    "dev": "bun --hot src/index.ts",
-    "build:admin": "cd admin && bun run build",
-    "build:vfs": "bunx make-vfs --dir ./admin/dist --content-format string --outfile ./src/admin-vfs.ts",
-    "build": "bun run build:admin && bun run build:vfs && bun build --compile --minify ./src/index.ts --outfile dist/bunbase",
-    "test": "bun test",
-    "test:watch": "bun test --watch"
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
   }
 }
 ```
 
----
+### Internal Pub/Sub
 
-## Key Decisions
+Implement simple in-process pub/sub for change notifications:
 
-| Choice | Rationale | Confidence |
-|--------|-----------|------------|
-| **Bun 1.3.x** | Only runtime with native SQLite + single-binary compile + password hashing | **High** |
-| **Hono** | Fastest framework for Bun, tiny footprint, built-in middleware | **High** |
-| **bun:sqlite** | Native, fastest, zero deps, matches SQLite's sync nature | **High** |
-| **Drizzle ORM** | Type-safe, lightweight, SQL-first, native bun:sqlite support | **High** |
-| **make-vfs for Admin UI** | Proven pattern for embedding directories in Bun executables | **Medium** |
-| **React + Vite** | Industry standard, excellent DX, large ecosystem | **High** |
-| **argon2id** | OWASP 2025 recommended, built into Bun.password | **High** |
-| **nanoid** | Shorter than UUID, URL-safe, same collision resistance | **High** |
-| **Zod** | TypeScript-first, Standard Schema, Hono integration | **High** |
+```typescript
+// Internal event bus (no Redis needed for single-process)
+const subscribers = new Map<string, Set<(event: ChangeEvent) => void>>();
 
----
+function publish(collection: string, event: ChangeEvent) {
+  subscribers.get(collection)?.forEach(cb => cb(event));
+  subscribers.get('*')?.forEach(cb => cb(event)); // Wildcard
+}
+```
 
-## What NOT to Use
+**No new dependencies needed.**
 
-| Avoid | Reason |
-|-------|--------|
-| **Prisma** | Heavy, requires binary download, doesn't support bun:sqlite natively |
-| **TypeORM** | Complex, performance issues, not optimized for Bun |
-| **Express** | Node.js-centric, requires adapters, slower than native alternatives |
-| **bcrypt npm package** | Native module compilation issues; use `Bun.password` instead |
-| **jsonwebtoken** | Older, use `hono/jwt` or `jose` for modern JWT handling |
-| **UUID** | Longer, not URL-safe; use nanoid for most cases |
-| **better-sqlite3** | Requires native compilation; bun:sqlite is faster and built-in |
-| **webpack** | Complex config, slower than Vite for frontend |
-| **Jest** | External dependency; `bun test` is faster and built-in |
-| **node:crypto for passwords** | Use `Bun.password` which handles worker threads automatically |
-| **External auth services** | Adds runtime dependency; build auth into the binary |
-| **MongoDB/PostgreSQL** | Requires external process; SQLite is embedded |
+### WebSocket Option (Future)
+
+If bidirectional communication is needed later, Bun.serve has native WebSocket support with pub/sub:
+
+```typescript
+Bun.serve({
+  websocket: {
+    open(ws) { ws.subscribe('changes'); },
+    message(ws, msg) { /* handle client messages */ },
+  }
+});
+```
+
+**Defer WebSocket to v0.3** - SSE is sufficient for record change subscriptions.
 
 ---
 
-## Version Matrix
+## UI Polish
 
-| Package | Version | Purpose |
+### Existing UI Stack
+
+- React 19.2.3
+- Tailwind CSS 4.1.18
+- shadcn/ui components (via Radix primitives)
+- lucide-react icons
+- sonner (toast notifications)
+- tw-animate-css (animations)
+
+### Potential Additions for Polish
+
+| Need | Option | Recommendation |
+|------|--------|----------------|
+| Loading skeletons | Already in shadcn/ui | Use existing |
+| Transitions | tw-animate-css installed | Use existing |
+| Better tables | @tanstack/react-table installed | Use existing |
+| Charts/metrics | recharts | Defer - not needed for v0.2 |
+| Rich text editing | tiptap | Defer - not needed for v0.2 |
+
+**No new UI dependencies needed for v0.2.**
+
+All polish work can be achieved with existing stack:
+- Tailwind transitions/animations
+- tw-animate-css for pre-built animations
+- shadcn/ui skeleton components
+- Refining existing components
+
+---
+
+## Summary: What to Add
+
+### New Dependencies
+
+| Package | Version | Purpose | Confidence |
+|---------|---------|---------|------------|
+| nodemailer | ^6.9.0 | Password reset emails | HIGH |
+| @types/nodemailer | ^6.4.0 | TypeScript types (dev) | HIGH |
+
+### Existing Dependencies (No Changes)
+
+| Package | Current | Purpose |
 |---------|---------|---------|
-| bun | ^1.3.6 | Runtime |
-| hono | ^4.11.4 | HTTP framework |
-| drizzle-orm | ^0.45.1 | ORM |
-| drizzle-kit | ^0.30.0 | Migrations CLI |
-| zod | ^3.24.0 | Validation |
-| @hono/zod-validator | ^0.7.6 | Hono + Zod integration |
-| nanoid | ^5.0.9 | ID generation |
-| jose | ^5.9.0 | Advanced JWT (optional) |
-| react | ^19.0.0 | Admin UI |
-| react-dom | ^19.0.0 | Admin UI |
-| @tanstack/react-router | ^1.95.0 | Admin routing |
-| @tanstack/react-query | ^5.64.0 | Admin data fetching |
-| vite | ^6.0.0 | Admin build tool |
-| @vitejs/plugin-react | ^4.3.0 | Vite React plugin |
-| tailwindcss | ^4.0.0 | Admin styling |
-| make-vfs | ^1.0.0 | Asset embedding |
-| bun-types | latest | TypeScript types |
+| jose | ^6.1.3 | JWT tokens (access + refresh) |
+| nanoid | ^5.0.9 | File name generation |
+| zod | ^3.24.0 | File validation schemas |
+
+### Bun Native Features (Zero Dependencies)
+
+| Feature | Bun API |
+|---------|---------|
+| File upload parsing | `Request.formData()` |
+| File saving | `Bun.write()` |
+| File reading | `Bun.file()` |
+| SSE streaming | `ReadableStream` + Response |
+| Reset token generation | `crypto.randomBytes()` |
+| Token hashing | `crypto.createHash('sha256')` |
 
 ---
 
-## Architecture Overview
+## Not Adding
 
+| Technology | Why Not |
+|------------|---------|
+| **Hono** | v0.1 uses raw Bun.serve successfully; adding framework adds complexity |
+| **multer** | Bun has native multipart parsing; multer is Node-specific |
+| **ws** | Bun has native WebSocket; ws is Node-specific |
+| **Redis** | Single-process pub/sub sufficient; Redis adds deployment complexity |
+| **S3/cloud storage** | v0.2 scoped to local filesystem; cloud storage is v0.3+ |
+| **@hono/streaming** | Not using Hono; native ReadableStream works fine |
+| **socket.io** | Over-engineered for our needs; native SSE/WS sufficient |
+| **passport.js** | Adds complexity; our auth is simple enough without it |
+| **External auth (Auth0, Clerk)** | Adds runtime dependency; conflicts with single-binary goal |
+| **rate-limit libraries** | Simple in-memory rate limiting sufficient for v0.2 |
+
+---
+
+## Installation Command
+
+```bash
+bun add nodemailer@^6.9.0
+bun add -D @types/nodemailer@^6.4.0
 ```
-bunbase (single binary)
-├── Bun Runtime (~90MB embedded)
-├── HTTP Layer (Hono)
-│   ├── /api/* - REST API routes
-│   ├── /admin/* - Admin UI (served from VFS)
-│   └── /auth/* - Authentication endpoints
-├── Database (bun:sqlite)
-│   ├── WAL mode for concurrency
-│   ├── Drizzle ORM for type-safety
-│   └── Auto-migrations on startup
-├── Admin UI (embedded)
-│   ├── React 19 + Vite build
-│   ├── TanStack Router/Query
-│   └── Tailwind CSS
-└── Auth (built-in)
-    ├── Bun.password (argon2id)
-    └── hono/jwt
-```
+
+---
+
+## Rationale
+
+### Why Minimal Additions?
+
+BunBase's core value is being a **single-binary backend-in-a-box**. Every dependency:
+1. Increases binary size
+2. Adds potential security vulnerabilities
+3. Increases maintenance burden
+4. May have Bun compatibility issues
+
+Bun 1.3+ provides excellent native APIs for:
+- File handling (Bun.file, Bun.write, formData)
+- Streaming (ReadableStream for SSE)
+- Cryptography (crypto module)
+- Password hashing (Bun.password)
+
+The only justified addition is **nodemailer** because:
+1. Email sending requires SMTP protocol implementation
+2. Rolling our own SMTP client would be error-prone
+3. nodemailer is battle-tested with 15+ years of development
+4. It's user-configurable (no vendor lock-in)
+
+### Why Not Hono?
+
+The original research recommended Hono, but v0.1 shipped successfully with raw Bun.serve. Adding Hono now would:
+1. Require refactoring all existing routes
+2. Add ~12KB to bundle size
+3. Introduce new patterns mid-project
+
+Raw Bun.serve + native APIs is working well. If routing becomes unwieldy in v0.3+, reconsider then.
 
 ---
 
 ## Sources
 
-- [Bun Official Documentation](https://bun.com/docs)
-- [Bun 1.3 Release Blog](https://bun.com/blog/bun-v1.3)
-- [Bun Single-file Executable Docs](https://bun.com/docs/bundler/executables)
-- [Bun SQLite Documentation](https://bun.com/docs/runtime/sqlite)
-- [Bun Password Hashing](https://bun.com/docs/guides/util/hash-a-password)
-- [Hono Official Documentation](https://hono.dev)
-- [Hono JWT Middleware](https://hono.dev/docs/middleware/builtin/jwt)
-- [Hono GitHub Releases](https://github.com/honojs/hono/releases)
-- [Drizzle ORM Bun SQLite](https://orm.drizzle.team/docs/connect-bun-sqlite)
-- [Drizzle ORM npm](https://www.npmjs.com/package/drizzle-orm)
-- [@hono/zod-validator npm](https://www.npmjs.com/package/@hono/zod-validator)
-- [make-vfs GitHub](https://github.com/seveibar/make-vfs)
-- [nanoid GitHub](https://github.com/ai/nanoid)
-- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
-- [PocketBase Official](https://pocketbase.io/)
-- [Bun Embed Directory Discussion](https://github.com/oven-sh/bun/issues/5445)
-- [VFS Embedding Pattern](https://dev.to/calumk/using-bun-compilebuild-to-embed-an-express-vite-vue-application-1e41)
+### Verified (HIGH Confidence)
+- [Bun File Uploads Guide](https://bun.com/docs/guides/http/file-uploads)
+- [Bun WebSocket API](https://bun.com/docs/api/websockets)
+- [jose npm package](https://www.npmjs.com/package/jose) - v6.1.3
+- [OWASP Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+
+### Researched (MEDIUM Confidence)
+- [Nodemailer Bun Compatibility](https://bun.sh/blog/bun-v0.6.13) - Official support added
+- [SSE with Bun](https://github.com/oven-sh/bun/issues/2443) - Community patterns
+- [Password Reset Best Practices](https://www.authgear.com/post/authentication-security-password-reset-best-practices-and-more)
+
+### Existing Codebase (HIGH Confidence)
+- `/Users/narcisbrindusescu/newme/bunbase/src/auth/admin.ts` - Admin auth pattern
+- `/Users/narcisbrindusescu/newme/bunbase/src/auth/jwt.ts` - JWT pattern with jose
+- `/Users/narcisbrindusescu/newme/bunbase/src/api/server.ts` - Raw Bun.serve pattern
