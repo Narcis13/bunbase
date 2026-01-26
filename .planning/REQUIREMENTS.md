@@ -55,23 +55,23 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin UI
 
-- [ ] **UI-01**: Admin can view list of all collections in sidebar
-- [ ] **UI-02**: Admin can browse records in a collection with pagination
-- [ ] **UI-03**: Admin can create a new record via form
-- [ ] **UI-04**: Admin can edit an existing record via form
-- [ ] **UI-05**: Admin can delete a record with confirmation
-- [ ] **UI-06**: Admin can create a new collection via schema editor
-- [ ] **UI-07**: Admin can add/edit/remove fields on existing collection
-- [ ] **UI-08**: Admin can view dashboard with collection stats (record counts)
-- [ ] **UI-09**: Forms auto-generate inputs based on field types
+- [x] **UI-01**: Admin can view list of all collections in sidebar
+- [x] **UI-02**: Admin can browse records in a collection with pagination
+- [x] **UI-03**: Admin can create a new record via form
+- [x] **UI-04**: Admin can edit an existing record via form
+- [x] **UI-05**: Admin can delete a record with confirmation
+- [x] **UI-06**: Admin can create a new collection via schema editor
+- [x] **UI-07**: Admin can add/edit/remove fields on existing collection
+- [x] **UI-08**: Admin can view dashboard with collection stats (record counts)
+- [x] **UI-09**: Forms auto-generate inputs based on field types
 
 ### Deployment
 
-- [ ] **DEPL-01**: Project compiles to single executable via `bun build --compile`
-- [ ] **DEPL-02**: Compiled binary includes embedded React admin UI
-- [ ] **DEPL-03**: Binary runs with no external dependencies (zero-install)
-- [ ] **DEPL-04**: Server starts on port 8090 by default (configurable via flag)
-- [ ] **DEPL-05**: SQLite database file created on first run
+- [x] **DEPL-01**: Project compiles to single executable via `bun build --compile`
+- [x] **DEPL-02**: Compiled binary includes embedded React admin UI
+- [x] **DEPL-03**: Binary runs with no external dependencies (zero-install)
+- [x] **DEPL-04**: Server starts on port 8090 by default (configurable via flag)
+- [x] **DEPL-05**: SQLite database file created on first run
 
 ## v2 Requirements
 
@@ -156,26 +156,27 @@ Which phases cover which requirements.
 | AUTH-02 | 5 | Complete |
 | AUTH-03 | 5 | Complete |
 | AUTH-04 | 5 | Complete |
-| UI-01 | 6 | Pending |
-| UI-02 | 6 | Pending |
-| UI-03 | 6 | Pending |
-| UI-04 | 6 | Pending |
-| UI-05 | 6 | Pending |
-| UI-06 | 7 | Pending |
-| UI-07 | 7 | Pending |
-| UI-08 | 6 | Pending |
-| UI-09 | 6 | Pending |
-| DEPL-01 | 8 | Pending |
-| DEPL-02 | 8 | Pending |
-| DEPL-03 | 8 | Pending |
-| DEPL-04 | 8 | Pending |
-| DEPL-05 | 8 | Pending |
+| UI-01 | 6 | Complete |
+| UI-02 | 6 | Complete |
+| UI-03 | 6 | Complete |
+| UI-04 | 6 | Complete |
+| UI-05 | 6 | Complete |
+| UI-06 | 7 | Complete |
+| UI-07 | 7 | Complete |
+| UI-08 | 6 | Complete |
+| UI-09 | 6 | Complete |
+| DEPL-01 | 8 | Complete |
+| DEPL-02 | 8 | Complete |
+| DEPL-03 | 8 | Complete |
+| DEPL-04 | 8 | Complete |
+| DEPL-05 | 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 44 total
 - Mapped to phases: 44
+- Complete: 44
 - Unmapped: 0
 
 ---
 *Requirements defined: 2025-01-24*
-*Last updated: 2025-01-25 after Phase 5 completion*
+*Last updated: 2026-01-26 after Milestone v0.1 completion*

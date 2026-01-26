@@ -21,7 +21,7 @@ BunBase delivers a backend-in-a-box alternative to PocketBase. The roadmap build
 - [x] **Phase 5: Admin Authentication** - JWT-based admin login and route protection
 - [x] **Phase 6: Admin UI Records** - Collection browser with record CRUD operations
 - [x] **Phase 7: Admin UI Schema Editor** - Runtime schema editing through web interface
-- [ ] **Phase 8: Single Binary Packaging** - Compile to standalone executable with embedded UI
+- [x] **Phase 8: Single Binary Packaging** - Compile to standalone executable with embedded UI
 
 ## Phase Details
 
@@ -163,8 +163,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md - CLI entry point with argument parsing (--port, --db, --help)
-- [ ] 08-02-PLAN.md - Build configuration and binary verification
+- [x] 08-01-PLAN.md - CLI entry point with argument parsing (--port, --db, --help)
+- [x] 08-02-PLAN.md - Build configuration and binary verification
 
 ---
 
@@ -182,7 +182,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Admin Authentication | 2/2 | Complete | 2025-01-25 |
 | 6. Admin UI Records | 5/5 | Complete | 2026-01-26 |
 | 7. Admin UI Schema Editor | 4/4 | Complete | 2026-01-26 |
-| 8. Single Binary Packaging | 0/2 | Not started | - |
+| 8. Single Binary Packaging | 2/2 | Complete | 2026-01-26 |
 
 ---
 
@@ -267,3 +267,6 @@ All 44 requirements mapped: Yes
 *Phase 6 complete: 2026-01-26*
 *Phase 7 planned: 2026-01-26*
 *Phase 7 complete: 2026-01-26*
+*Phase 8 planned: 2026-01-26*
+*Phase 8 complete: 2026-01-26*
+*Milestone v0.1 complete: 2026-01-26*
