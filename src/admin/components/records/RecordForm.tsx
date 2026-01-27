@@ -6,6 +6,7 @@
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { DynamicField } from "./DynamicField";
 import type { Field } from "@/hooks/useCollectionFields";
 
@@ -87,6 +88,7 @@ export function RecordForm({
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting || loading}>
+          {(isSubmitting || loading) && <Spinner className="mr-2" size="sm" />}
           {isSubmitting || loading
             ? "Saving..."
             : isEditing

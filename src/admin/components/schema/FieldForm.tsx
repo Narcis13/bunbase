@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import type { Field, FieldInput, Collection } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -103,6 +104,7 @@ export function FieldForm({
             },
           })}
           disabled={loading}
+          aria-invalid={!!errors.name}
         />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -215,6 +217,7 @@ export function FieldForm({
 
       {/* Submit Button */}
       <Button type="submit" className="w-full" disabled={loading}>
+        {loading && <Spinner className="mr-2" size="sm" />}
         {loading ? "Saving..." : field ? "Update Field" : "Create Field"}
       </Button>
     </form>

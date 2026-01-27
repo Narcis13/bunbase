@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 interface DeleteConfirmationProps {
   open: boolean;
@@ -60,6 +61,7 @@ export function DeleteConfirmation({
             disabled={loading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
+            {loading && <Spinner className="mr-2" size="sm" />}
             {loading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>

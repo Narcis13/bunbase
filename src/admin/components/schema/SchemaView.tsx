@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { Plus, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 import { FieldsTable } from "./FieldsTable";
 import { FieldSheet } from "./FieldSheet";
 import { useSchema } from "@/hooks/useSchema";
@@ -247,6 +248,7 @@ export function SchemaView({
               disabled={deletingFieldLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
+              {deletingFieldLoading && <Spinner className="mr-2" size="sm" />}
               {deletingFieldLoading ? "Deleting..." : "Delete Field"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -278,6 +280,7 @@ export function SchemaView({
               disabled={deletingCollection}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
+              {deletingCollection && <Spinner className="mr-2" size="sm" />}
               {deletingCollection ? "Deleting..." : "Delete Collection"}
             </AlertDialogAction>
           </AlertDialogFooter>
