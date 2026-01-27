@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { FIELD_TYPE_MAP, type Field, type FieldOptions } from "../types/collection.ts";
+import { FIELD_TYPE_MAP, type Field, type FieldOptions, type CollectionType } from "../types/collection.ts";
 
 /**
  * Validate that a name contains only safe characters (alphanumeric + underscore).
@@ -19,24 +19,43 @@ function validateIdentifier(name: string): void {
 /**
  * Generate CREATE TABLE SQL for a collection with system fields and user-defined fields.
  *
- * System fields (auto-added):
+ * System fields (auto-added for all collections):
  * - id: TEXT PRIMARY KEY
  * - created_at: TEXT DEFAULT (datetime('now'))
  * - updated_at: TEXT DEFAULT (datetime('now'))
  *
+ * Additional fields for auth collections:
+ * - email: TEXT UNIQUE NOT NULL
+ * - password_hash: TEXT NOT NULL
+ * - verified: INTEGER DEFAULT 0
+ *
  * @param tableName - Name of the table to create
  * @param fields - Array of user-defined field definitions
+ * @param collectionType - Type of collection ('base' or 'auth')
  * @returns CREATE TABLE SQL statement
  */
-export function createTableSQL(tableName: string, fields: Field[]): string {
+export function createTableSQL(
+  tableName: string,
+  fields: Field[],
+  collectionType: CollectionType = "base"
+): string {
   validateIdentifier(tableName);
 
   const columns: string[] = [
-    // System fields
+    // System fields for all collections
     "id TEXT PRIMARY KEY",
     "created_at TEXT DEFAULT (datetime('now'))",
     "updated_at TEXT DEFAULT (datetime('now'))",
   ];
+
+  // Add auth-specific system fields
+  if (collectionType === "auth") {
+    columns.push(
+      "email TEXT UNIQUE NOT NULL",
+      "password_hash TEXT NOT NULL",
+      "verified INTEGER DEFAULT 0"
+    );
+  }
 
   for (const field of fields) {
     validateIdentifier(field.name);
@@ -146,12 +165,14 @@ export function dropTableSQL(tableName: string): string {
  * @param tableName - Name of the table to migrate
  * @param newFields - New field definitions
  * @param oldFields - Current field definitions
+ * @param collectionType - Type of collection ('base' or 'auth')
  */
 export function migrateTable(
   db: Database,
   tableName: string,
   newFields: Field[],
-  oldFields: Field[]
+  oldFields: Field[],
+  collectionType: CollectionType = "base"
 ): void {
   validateIdentifier(tableName);
 
@@ -160,7 +181,14 @@ export function migrateTable(
   // Build list of columns to copy (exist in both old and new, plus system fields)
   const oldFieldNames = new Set(oldFields.map((f) => f.name));
   const newFieldNames = new Set(newFields.map((f) => f.name));
+
+  // System fields for all collections
   const systemFields = ["id", "created_at", "updated_at"];
+
+  // Add auth-specific system fields
+  if (collectionType === "auth") {
+    systemFields.push("email", "password_hash", "verified");
+  }
 
   // Columns to copy: system fields + fields that exist in both old and new
   const columnsToCopy = [
@@ -188,7 +216,7 @@ export function migrateTable(
         .all({ table: tableName });
 
       // 4. Create new table with temp name
-      const createSQL = createTableSQL(tempName, newFields);
+      const createSQL = createTableSQL(tempName, newFields, collectionType);
       db.run(createSQL);
 
       // 5. Copy data (only columns that exist in both)

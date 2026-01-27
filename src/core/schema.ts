@@ -1,7 +1,16 @@
 import { getDatabase } from "./database.ts";
 import { generateId } from "../utils/id.ts";
 import { createTableSQL, addColumnSQL, dropTableSQL, migrateTable } from "./migrations.ts";
-import type { Collection, Field, FieldType, FieldOptions } from "../types/collection.ts";
+import type {
+  Collection,
+  Field,
+  FieldType,
+  FieldOptions,
+  CollectionType,
+  CollectionRules,
+} from "../types/collection.ts";
+import { AUTH_SYSTEM_FIELDS } from "../types/collection.ts";
+import type { AuthCollectionOptions } from "../types/auth.ts";
 
 /**
  * Input type for creating fields (without auto-generated values)
@@ -16,6 +25,18 @@ export interface UpdateFieldInput {
   type?: FieldType;
   required?: boolean;
   options?: FieldOptions | null;
+}
+
+/**
+ * Options for creating a collection.
+ */
+export interface CreateCollectionOptions {
+  /** Collection type: 'base' (default) or 'auth' */
+  type?: CollectionType;
+  /** Auth-specific options (only used when type is 'auth') */
+  authOptions?: AuthCollectionOptions;
+  /** Access control rules for collection operations */
+  rules?: CollectionRules;
 }
 
 /**
@@ -42,10 +63,29 @@ function validateName(name: string, type: "collection" | "field"): void {
 export function getCollection(name: string): Collection | null {
   const db = getDatabase();
   const stmt = db.prepare(
-    "SELECT id, name, created_at, updated_at FROM _collections WHERE name = $name"
+    "SELECT id, name, type, options, rules, created_at, updated_at FROM _collections WHERE name = $name"
   );
-  const result = stmt.get({ name }) as Collection | null;
-  return result;
+  const row = stmt.get({ name }) as {
+    id: string;
+    name: string;
+    type: CollectionType;
+    options: string | null;
+    rules: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    options: row.options,
+    rules: row.rules ? JSON.parse(row.rules) : null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
 }
 
 /**
@@ -56,21 +96,49 @@ export function getCollection(name: string): Collection | null {
 export function getAllCollections(): Collection[] {
   const db = getDatabase();
   const stmt = db.prepare(
-    "SELECT id, name, created_at, updated_at FROM _collections ORDER BY name"
+    "SELECT id, name, type, options, rules, created_at, updated_at FROM _collections ORDER BY name"
   );
-  return stmt.all() as Collection[];
+  const rows = stmt.all() as Array<{
+    id: string;
+    name: string;
+    type: CollectionType;
+    options: string | null;
+    rules: string | null;
+    created_at: string;
+    updated_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    options: row.options,
+    rules: row.rules ? JSON.parse(row.rules) : null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
 }
 
 /**
  * Create a new collection with fields.
  * This creates both the metadata entries and the actual SQLite table.
  *
+ * For auth collections (type: 'auth'), system fields (email, password_hash, verified)
+ * are automatically added to the table - do not include them in the fields array.
+ *
  * @param name - Collection name
  * @param fields - Array of field definitions
+ * @param options - Optional collection options (type, authOptions, rules)
  * @returns The created collection
  */
-export function createCollection(name: string, fields: FieldInput[]): Collection {
+export function createCollection(
+  name: string,
+  fields: FieldInput[],
+  options?: CreateCollectionOptions
+): Collection {
   const db = getDatabase();
+
+  const collectionType = options?.type ?? "base";
 
   // Validate name
   validateName(name, "collection");
@@ -81,13 +149,31 @@ export function createCollection(name: string, fields: FieldInput[]): Collection
     throw new Error(`Collection "${name}" already exists`);
   }
 
-  // Validate field names
+  // Validate field names and check for conflicts with auth system fields
   for (const field of fields) {
     validateName(field.name, "field");
+
+    // For auth collections, ensure user-defined fields don't conflict with system fields
+    if (collectionType === "auth") {
+      if (AUTH_SYSTEM_FIELDS.includes(field.name as (typeof AUTH_SYSTEM_FIELDS)[number])) {
+        throw new Error(
+          `Field "${field.name}" conflicts with auth system field. ` +
+            `Auth collections automatically have: ${AUTH_SYSTEM_FIELDS.join(", ")}`
+        );
+      }
+    }
   }
 
   const collectionId = generateId();
   const now = new Date().toISOString();
+
+  // Serialize options based on collection type
+  const serializedOptions =
+    collectionType === "auth" && options?.authOptions
+      ? JSON.stringify(options.authOptions)
+      : null;
+
+  const serializedRules = options?.rules ? JSON.stringify(options.rules) : null;
 
   // Build field records for createTableSQL
   const fieldRecords: Field[] = fields.map((f) => ({
@@ -102,17 +188,21 @@ export function createCollection(name: string, fields: FieldInput[]): Collection
 
   // Use transaction for atomicity
   const createCollectionTx = db.transaction(() => {
-    // Insert collection
+    // Insert collection with type, options, and rules
     db.prepare(
-      "INSERT INTO _collections (id, name, created_at, updated_at) VALUES ($id, $name, $created_at, $updated_at)"
+      `INSERT INTO _collections (id, name, type, options, rules, created_at, updated_at)
+       VALUES ($id, $name, $type, $options, $rules, $created_at, $updated_at)`
     ).run({
       id: collectionId,
       name,
+      type: collectionType,
+      options: serializedOptions,
+      rules: serializedRules,
       created_at: now,
       updated_at: now,
     });
 
-    // Insert fields
+    // Insert fields (user-defined only, not system fields)
     const insertField = db.prepare(`
       INSERT INTO _fields (id, collection_id, name, type, required, options, created_at)
       VALUES ($id, $collection_id, $name, $type, $required, $options, $created_at)
@@ -129,8 +219,8 @@ export function createCollection(name: string, fields: FieldInput[]): Collection
       });
     }
 
-    // Create the SQLite table using migrations module
-    const sql = createTableSQL(name, fieldRecords);
+    // Create the SQLite table using migrations module (with collection type)
+    const sql = createTableSQL(name, fieldRecords, collectionType);
     db.run(sql);
   });
 
@@ -139,6 +229,9 @@ export function createCollection(name: string, fields: FieldInput[]): Collection
   return {
     id: collectionId,
     name,
+    type: collectionType,
+    options: serializedOptions,
+    rules: options?.rules ?? null,
     created_at: now,
     updated_at: now,
   };
@@ -192,8 +285,12 @@ export function updateCollection(name: string, newName: string): Collection {
   transaction();
 
   return {
-    ...existing,
+    id: existing.id,
     name: newName,
+    type: existing.type,
+    options: existing.options,
+    rules: existing.rules,
+    created_at: existing.created_at,
     updated_at: now,
   };
 }
@@ -432,7 +529,7 @@ export function updateField(
       const updatedFields = allFields.map((f) =>
         f.id === existingField.id ? updatedField : f
       );
-      migrateTable(db, collectionName, updatedFields, allFields);
+      migrateTable(db, collectionName, updatedFields, allFields, collection.type);
     } else if (nameChanged) {
       // Just rename column (SQLite 3.25+)
       db.run(`ALTER TABLE ${collectionName} RENAME COLUMN ${fieldName} TO ${updates.name}`);
@@ -485,7 +582,7 @@ export function removeField(collectionName: string, fieldName: string): void {
     const remainingFields = allFields.filter((f) => f.id !== existingField.id);
 
     // Migrate table to remove column
-    migrateTable(db, collectionName, remainingFields, allFields);
+    migrateTable(db, collectionName, remainingFields, allFields, collection.type);
 
     // Delete field metadata
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -500,4 +597,15 @@ export function removeField(collectionName: string, fieldName: string): void {
   });
 
   transaction();
+}
+
+/**
+ * Check if a collection is an auth collection.
+ *
+ * @param name - Collection name
+ * @returns true if the collection is an auth collection, false otherwise
+ */
+export function isAuthCollection(name: string): boolean {
+  const collection = getCollection(name);
+  return collection?.type === "auth";
 }
