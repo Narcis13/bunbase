@@ -47,6 +47,23 @@ export interface Field {
 }
 
 /**
+ * Collection type: 'base' for regular collections, 'auth' for user auth collections.
+ */
+export type CollectionType = "base" | "auth";
+
+/**
+ * Access control rules for collection operations.
+ * null = locked (admin only), '' = public, string = filter expression
+ */
+export interface CollectionRules {
+  listRule: string | null;
+  viewRule: string | null;
+  createRule: string | null;
+  updateRule: string | null;
+  deleteRule: string | null;
+}
+
+/**
  * A collection definition.
  */
 export interface Collection {
@@ -54,6 +71,12 @@ export interface Collection {
   id: string;
   /** Collection name (unique across all collections) */
   name: string;
+  /** Collection type: 'base' or 'auth' */
+  type: CollectionType;
+  /** JSON-encoded options (e.g., AuthCollectionOptions for auth collections) */
+  options: string | null;
+  /** Access control rules for collection operations */
+  rules: CollectionRules | null;
   /** When this collection was created (ISO 8601) */
   created_at: string;
   /** When this collection was last updated (ISO 8601) */
@@ -72,3 +95,13 @@ export const FIELD_TYPE_MAP: Record<FieldType, string> = {
   json: "TEXT", // JSON stringified
   relation: "TEXT", // Foreign ID
 } as const;
+
+/**
+ * System fields automatically added to auth collections.
+ * These are added to the SQL table and should not be defined by users.
+ */
+export const AUTH_SYSTEM_FIELDS = [
+  "email",
+  "password_hash",
+  "verified",
+] as const;

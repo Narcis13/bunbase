@@ -12,6 +12,9 @@ const INIT_METADATA_SQL = `
   CREATE TABLE IF NOT EXISTS _collections (
     id TEXT PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
+    type TEXT NOT NULL DEFAULT 'base' CHECK(type IN ('base', 'auth')),
+    options TEXT,
+    rules TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
