@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 10 - User Authentication
-Plan: 03 of 6 complete (10-01, 10-02, 10-03)
+Plan: 04 of 6 complete (10-01, 10-02, 10-03, 10-04)
 Status: In progress
-Last activity: 2026-01-27 — Completed 10-03-PLAN.md (User Auth Operations)
+Last activity: 2026-01-27 — Completed 10-04-PLAN.md (Email Verification)
 
-Progress: [████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 42% (5/12 v0.2 plans)
+Progress: [██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░] 50% (6/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -25,7 +25,7 @@ Progress: [████████████░░░░░░░░░░░
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
-| 10 | User Authentication | 11 | In Progress (3/6 plans) |
+| 10 | User Authentication | 11 | In Progress (4/6 plans) |
 | 11 | File Uploads | 10 | Pending |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
@@ -56,6 +56,10 @@ v0.2 decisions made:
 - Token rotation on refresh: old token immediately revoked (10-03)
 - Password change revokes all refresh tokens for user (10-03)
 - Generic "Invalid credentials" error for both wrong password and non-existent user (10-03)
+- Verification tokens hashed with SHA-256 before storage (10-04)
+- 64-character tokens via nanoid for sufficient entropy (10-04)
+- Previous unused tokens invalidated when new one created (10-04)
+- GET endpoint for confirm-verification returns HTML for direct link clicking (10-04)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -71,12 +75,12 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 10-03-PLAN.md
+Stopped at: Completed 10-04-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Continue Phase 10 — Execute 10-04-PLAN.md (Protected Routes Middleware)
+Continue Phase 10 — Execute 10-05-PLAN.md (Password Reset)
 
 ---
-*State updated: 2026-01-27 after completing 10-03-PLAN.md*
+*State updated: 2026-01-27 after completing 10-04-PLAN.md*
