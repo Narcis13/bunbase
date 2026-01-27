@@ -134,6 +134,7 @@ export function RecordsTable({
                 size="sm"
                 className="h-8 w-8 p-0"
                 onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
@@ -206,8 +207,25 @@ export function RecordsTable({
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className="cursor-pointer"
+              tabIndex={0}
+              className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset"
               onClick={() => onRowClick(row.original)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onRowClick(row.original);
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  const nextRow = e.currentTarget.nextElementSibling as HTMLElement;
+                  nextRow?.focus();
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const prevRow = e.currentTarget.previousElementSibling as HTMLElement;
+                  prevRow?.focus();
+                }
+              }}
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
