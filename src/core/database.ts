@@ -101,13 +101,22 @@ export function initDatabase(path: string): Database {
  * the initial schema was created.
  */
 function runMigrations(db: Database): void {
-  // Migration 1: Add 'type' column to _collections if it doesn't exist
-  // This column was added in Phase 10 (User Authentication)
   const collectionsInfo = db.query("PRAGMA table_info(_collections)").all() as Array<{ name: string }>;
-  const hasTypeColumn = collectionsInfo.some(col => col.name === "type");
+  const existingColumns = new Set(collectionsInfo.map(col => col.name));
 
-  if (!hasTypeColumn) {
-    db.run("ALTER TABLE _collections ADD COLUMN type TEXT NOT NULL DEFAULT 'base' CHECK(type IN ('base', 'auth'))");
+  // Migration: Add missing columns to _collections
+  // These columns were added in later phases
+  if (!existingColumns.has("type")) {
+    db.run("ALTER TABLE _collections ADD COLUMN type TEXT DEFAULT 'base'");
+  }
+  if (!existingColumns.has("options")) {
+    db.run("ALTER TABLE _collections ADD COLUMN options TEXT");
+  }
+  if (!existingColumns.has("rules")) {
+    db.run("ALTER TABLE _collections ADD COLUMN rules TEXT");
+  }
+  if (!existingColumns.has("updated_at")) {
+    db.run("ALTER TABLE _collections ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
   }
 }
 
