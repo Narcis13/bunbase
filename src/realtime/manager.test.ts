@@ -127,55 +127,62 @@ describe("RealtimeManager", () => {
   });
 
   describe("setSubscriptions", () => {
-    test("sets subscriptions for client", () => {
+    test("parses topic strings into subscriptions", () => {
       manager.registerClient("client-1", mockController);
 
-      const subscriptions: Subscription[] = [
-        { collection: "posts", recordId: "*" },
-        { collection: "users", recordId: "user-123" },
-      ];
-
-      manager.setSubscriptions("client-1", subscriptions);
+      manager.setSubscriptions("client-1", ["posts/*", "users/user123"]);
 
       const client = manager.getClient("client-1");
-      expect(client?.subscriptions).toEqual(subscriptions);
+      expect(client?.subscriptions).toEqual([
+        { collection: "posts", recordId: "*" },
+        { collection: "users", recordId: "user123" },
+      ]);
     });
 
     test("replaces existing subscriptions", () => {
       manager.registerClient("client-1", mockController);
 
-      manager.setSubscriptions("client-1", [
-        { collection: "posts", recordId: "*" },
-      ]);
-      manager.setSubscriptions("client-1", [
-        { collection: "users", recordId: "user-123" },
-      ]);
+      manager.setSubscriptions("client-1", ["posts/*"]);
+      manager.setSubscriptions("client-1", ["users/user123"]);
 
       const client = manager.getClient("client-1");
       expect(client?.subscriptions).toEqual([
-        { collection: "users", recordId: "user-123" },
+        { collection: "users", recordId: "user123" },
       ]);
     });
 
-    test("can set empty subscriptions", () => {
+    test("can set empty subscriptions (unsubscribe all)", () => {
       manager.registerClient("client-1", mockController);
 
-      manager.setSubscriptions("client-1", [
-        { collection: "posts", recordId: "*" },
-      ]);
+      manager.setSubscriptions("client-1", ["posts/*"]);
       manager.setSubscriptions("client-1", []);
 
       const client = manager.getClient("client-1");
       expect(client?.subscriptions).toEqual([]);
     });
 
+    test("filters out invalid topics", () => {
+      manager.registerClient("client-1", mockController);
+
+      manager.setSubscriptions("client-1", [
+        "posts/*",
+        "invalid",
+        "users/abc123",
+        "another-invalid-topic",
+      ]);
+
+      const client = manager.getClient("client-1");
+      expect(client?.subscriptions).toEqual([
+        { collection: "posts", recordId: "*" },
+        { collection: "users", recordId: "abc123" },
+      ]);
+    });
+
     test("updates lastActivity when setting subscriptions", () => {
       manager.registerClient("client-1", mockController);
       const before = manager.getClient("client-1")?.lastActivity || 0;
 
-      manager.setSubscriptions("client-1", [
-        { collection: "posts", recordId: "*" },
-      ]);
+      manager.setSubscriptions("client-1", ["posts/*"]);
       const after = manager.getClient("client-1")?.lastActivity || 0;
 
       expect(after).toBeGreaterThanOrEqual(before);
@@ -252,9 +259,7 @@ describe("RealtimeManager", () => {
       };
 
       manager.setClientAuth("client-1", user1);
-      manager.setSubscriptions("client-2", [
-        { collection: "posts", recordId: "*" },
-      ]);
+      manager.setSubscriptions("client-2", ["posts/*"]);
 
       const c1 = manager.getClient("client-1");
       const c2 = manager.getClient("client-2");
