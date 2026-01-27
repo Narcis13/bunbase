@@ -46,7 +46,7 @@ export function Layout({
             {currentCollection || "Dashboard"}
           </h1>
         </header>
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 overflow-hidden p-4">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

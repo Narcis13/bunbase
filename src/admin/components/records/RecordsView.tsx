@@ -138,7 +138,7 @@ export function RecordsView({ collection }: RecordsViewProps) {
   return (
     <div className="space-y-4">
       {/* Header with create button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="text-sm text-muted-foreground">
           {loading ? (
             "Loading..."
@@ -148,25 +148,27 @@ export function RecordsView({ collection }: RecordsViewProps) {
             </>
           )}
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           New Record
         </Button>
       </div>
 
       {/* Records table */}
-      <RecordsTable
-        records={records}
-        fields={fields}
-        loading={loading || fieldsLoading}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
-        onRowClick={handleEdit}
-      />
+      <div className="overflow-x-auto">
+        <RecordsTable
+          records={records}
+          fields={fields}
+          loading={loading || fieldsLoading}
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+          onRowClick={handleEdit}
+        />
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
           </div>
@@ -178,7 +180,7 @@ export function RecordsView({ collection }: RecordsViewProps) {
               disabled={page <= 1 || loading}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              <span className="sr-only sm:not-sr-only">Previous</span>
             </Button>
             <Button
               variant="outline"
@@ -186,7 +188,7 @@ export function RecordsView({ collection }: RecordsViewProps) {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
             >
-              Next
+              <span className="sr-only sm:not-sr-only">Next</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

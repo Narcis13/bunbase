@@ -38,7 +38,7 @@ export function Dashboard({ onNavigateToCollection }: DashboardProps) {
   return (
     <div className="space-y-8">
       {/* Summary stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border bg-card p-4">
           <div className="text-sm font-medium text-muted-foreground">
             Total Collections
@@ -61,7 +61,7 @@ export function Dashboard({ onNavigateToCollection }: DashboardProps) {
       <div>
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-32 w-full" />
             ))}
@@ -75,7 +75,7 @@ export function Dashboard({ onNavigateToCollection }: DashboardProps) {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {userCollections.map((collection) => (
               <CollectionCard
                 key={collection.id}
@@ -96,7 +96,7 @@ export function Dashboard({ onNavigateToCollection }: DashboardProps) {
           <h2 className="text-sm font-medium text-muted-foreground mb-3">
             System Collections
           </h2>
-          <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {systemCollections.map((collection) => (
               <button
                 key={collection.id}
