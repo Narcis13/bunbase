@@ -95,6 +95,7 @@ export function CreateCollectionSheet({
                 },
               })}
               disabled={loading}
+              aria-invalid={!!errors.name}
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
