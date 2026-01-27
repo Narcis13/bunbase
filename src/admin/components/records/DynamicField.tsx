@@ -49,6 +49,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                   {...formField}
                   value={(formField.value as string) ?? ""}
                   placeholder={`Enter ${field.name}`}
+                  aria-invalid={!!error}
                 />
               );
 
@@ -65,6 +66,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                     formField.onChange(val === "" ? null : Number(val));
                   }}
                   placeholder={`Enter ${field.name}`}
+                  aria-invalid={!!error}
                 />
               );
 
@@ -93,6 +95,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                     const val = e.target.value;
                     formField.onChange(val ? new Date(val).toISOString() : null);
                   }}
+                  aria-invalid={!!error}
                 />
               );
 
@@ -117,6 +120,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                   }}
                   placeholder="Enter JSON"
                   className="font-mono text-sm min-h-[100px]"
+                  aria-invalid={!!error}
                 />
               );
 
@@ -128,6 +132,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                   value={(formField.value as string) ?? ""}
                   placeholder={`Enter ${field.options?.target || "record"} ID`}
                   className="font-mono"
+                  aria-invalid={!!error}
                 />
               );
 
@@ -137,6 +142,7 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                   id={field.name}
                   {...formField}
                   value={(formField.value as string) ?? ""}
+                  aria-invalid={!!error}
                 />
               );
           }
