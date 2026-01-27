@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 9 - Email Service (VERIFIED ✓)
-Plan: —
-Status: Phase verified, ready for Phase 10
-Last activity: 2026-01-27 — Phase 9 verified and approved
+Phase: 10 - User Authentication
+Plan: 02 of 6 complete
+Status: In progress
+Last activity: 2026-01-27 — Completed 10-02-PLAN.md (User JWT Infrastructure)
 
-Progress: [████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 25% (3/12 v0.2 plans)
+Progress: [██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 33% (4/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -24,8 +24,8 @@ Progress: [████████░░░░░░░░░░░░░░░
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 9 | Email Service | 3 | ✓ Verified |
-| 10 | User Authentication | 11 | Pending |
+| 9 | Email Service | 3 | Verified |
+| 10 | User Authentication | 11 | In Progress (2/6 plans) |
 | 11 | File Uploads | 10 | Pending |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
@@ -46,9 +46,11 @@ v0.2 decisions made:
 - Sanitize error messages to prevent credential leaks
 - CLI flags take precedence over env vars for SMTP configuration
 - Server starts normally without SMTP config (graceful degradation)
+- Token expiration: 15min access + 7day refresh (decided in 10-02)
+- Store token_id in DB, not actual token (security)
+- Reuse JWT_SECRET for admin and user tokens
 
 v0.2 decisions pending:
-- Token expiration strategy (15min access + 7day refresh vs 24h access only)
 - Email templates design (plain text vs HTML) - start with plain text
 
 ### Pending Todos
@@ -62,12 +64,12 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Phase 9 verified
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Plan Phase 10 (User Authentication) — `/gsd:discuss-phase 10` or `/gsd:plan-phase 10`
+Continue Phase 10 — Execute 10-03-PLAN.md (Auth Collection & Routes)
 
 ---
-*State updated: 2026-01-27 after Phase 9 verification*
+*State updated: 2026-01-27 after completing 10-02-PLAN.md*
