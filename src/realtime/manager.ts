@@ -11,6 +11,8 @@
  */
 
 import type { AuthenticatedUser } from "../auth/middleware";
+import { formatSSEMessage, formatSSEComment } from "./sse";
+import { nanoid } from "nanoid";
 
 /**
  * A subscription to a collection's realtime updates.
@@ -147,5 +149,67 @@ export class RealtimeManager {
    */
   getClientCount(): number {
     return this.clients.size;
+  }
+
+  /**
+   * Get all client IDs.
+   *
+   * @returns Array of all connected client IDs
+   */
+  getAllClientIds(): string[] {
+    return Array.from(this.clients.keys());
+  }
+
+  /**
+   * Send an SSE event to a specific client.
+   *
+   * @param clientId - Client ID to send to
+   * @param event - Event type name
+   * @param data - Event data (will be JSON stringified)
+   * @returns true if sent successfully, false if client not found or error
+   */
+  async sendEvent(
+    clientId: string,
+    event: string,
+    data: unknown
+  ): Promise<boolean> {
+    const client = this.clients.get(clientId);
+    if (!client) {
+      return false;
+    }
+
+    try {
+      const message = formatSSEMessage({ event, data, id: nanoid() });
+      await client.controller.write(message);
+      await client.controller.flush();
+      return true;
+    } catch {
+      // Client likely disconnected
+      return false;
+    }
+  }
+
+  /**
+   * Send an SSE comment (keep-alive) to a specific client.
+   *
+   * @param clientId - Client ID to send to
+   * @param comment - Comment text
+   * @returns true if sent successfully, false if client not found or error
+   */
+  async sendComment(clientId: string, comment: string): Promise<boolean> {
+    const client = this.clients.get(clientId);
+    if (!client) {
+      return false;
+    }
+
+    try {
+      const formatted = formatSSEComment(comment);
+      await client.controller.write(formatted);
+      await client.controller.flush();
+      return true;
+    } catch {
+      // Client likely disconnected
+      return false;
+    }
   }
 }
