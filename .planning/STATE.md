@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 11 - File Uploads (COMPLETE)
-Plan: 06 of 6 complete (11-01, 11-02, 11-03, 11-04, 11-05, 11-06)
-Status: Phase complete
-Last activity: 2026-01-27 — Completed 11-06-PLAN.md (File Cleanup Hooks)
+Phase: 12 - Realtime/SSE (IN PROGRESS)
+Plan: 02 of 6 complete (12-02)
+Status: Executing Wave 1
+Last activity: 2026-01-27 — Completed 12-02-PLAN.md (Topic Parsing)
 
-Progress: [████████████████████████████████████░░░░░░░░] 75% (15/20 v0.2 plans)
+Progress: [█████████████████████████████████████░░░░░░░] 80% (16/20 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -27,7 +27,7 @@ Progress: [███████████████████████
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
 | 11 | File Uploads | 10 | Verified |
-| 12 | Realtime/SSE | 10 | Pending |
+| 12 | Realtime/SSE | 10 | In Progress |
 | 13 | UI Polish | 7 | Pending |
 
 ## Accumulated Context
@@ -89,6 +89,9 @@ v0.2 decisions made:
 - URL transformation happens at response time, not storage time (11-05)
 - File cleanup hook uses afterDelete, logs errors but doesn't throw (11-06)
 - Cleanup only runs for collections with file fields (optimization) (11-06)
+- Topic format: collection/* for wildcard, collection/recordId for specific (12-02)
+- Collection names: alphanumeric + underscore, must start with letter (12-02)
+- Invalid topics return null (fail-safe parsing, not exceptions) (12-02)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -104,13 +107,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 11-06-PLAN.md (Phase 11 complete)
+Stopped at: Completed 12-02-PLAN.md (Topic Parsing)
 Resume file: None
 
 ## Next Steps
 
-Phase 11 (File Uploads) complete. All v0.2 core phases done.
-Ready for Phase 12 (Realtime/SSE) or Phase 13 (UI Polish).
+Phase 12 (Realtime/SSE) Wave 1 in progress.
+Next: Continue with 12-01 (SSE types), 12-03 (Subscription Manager), or remaining Wave 1 plans.
 
 ---
-*State updated: 2026-01-27 after completing 11-06-PLAN.md*
+*State updated: 2026-01-27 after completing 12-02-PLAN.md*
