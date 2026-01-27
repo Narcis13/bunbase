@@ -1156,6 +1156,9 @@ export async function startServer(
   // Register realtime hooks for broadcasting record changes to SSE subscribers
   registerRealtimeHooks(hookManager, realtimeManager);
 
+  // Start inactivity cleanup (check every minute)
+  realtimeManager.startInactivityCleanup(60000);
+
   // Initialize email service if configured
   if (smtpConfig) {
     initEmailService(smtpConfig);
