@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 11 - File Uploads (IN PROGRESS)
-Plan: 05 of 6 complete (11-01, 11-02, 11-03, 11-04, 11-05)
-Status: In progress
-Last activity: 2026-01-27 — Completed 11-05-PLAN.md (File Serving)
+Phase: 11 - File Uploads (COMPLETE)
+Plan: 06 of 6 complete (11-01, 11-02, 11-03, 11-04, 11-05, 11-06)
+Status: Phase complete
+Last activity: 2026-01-27 — Completed 11-06-PLAN.md (File Cleanup Hooks)
 
-Progress: [█████████████████████████████░░░░░░░░░░░░░] 94% (12/13 v0.2 plans)
+Progress: [███████████████████████████████████████████] 100% (13/13 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [███████████████████████
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | In Progress (5/6) |
+| 11 | File Uploads | 10 | Complete |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 
@@ -87,6 +87,8 @@ v0.2 decisions made:
 - File access uses same view rules as record access (11-05)
 - Bun.file() handles Content-Type automatically from extension (11-05)
 - URL transformation happens at response time, not storage time (11-05)
+- File cleanup hook uses afterDelete, logs errors but doesn't throw (11-06)
+- Cleanup only runs for collections with file fields (optimization) (11-06)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -102,13 +104,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 11-05-PLAN.md
+Stopped at: Completed 11-06-PLAN.md (Phase 11 complete)
 Resume file: None
 
 ## Next Steps
 
-Phase 11 (File Uploads) in progress. Next:
-- 11-06: Admin UI (final plan in phase)
+Phase 11 (File Uploads) complete. All v0.2 core phases done.
+Ready for Phase 12 (Realtime/SSE) or Phase 13 (UI Polish).
 
 ---
-*State updated: 2026-01-27 after completing 11-05-PLAN.md*
+*State updated: 2026-01-27 after completing 11-06-PLAN.md*
