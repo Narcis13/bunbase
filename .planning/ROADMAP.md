@@ -167,10 +167,17 @@ Plans:
 
 **Dependencies:** None (can run in parallel with other phases after Phase 10)
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Spinner component and loading state updates (Wave 1)
+- [ ] 13-02-PLAN.md — Form validation with aria-invalid accessibility (Wave 1)
+- [ ] 13-03-PLAN.md — Keyboard navigation and responsive refinements (Wave 2)
+
 **Requirements:**
 - UI-01: Loading states with spinners during async operations
-- UI-02: Error toast notifications on failures
-- UI-03: Success toast confirmations on actions
+- UI-02: Error toast notifications on failures (already implemented)
+- UI-03: Success toast confirmations on actions (already implemented)
 - UI-04: Form validation feedback with inline errors
 - UI-05: Consistent spacing throughout admin UI
 - UI-06: Keyboard navigation for forms and tables
@@ -222,3 +229,4 @@ Phase 9 (Email) ──┐
 *Phase 11 complete: 2026-01-27*
 *Phase 12 planned: 2026-01-27*
 *Phase 12 complete: 2026-01-27*
+*Phase 13 planned: 2026-01-27*
