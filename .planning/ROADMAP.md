@@ -26,7 +26,7 @@
 
 **Plans:** 3 plans
 
-**Status:** ✓ Complete (2026-01-27)
+**Status:** Complete (2026-01-27)
 
 Plans:
 - [x] 09-01-PLAN.md — Config types and template utilities
@@ -50,6 +50,16 @@ Plans:
 **Goal:** Users can securely manage their accounts with email/password authentication.
 
 **Dependencies:** Phase 9 (Email Service for verification and password reset)
+
+**Plans:** 6 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Auth types, password validation, auth collection schema (Wave 1)
+- [ ] 10-02-PLAN.md — User JWT tokens and refresh token storage (Wave 1)
+- [ ] 10-03-PLAN.md — Signup, login, token refresh endpoints (Wave 2)
+- [ ] 10-04-PLAN.md — Email verification flow with secure tokens (Wave 2)
+- [ ] 10-05-PLAN.md — Password reset flow with secure tokens (Wave 2)
+- [ ] 10-06-PLAN.md — Auth middleware and collection rules (Wave 3)
 
 **Requirements:**
 - AUTH-01: Auth collection type with special fields (email, password_hash, verified, created, updated)
@@ -180,3 +190,4 @@ Phase 9 (Email) ──┐
 *Roadmap created: 2026-01-26*
 *Phase 9 planned: 2026-01-27*
 *Phase 9 complete: 2026-01-27*
+*Phase 10 planned: 2026-01-27*
