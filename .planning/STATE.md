@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 11 - File Uploads (IN PROGRESS)
-Plan: 02 of 6 complete (11-01, 11-02)
+Plan: 03 of 6 complete (11-01, 11-02, 11-03)
 Status: In progress
-Last activity: 2026-01-27 — Completed 11-02-PLAN.md (File Storage Operations)
+Last activity: 2026-01-27 — Completed 11-03-PLAN.md (File Validation)
 
-Progress: [██████████████████████░░░░░░░░░░░░░░░░░░░░] 83% (10/12 v0.2 plans)
+Progress: [█████████████████████████░░░░░░░░░░░░░░░░░] 92% (11/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [██████████████████████░
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | In Progress (2/6) |
+| 11 | File Uploads | 10 | In Progress (3/6) |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 
@@ -75,6 +75,10 @@ v0.2 decisions made:
 - Storage structure: {storageDir}/{collectionName}/{recordId}/filename (11-02)
 - Idempotent delete operations - no throw on missing files/directories (11-02)
 - listRecordFiles returns empty array for non-existent directories (11-02)
+- Default max file size: 10MB when maxSize not specified (11-03)
+- Default max files per field: 1 when maxFiles not specified (11-03)
+- Wildcard MIME types use prefix matching (e.g., image/* matches image/jpeg) (11-03)
+- Error accumulation: collect all validation errors rather than fail-fast (11-03)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -90,16 +94,15 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 11-02-PLAN.md
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
 
 ## Next Steps
 
 Phase 11 (File Uploads) in progress. Next:
-- 11-03: Upload Endpoint
-- 11-04: File Serving
-- 11-05: File Deletion
+- 11-04: Upload Endpoint
+- 11-05: File Serving
 - 11-06: Admin UI
 
 ---
-*State updated: 2026-01-27 after completing 11-02-PLAN.md*
+*State updated: 2026-01-27 after completing 11-03-PLAN.md*
