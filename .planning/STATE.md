@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 10 - User Authentication
-Plan: 02 of 6 complete (10-01 and 10-02)
+Plan: 03 of 6 complete (10-01, 10-02, 10-03)
 Status: In progress
-Last activity: 2026-01-27 — Completed 10-01-PLAN.md (Auth Types & Collection Schema)
+Last activity: 2026-01-27 — Completed 10-03-PLAN.md (User Auth Operations)
 
-Progress: [██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 33% (4/12 v0.2 plans)
+Progress: [████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 42% (5/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -25,7 +25,7 @@ Progress: [██████████░░░░░░░░░░░░░
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
-| 10 | User Authentication | 11 | In Progress (2/6 plans) |
+| 10 | User Authentication | 11 | In Progress (3/6 plans) |
 | 11 | File Uploads | 10 | Pending |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
@@ -52,6 +52,10 @@ v0.2 decisions made:
 - Auth collections use type field ('base' | 'auth') rather than separate table
 - Password requires 8+ chars, at least 1 letter, at least 1 number (configurable minLength)
 - Auth system fields (email, password_hash, verified) auto-added to table
+- Timing attack prevention: verify against dummy hash when user not found (10-03)
+- Token rotation on refresh: old token immediately revoked (10-03)
+- Password change revokes all refresh tokens for user (10-03)
+- Generic "Invalid credentials" error for both wrong password and non-existent user (10-03)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -67,12 +71,12 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 10-01-PLAN.md
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Continue Phase 10 — Execute 10-03-PLAN.md (Auth Collection & Routes)
+Continue Phase 10 — Execute 10-04-PLAN.md (Protected Routes Middleware)
 
 ---
-*State updated: 2026-01-27 after completing 10-01-PLAN.md*
+*State updated: 2026-01-27 after completing 10-03-PLAN.md*
