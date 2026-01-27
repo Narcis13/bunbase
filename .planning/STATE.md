@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 12 - Realtime/SSE (IN PROGRESS)
-Plan: 05 of 6 complete (12-01, 12-02, 12-03, 12-04, 12-05)
-Status: Executing Wave 3
-Last activity: 2026-01-27 — Completed 12-05-PLAN.md (Event Broadcasting)
+Phase: 12 - Realtime/SSE (COMPLETE)
+Plan: 06 of 6 complete (12-01, 12-02, 12-03, 12-04, 12-05, 12-06)
+Status: Phase 12 Complete
+Last activity: 2026-01-27 — Completed 12-06-PLAN.md (Connection Lifecycle)
 
-Progress: [███████████████████████████████████████████░] 96% (20/21 v0.2 plans)
+Progress: [████████████████████████████████████████████] 100% (21/21 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -27,7 +27,7 @@ Progress: [███████████████████████
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
 | 11 | File Uploads | 10 | Verified |
-| 12 | Realtime/SSE | 10 | In Progress |
+| 12 | Realtime/SSE | 10 | Complete |
 | 13 | UI Polish | 7 | Pending |
 
 ## Accumulated Context
@@ -109,6 +109,10 @@ v0.2 decisions made:
 - Fire-and-forget broadcasting: don't block API responses (12-05)
 - Event format: { action, record } following PocketBase convention (12-05)
 - Remove client from manager on send error (disconnected cleanup) (12-05)
+- 5-minute inactivity timeout for SSE connections (12-06)
+- 60-second cleanup interval (12-06)
+- setInactivityTimeout() for testing flexibility (12-06)
+- Cleanup logs to console when clients removed (12-06)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -124,13 +128,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 12-05-PLAN.md (Event Broadcasting)
+Stopped at: Completed 12-06-PLAN.md (Connection Lifecycle)
 Resume file: None
 
 ## Next Steps
 
-Phase 12 (Realtime/SSE) Wave 3 complete.
-Next: 12-06 (Connection Lifecycle) to complete Phase 12, then Phase 13 (UI Polish).
+Phase 12 (Realtime/SSE) is COMPLETE. All 10 requirements implemented.
+Next: Phase 13 (UI Polish) to complete v0.2 milestone.
 
 ---
-*State updated: 2026-01-27 after completing 12-05-PLAN.md*
+*State updated: 2026-01-27 after completing 12-06-PLAN.md*
