@@ -3,6 +3,12 @@ import { generateId } from "../utils/id.ts";
 import { createSystemFields } from "../types/record.ts";
 import { getFields, getCollection } from "./schema.ts";
 import { validateRecord, formatValidationErrors } from "./validation.ts";
+import { saveFile } from "../storage/files.ts";
+import {
+  validateFieldFiles,
+  formatFileErrors,
+  type FileValidationError,
+} from "../storage/validation.ts";
 import { buildListQuery } from "./query.ts";
 import { expandRelations } from "./expand.ts";
 import { HookManager } from "./hooks.ts";
@@ -664,4 +670,192 @@ export async function deleteRecordWithHooks(
   } catch (error) {
     console.error("afterDelete hook error:", error);
   }
+}
+
+// ============================================================================
+// File-aware record operations
+// ============================================================================
+
+/**
+ * Get file field definitions for a collection.
+ */
+function getFileFields(collectionName: string): Field[] {
+  const fields = getFields(collectionName);
+  return fields.filter((f) => f.type === "file");
+}
+
+/**
+ * Validate uploaded files against field options.
+ *
+ * @param collectionName - Name of the collection
+ * @param files - Map of field names to File arrays
+ * @returns Array of validation errors (empty if all valid)
+ */
+function validateUploadedFiles(
+  collectionName: string,
+  files: Map<string, File[]>
+): FileValidationError[] {
+  const fileFields = getFileFields(collectionName);
+  const errors: FileValidationError[] = [];
+
+  for (const field of fileFields) {
+    const fieldFiles = files.get(field.name) ?? [];
+    if (fieldFiles.length === 0) continue;
+
+    const fieldErrors = validateFieldFiles(
+      field.name,
+      fieldFiles,
+      field.options ?? {}
+    );
+    errors.push(...fieldErrors);
+  }
+
+  // Check for files uploaded to non-file fields
+  for (const [fieldName, fieldFiles] of files) {
+    const field = fileFields.find((f) => f.name === fieldName);
+    if (!field && fieldFiles.length > 0) {
+      errors.push({
+        field: fieldName,
+        file: "",
+        message: `Field "${fieldName}" is not a file field`,
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Save files for a record and return the update data.
+ *
+ * @param collectionName - Name of the collection
+ * @param recordId - ID of the record
+ * @param files - Map of field names to File arrays
+ * @returns Data object with file field values (filenames or arrays)
+ */
+async function saveRecordFiles(
+  collectionName: string,
+  recordId: string,
+  files: Map<string, File[]>
+): Promise<Record<string, string | string[]>> {
+  const fileFields = getFileFields(collectionName);
+  const fileData: Record<string, string | string[]> = {};
+
+  for (const field of fileFields) {
+    const fieldFiles = files.get(field.name) ?? [];
+    if (fieldFiles.length === 0) continue;
+
+    const savedFilenames: string[] = [];
+    for (const file of fieldFiles) {
+      const filename = await saveFile(collectionName, recordId, file);
+      savedFilenames.push(filename);
+    }
+
+    // Store as array if maxFiles > 1, else single string
+    const maxFiles = field.options?.maxFiles ?? 1;
+    fileData[field.name] = maxFiles > 1 ? savedFilenames : savedFilenames[0];
+  }
+
+  return fileData;
+}
+
+/**
+ * Create a new record with file upload support.
+ *
+ * @param collectionName - Name of the collection
+ * @param data - Record data (without files)
+ * @param files - Map of field names to uploaded files
+ * @param hooks - HookManager instance
+ * @param request - Optional HTTP request for context
+ * @param authContext - Optional auth context for rule enforcement
+ * @returns The created record with file field values
+ */
+export async function createRecordWithFiles(
+  collectionName: string,
+  data: Record<string, unknown>,
+  files: Map<string, File[]>,
+  hooks: HookManager,
+  request?: Request,
+  authContext?: RecordAuthContext
+): Promise<Record<string, unknown>> {
+  // Validate files first
+  const validationErrors = validateUploadedFiles(collectionName, files);
+  if (validationErrors.length > 0) {
+    throw new Error(`File validation failed: ${formatFileErrors(validationErrors)}`);
+  }
+
+  // Create the record first (to get ID)
+  const record = await createRecordWithHooks(
+    collectionName,
+    data,
+    hooks,
+    request,
+    authContext
+  );
+
+  // Save files if any
+  if (files.size > 0) {
+    const fileData = await saveRecordFiles(
+      collectionName,
+      record.id as string,
+      files
+    );
+
+    // Update record with file references if we saved any files
+    if (Object.keys(fileData).length > 0) {
+      return updateRecord(collectionName, record.id as string, fileData);
+    }
+  }
+
+  return record;
+}
+
+/**
+ * Update a record with file upload support.
+ *
+ * @param collectionName - Name of the collection
+ * @param id - Record ID
+ * @param data - Record data to update (without files)
+ * @param files - Map of field names to uploaded files
+ * @param hooks - HookManager instance
+ * @param request - Optional HTTP request for context
+ * @param authContext - Optional auth context for rule enforcement
+ * @returns The updated record with file field values
+ */
+export async function updateRecordWithFiles(
+  collectionName: string,
+  id: string,
+  data: Record<string, unknown>,
+  files: Map<string, File[]>,
+  hooks: HookManager,
+  request?: Request,
+  authContext?: RecordAuthContext
+): Promise<Record<string, unknown>> {
+  // Validate files first
+  const validationErrors = validateUploadedFiles(collectionName, files);
+  if (validationErrors.length > 0) {
+    throw new Error(`File validation failed: ${formatFileErrors(validationErrors)}`);
+  }
+
+  // Update the record data (without files)
+  let record = await updateRecordWithHooks(
+    collectionName,
+    id,
+    data,
+    hooks,
+    request,
+    authContext
+  );
+
+  // Save new files if any
+  if (files.size > 0) {
+    const fileData = await saveRecordFiles(collectionName, id, files);
+
+    // Update record with file references if we saved any files
+    if (Object.keys(fileData).length > 0) {
+      record = updateRecord(collectionName, id, fileData);
+    }
+  }
+
+  return record;
 }
