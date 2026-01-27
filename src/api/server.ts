@@ -321,6 +321,66 @@ export function createServer(
             }
           );
         },
+
+        /**
+         * POST /api/realtime
+         * Manage subscriptions for an established SSE connection
+         * Requires clientId from PB_CONNECT event
+         * Optionally accepts Authorization header for user context
+         */
+        POST: async (req) => {
+          try {
+            interface SubscriptionRequest {
+              clientId: string;
+              subscriptions?: string[];
+            }
+
+            const body = (await req.json()) as SubscriptionRequest;
+
+            if (!body.clientId) {
+              return Response.json(
+                { error: "clientId is required" },
+                { status: 400 }
+              );
+            }
+
+            // Verify client exists
+            const client = realtimeManager.getClient(body.clientId);
+            if (!client) {
+              return Response.json(
+                { error: "Invalid client ID" },
+                { status: 404 }
+              );
+            }
+
+            // Extract optional user auth
+            const user = await optionalUser(req);
+
+            // If client already has auth, verify it matches (prevent hijacking)
+            if (client.user && user && client.user.id !== user.id) {
+              return Response.json(
+                { error: "Authorization mismatch" },
+                { status: 403 }
+              );
+            }
+
+            // Set auth context if provided and not already set
+            if (user && !client.user) {
+              realtimeManager.setClientAuth(body.clientId, user);
+            }
+
+            // Update subscriptions (empty array = unsubscribe all)
+            const subscriptions = body.subscriptions ?? [];
+            realtimeManager.setSubscriptions(body.clientId, subscriptions);
+
+            return new Response(null, { status: 204 });
+          } catch {
+            return Response.json(
+              { error: "Invalid request body" },
+              { status: 400 }
+            );
+          }
+        },
       },
 
       // Single record operations
