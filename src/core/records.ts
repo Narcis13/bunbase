@@ -6,6 +6,8 @@ import { validateRecord, formatValidationErrors } from "./validation.ts";
 import { buildListQuery } from "./query.ts";
 import { expandRelations } from "./expand.ts";
 import { HookManager } from "./hooks.ts";
+import { evaluateRule, getRuleForOperation, RuleContext } from "../auth/rules.ts";
+import type { AuthenticatedUser } from "../auth/middleware.ts";
 import type { Field } from "../types/collection.ts";
 import type { QueryOptions, PaginatedResponse } from "../types/query.ts";
 import type {
@@ -16,6 +18,57 @@ import type {
   BeforeDeleteContext,
   AfterDeleteContext,
 } from "../types/hooks.ts";
+
+/**
+ * Auth context for record operations.
+ * When undefined, operations allow access (for CLI/internal use).
+ */
+export interface RecordAuthContext {
+  isAdmin: boolean;
+  user: AuthenticatedUser | null;
+}
+
+/**
+ * Check rule access for a record operation.
+ * Throws "Access denied" if rule evaluation fails.
+ *
+ * @param collectionName - Name of the collection
+ * @param operation - The operation being performed
+ * @param authContext - Auth context (undefined = skip checks)
+ * @param record - The record being accessed (for view/update/delete)
+ * @param body - The request body (for create/update)
+ */
+function checkRuleAccess(
+  collectionName: string,
+  operation: 'list' | 'view' | 'create' | 'update' | 'delete',
+  authContext?: RecordAuthContext,
+  record?: Record<string, unknown>,
+  body?: Record<string, unknown>
+): void {
+  // Skip checks if no auth context (backward compatible for CLI/internal use)
+  if (!authContext) {
+    return;
+  }
+
+  const collection = getCollection(collectionName);
+  if (!collection) {
+    throw new Error(`Collection "${collectionName}" not found`);
+  }
+
+  const rules = collection.rules;
+  const rule = getRuleForOperation(rules, operation);
+
+  const evalContext: RuleContext = {
+    isAdmin: authContext.isAdmin,
+    auth: authContext.user,
+    record,
+    body,
+  };
+
+  if (!evaluateRule(rule, evalContext)) {
+    throw new Error('Access denied');
+  }
+}
 
 /**
  * Validate that relation fields reference existing records.
@@ -196,11 +249,14 @@ export function createRecord(
  *
  * @param collectionName - Name of the collection
  * @param id - Record ID
+ * @param authContext - Optional auth context for rule enforcement (undefined = skip checks)
  * @returns The record or null if not found
+ * @throws Error if access denied
  */
 export function getRecord(
   collectionName: string,
-  id: string
+  id: string,
+  authContext?: RecordAuthContext
 ): Record<string, unknown> | null {
   const db = getDatabase();
 
@@ -220,7 +276,12 @@ export function getRecord(
   }
 
   // Parse JSON fields back to objects
-  return parseJsonFields(fields, result);
+  const record = parseJsonFields(fields, result);
+
+  // Check view rule access (after fetching record so we can use record fields in rule)
+  checkRuleAccess(collectionName, 'view', authContext, record);
+
+  return record;
 }
 
 /**
@@ -350,13 +411,18 @@ export function deleteRecord(collectionName: string, id: string): void {
  *
  * @param collectionName - Name of the collection
  * @param options - Query options for filtering, sorting, pagination, and expansion
+ * @param authContext - Optional auth context for rule enforcement (undefined = skip checks)
  * @returns Paginated response with items and metadata
- * @throws Error if collection not found or invalid field names in query
+ * @throws Error if collection not found, invalid field names, or access denied
  */
 export function listRecordsWithQuery(
   collectionName: string,
-  options: QueryOptions
+  options: QueryOptions,
+  authContext?: RecordAuthContext
 ): PaginatedResponse<Record<string, unknown>> {
+  // Check list rule access
+  checkRuleAccess(collectionName, 'list', authContext);
+
   const db = getDatabase();
 
   // Verify collection exists
@@ -434,15 +500,20 @@ function buildRequestContext(
  * @param data - Record data (without system fields)
  * @param hooks - HookManager instance for triggering hooks
  * @param request - Optional HTTP request for context
+ * @param authContext - Optional auth context for rule enforcement (undefined = skip checks)
  * @returns The created record with system fields
- * @throws Error if collection not found, validation fails, or beforeCreate hook throws
+ * @throws Error if collection not found, validation fails, access denied, or beforeCreate hook throws
  */
 export async function createRecordWithHooks(
   collectionName: string,
   data: Record<string, unknown>,
   hooks: HookManager,
-  request?: Request
+  request?: Request,
+  authContext?: RecordAuthContext
 ): Promise<Record<string, unknown>> {
+  // Check create rule access
+  checkRuleAccess(collectionName, 'create', authContext, undefined, data);
+
   // Build beforeCreate context with copy of data to allow safe mutation
   const beforeContext: BeforeCreateContext = {
     collection: collectionName,
@@ -484,21 +555,26 @@ export async function createRecordWithHooks(
  * @param data - Partial record data to update
  * @param hooks - HookManager instance for triggering hooks
  * @param request - Optional HTTP request for context
+ * @param authContext - Optional auth context for rule enforcement (undefined = skip checks)
  * @returns The updated record
- * @throws Error if record not found, validation fails, or beforeUpdate hook throws
+ * @throws Error if record not found, validation fails, access denied, or beforeUpdate hook throws
  */
 export async function updateRecordWithHooks(
   collectionName: string,
   id: string,
   data: Record<string, unknown>,
   hooks: HookManager,
-  request?: Request
+  request?: Request,
+  authContext?: RecordAuthContext
 ): Promise<Record<string, unknown>> {
-  // Fetch existing record first
+  // Fetch existing record first (without auth check to get record for rule evaluation)
   const existing = getRecord(collectionName, id);
   if (!existing) {
     throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
   }
+
+  // Check update rule access with existing record
+  checkRuleAccess(collectionName, 'update', authContext, existing, data);
 
   // Build beforeUpdate context with copy of data to allow safe mutation
   const beforeContext: BeforeUpdateContext = {
@@ -542,19 +618,24 @@ export async function updateRecordWithHooks(
  * @param id - Record ID
  * @param hooks - HookManager instance for triggering hooks
  * @param request - Optional HTTP request for context
- * @throws Error if record not found or beforeDelete hook throws
+ * @param authContext - Optional auth context for rule enforcement (undefined = skip checks)
+ * @throws Error if record not found, access denied, or beforeDelete hook throws
  */
 export async function deleteRecordWithHooks(
   collectionName: string,
   id: string,
   hooks: HookManager,
-  request?: Request
+  request?: Request,
+  authContext?: RecordAuthContext
 ): Promise<void> {
-  // Fetch existing record first
+  // Fetch existing record first (without auth check to get record for rule evaluation)
   const existing = getRecord(collectionName, id);
   if (!existing) {
     throw new Error(`Record "${id}" not found in collection "${collectionName}"`);
   }
+
+  // Check delete rule access with existing record
+  checkRuleAccess(collectionName, 'delete', authContext, existing);
 
   // Build beforeDelete context
   const beforeContext: BeforeDeleteContext = {

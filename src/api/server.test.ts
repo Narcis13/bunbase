@@ -21,17 +21,26 @@ describe("REST API CRUD Endpoints", () => {
     // Initialize test database
     initDatabase(":memory:");
 
+    // Public rules for testing (allow all operations without auth)
+    const publicRules = {
+      listRule: '',
+      viewRule: '',
+      createRule: '',
+      updateRule: '',
+      deleteRule: '',
+    };
+
     // Create test collection "authors" for relation testing
     createCollection("authors", [
       { name: "name", type: "text", required: true },
-    ]);
+    ], { rules: publicRules });
 
     // Create test collection "posts" with title (required), content (optional), author (relation)
     createCollection("posts", [
       { name: "title", type: "text", required: true },
       { name: "content", type: "text", required: false },
       { name: "author", type: "relation", required: false, options: { collection: "authors" } },
-    ]);
+    ], { rules: publicRules });
 
     // Start server
     server = createServer(TEST_PORT);

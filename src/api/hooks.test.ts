@@ -31,16 +31,25 @@ describe("Lifecycle Hooks Integration", () => {
     // Initialize test database
     initDatabase(":memory:");
 
-    // Create test collections
+    // Public rules for testing (allow all operations without auth)
+    const publicRules = {
+      listRule: '',
+      viewRule: '',
+      createRule: '',
+      updateRule: '',
+      deleteRule: '',
+    };
+
+    // Create test collections with public rules
     createCollection("authors", [
       { name: "name", type: "text", required: true },
-    ]);
+    ], { rules: publicRules });
 
     createCollection("posts", [
       { name: "title", type: "text", required: true },
       { name: "content", type: "text", required: false },
       { name: "author", type: "relation", required: false, options: { collection: "authors" } },
-    ]);
+    ], { rules: publicRules });
 
     // Create server with the hook manager
     server = createServer(TEST_PORT, hookManager);

@@ -34,7 +34,7 @@ import {
   updateAdminPassword,
 } from "../auth/admin";
 import { createAdminToken } from "../auth/jwt";
-import { requireAdmin, extractBearerToken } from "../auth/middleware";
+import { requireAdmin, extractBearerToken, optionalUser } from "../auth/middleware";
 import { initEmailService, type SmtpConfig } from "../email";
 import {
   requestEmailVerification,
@@ -115,16 +115,22 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * GET /api/collections/:name/records
          * List records with query support (filter, sort, pagination, expand)
+         * Respects collection list rules
          */
-        GET: (req) => {
+        GET: async (req) => {
           try {
             const { name } = req.params;
+            const user = await optionalUser(req);
+            const authContext = { isAdmin: false, user };
             const url = new URL(req.url);
             const options = parseQueryOptions(url);
-            const result = listRecordsWithQuery(name, options);
+            const result = listRecordsWithQuery(name, options, authContext);
             return Response.json(result);
           } catch (error) {
             const err = error as Error;
+            if (err.message === 'Access denied') {
+              return errorResponse(err.message, 403);
+            }
             return errorResponse(err.message, mapErrorToStatus(err));
           }
         },
@@ -132,15 +138,21 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * POST /api/collections/:name/records
          * Create a new record in a collection (with lifecycle hooks)
+         * Respects collection create rules
          */
         POST: async (req) => {
           try {
             const { name } = req.params;
+            const user = await optionalUser(req);
+            const authContext = { isAdmin: false, user };
             const body = await req.json();
-            const record = await createRecordWithHooks(name, body, hookManager, req);
+            const record = await createRecordWithHooks(name, body, hookManager, req, authContext);
             return Response.json(record, { status: 201 });
           } catch (error) {
             const err = error as Error;
+            if (err.message === 'Access denied') {
+              return errorResponse(err.message, 403);
+            }
             return errorResponse(err.message, mapErrorToStatus(err));
           }
         },
@@ -151,11 +163,14 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * GET /api/collections/:name/records/:id
          * Get a single record by ID
+         * Respects collection view rules
          */
-        GET: (req) => {
+        GET: async (req) => {
           try {
             const { name, id } = req.params;
-            const record = getRecord(name, id);
+            const user = await optionalUser(req);
+            const authContext = { isAdmin: false, user };
+            const record = getRecord(name, id, authContext);
             if (!record) {
               return errorResponse(
                 `Record "${id}" not found in collection "${name}"`,
@@ -165,6 +180,9 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
             return Response.json(record);
           } catch (error) {
             const err = error as Error;
+            if (err.message === 'Access denied') {
+              return errorResponse(err.message, 403);
+            }
             return errorResponse(err.message, mapErrorToStatus(err));
           }
         },
@@ -172,15 +190,21 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * PATCH /api/collections/:name/records/:id
          * Update a record by ID (with lifecycle hooks)
+         * Respects collection update rules
          */
         PATCH: async (req) => {
           try {
             const { name, id } = req.params;
+            const user = await optionalUser(req);
+            const authContext = { isAdmin: false, user };
             const body = await req.json();
-            const record = await updateRecordWithHooks(name, id, body, hookManager, req);
+            const record = await updateRecordWithHooks(name, id, body, hookManager, req, authContext);
             return Response.json(record);
           } catch (error) {
             const err = error as Error;
+            if (err.message === 'Access denied') {
+              return errorResponse(err.message, 403);
+            }
             return errorResponse(err.message, mapErrorToStatus(err));
           }
         },
@@ -188,14 +212,20 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * DELETE /api/collections/:name/records/:id
          * Delete a record by ID (with lifecycle hooks)
+         * Respects collection delete rules
          */
         DELETE: async (req) => {
           try {
             const { name, id } = req.params;
-            await deleteRecordWithHooks(name, id, hookManager, req);
+            const user = await optionalUser(req);
+            const authContext = { isAdmin: false, user };
+            await deleteRecordWithHooks(name, id, hookManager, req, authContext);
             return new Response(null, { status: 204 });
           } catch (error) {
             const err = error as Error;
+            if (err.message === 'Access denied') {
+              return errorResponse(err.message, 403);
+            }
             return errorResponse(err.message, mapErrorToStatus(err));
           }
         },
