@@ -50,6 +50,20 @@ const INIT_METADATA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON _refresh_tokens(user_id);
   CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_id ON _refresh_tokens(token_id);
+
+  CREATE TABLE IF NOT EXISTS _verification_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    collection_name TEXT NOT NULL,
+    token_hash TEXT UNIQUE NOT NULL,
+    type TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_verification_tokens_user_id ON _verification_tokens(user_id);
+  CREATE INDEX IF NOT EXISTS idx_verification_tokens_hash ON _verification_tokens(token_hash);
 `;
 
 /**
