@@ -13,16 +13,14 @@
 import type { AuthenticatedUser } from "../auth/middleware";
 import { formatSSEMessage, formatSSEComment } from "./sse";
 import { nanoid } from "nanoid";
+import {
+  parseTopic,
+  matchesSubscription,
+  type Subscription,
+} from "./topics";
 
-/**
- * A subscription to a collection's realtime updates.
- */
-export interface Subscription {
-  /** Collection name to subscribe to */
-  collection: string;
-  /** Specific record ID or "*" for all records in collection */
-  recordId: string | "*";
-}
+// Re-export Subscription type for backward compatibility
+export type { Subscription } from "./topics";
 
 /**
  * A connected SSE client with its state.
@@ -117,17 +115,23 @@ export class RealtimeManager {
   }
 
   /**
-   * Set subscriptions for a client.
+   * Set subscriptions for a client from topic strings.
+   * Parses topic strings and stores valid subscriptions.
+   * Invalid topics are silently filtered out.
    *
    * @param clientId - Client ID to update
-   * @param subscriptions - New subscription list (replaces existing)
+   * @param topics - Array of topic strings (e.g., "posts/*", "users/abc123")
    */
-  setSubscriptions(clientId: string, subscriptions: Subscription[]): void {
+  setSubscriptions(clientId: string, topics: string[]): void {
     const client = this.clients.get(clientId);
-    if (client) {
-      client.subscriptions = subscriptions;
-      client.lastActivity = Date.now();
-    }
+    if (!client) return;
+
+    // Parse topics into subscriptions, filter out invalid ones
+    client.subscriptions = topics
+      .map((topic) => parseTopic(topic))
+      .filter((s): s is Subscription => s !== null);
+
+    client.lastActivity = Date.now();
   }
 
   /**
@@ -211,5 +215,31 @@ export class RealtimeManager {
       // Client likely disconnected
       return false;
     }
+  }
+
+  /**
+   * Get all clients subscribed to a specific record.
+   * Matches both wildcard subscriptions (collection/*) and specific record subscriptions.
+   *
+   * @param collection - Collection name
+   * @param recordId - Record ID
+   * @returns Array of clients subscribed to the record
+   */
+  getSubscribersForRecord(
+    collection: string,
+    recordId: string
+  ): RealtimeClient[] {
+    const subscribers: RealtimeClient[] = [];
+
+    for (const client of this.clients.values()) {
+      for (const sub of client.subscriptions) {
+        if (matchesSubscription(sub, collection, recordId)) {
+          subscribers.push(client);
+          break; // Don't add same client twice
+        }
+      }
+    }
+
+    return subscribers;
   }
 }

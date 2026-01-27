@@ -270,4 +270,68 @@ describe("RealtimeManager", () => {
       expect(c2?.subscriptions).toEqual([{ collection: "posts", recordId: "*" }]);
     });
   });
+
+  describe("getSubscribersForRecord", () => {
+    test("returns empty array when no clients", () => {
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toEqual([]);
+    });
+
+    test("returns empty array when no matching subscriptions", () => {
+      manager.registerClient("client-1", mockController);
+      manager.setSubscriptions("client-1", ["users/*"]);
+
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toEqual([]);
+    });
+
+    test("matches wildcard subscription", () => {
+      manager.registerClient("client-1", mockController);
+      manager.setSubscriptions("client-1", ["posts/*"]);
+
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toHaveLength(1);
+      expect(subscribers[0].id).toBe("client-1");
+    });
+
+    test("matches specific record subscription", () => {
+      manager.registerClient("client-1", mockController);
+      manager.setSubscriptions("client-1", ["posts/abc123"]);
+
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toHaveLength(1);
+      expect(subscribers[0].id).toBe("client-1");
+    });
+
+    test("does not match different record in specific subscription", () => {
+      manager.registerClient("client-1", mockController);
+      manager.setSubscriptions("client-1", ["posts/abc123"]);
+
+      const subscribers = manager.getSubscribersForRecord("posts", "xyz789");
+      expect(subscribers).toEqual([]);
+    });
+
+    test("returns multiple matching clients", () => {
+      manager.registerClient("client-1", mockController);
+      manager.registerClient("client-2", mockController);
+      manager.registerClient("client-3", mockController);
+
+      manager.setSubscriptions("client-1", ["posts/*"]);
+      manager.setSubscriptions("client-2", ["posts/abc123"]);
+      manager.setSubscriptions("client-3", ["users/*"]); // Different collection
+
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toHaveLength(2);
+      expect(subscribers.map((c) => c.id).sort()).toEqual(["client-1", "client-2"]);
+    });
+
+    test("does not add same client twice for multiple matching subscriptions", () => {
+      manager.registerClient("client-1", mockController);
+      manager.setSubscriptions("client-1", ["posts/*", "posts/abc123"]);
+
+      const subscribers = manager.getSubscribersForRecord("posts", "abc123");
+      expect(subscribers).toHaveLength(1);
+      expect(subscribers[0].id).toBe("client-1");
+    });
+  });
 });
