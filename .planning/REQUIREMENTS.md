@@ -15,17 +15,17 @@ Requirements for User Authentication, Files & Realtime milestone. Each maps to r
 
 ### User Authentication
 
-- [ ] **AUTH-01**: Auth collection type with special fields (email, password_hash, verified, created, updated)
-- [ ] **AUTH-02**: User can sign up with email and password
-- [ ] **AUTH-03**: User can log in with email and password, receives JWT token
-- [ ] **AUTH-04**: User can refresh token to extend session
-- [ ] **AUTH-05**: User can request email verification (sends verification email)
-- [ ] **AUTH-06**: User can confirm email verification with token
-- [ ] **AUTH-07**: User can request password reset (sends reset email)
-- [ ] **AUTH-08**: User can confirm password reset with token and new password
-- [ ] **AUTH-09**: Password validation (minimum length, complexity rules)
-- [ ] **AUTH-10**: Auth middleware for user routes (verify user JWT)
-- [ ] **AUTH-11**: Collection-level auth rules (who can create, read, update, delete records)
+- [x] **AUTH-01**: Auth collection type with special fields (email, password_hash, verified, created, updated)
+- [x] **AUTH-02**: User can sign up with email and password
+- [x] **AUTH-03**: User can log in with email and password, receives JWT token
+- [x] **AUTH-04**: User can refresh token to extend session
+- [x] **AUTH-05**: User can request email verification (sends verification email)
+- [x] **AUTH-06**: User can confirm email verification with token
+- [x] **AUTH-07**: User can request password reset (sends reset email)
+- [x] **AUTH-08**: User can confirm password reset with token and new password
+- [x] **AUTH-09**: Password validation (minimum length, complexity rules)
+- [x] **AUTH-10**: Auth middleware for user routes (verify user JWT)
+- [x] **AUTH-11**: Collection-level auth rules (who can create, read, update, delete records)
 
 ### File Uploads
 
@@ -123,17 +123,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMAIL-01 | Phase 9 | Complete |
 | EMAIL-02 | Phase 9 | Complete |
 | EMAIL-03 | Phase 9 | Complete |
-| AUTH-01 | Phase 10 | Pending |
-| AUTH-02 | Phase 10 | Pending |
-| AUTH-03 | Phase 10 | Pending |
-| AUTH-04 | Phase 10 | Pending |
-| AUTH-05 | Phase 10 | Pending |
-| AUTH-06 | Phase 10 | Pending |
-| AUTH-07 | Phase 10 | Pending |
-| AUTH-08 | Phase 10 | Pending |
-| AUTH-09 | Phase 10 | Pending |
-| AUTH-10 | Phase 10 | Pending |
-| AUTH-11 | Phase 10 | Pending |
+| AUTH-01 | Phase 10 | Complete |
+| AUTH-02 | Phase 10 | Complete |
+| AUTH-03 | Phase 10 | Complete |
+| AUTH-04 | Phase 10 | Complete |
+| AUTH-05 | Phase 10 | Complete |
+| AUTH-06 | Phase 10 | Complete |
+| AUTH-07 | Phase 10 | Complete |
+| AUTH-08 | Phase 10 | Complete |
+| AUTH-09 | Phase 10 | Complete |
+| AUTH-10 | Phase 10 | Complete |
+| AUTH-11 | Phase 10 | Complete |
 | FILE-01 | Phase 11 | Pending |
 | FILE-02 | Phase 11 | Pending |
 | FILE-03 | Phase 11 | Pending |
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-26*
-*Last updated: 2026-01-26 after roadmap creation*
+*Last updated: 2026-01-27 after Phase 10 completion*
