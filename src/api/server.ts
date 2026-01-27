@@ -41,8 +41,8 @@ import {
   getAdminByEmail,
   updateAdminPassword,
 } from "../auth/admin";
-import { createAdminToken } from "../auth/jwt";
-import { requireAdmin, extractBearerToken, optionalUser } from "../auth/middleware";
+import { createAdminToken, verifyAdminToken } from "../auth/jwt";
+import { requireAdmin, extractBearerToken, optionalUser, AuthenticatedUser } from "../auth/middleware";
 import { initEmailService, type SmtpConfig } from "../email";
 import {
   requestEmailVerification,
@@ -113,6 +113,30 @@ function getRecordCount(collectionName: string): number {
 }
 
 /**
+ * Build auth context for record operations.
+ * Checks for admin token first (grants full access), then user token.
+ *
+ * @param req - The incoming request
+ * @returns Auth context with isAdmin flag and optional user
+ */
+async function buildAuthContext(req: Request): Promise<{ isAdmin: boolean; user: AuthenticatedUser | null }> {
+  const token = extractBearerToken(req);
+  if (!token) {
+    return { isAdmin: false, user: null };
+  }
+
+  // Check for admin token first
+  const adminPayload = await verifyAdminToken(token);
+  if (adminPayload) {
+    return { isAdmin: true, user: null };
+  }
+
+  // Fall back to user token
+  const user = await optionalUser(req);
+  return { isAdmin: false, user };
+}
+
+/**
  * Create the HTTP server with all CRUD routes.
  *
  * @param port - Port to listen on (default: 8090)
@@ -146,8 +170,7 @@ export function createServer(
         GET: async (req) => {
           try {
             const { name } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
             const url = new URL(req.url);
             const options = parseQueryOptions(url);
             const result = listRecordsWithQuery(name, options, authContext);
@@ -177,8 +200,7 @@ export function createServer(
         POST: async (req) => {
           try {
             const { name } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
 
             let record: Record<string, unknown>;
 
@@ -226,8 +248,7 @@ export function createServer(
         GET: async (req) => {
           try {
             const { collection, record: recordId, filename } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
 
             // Verify record exists and user can view it
             // This enforces collection view rules for file access
@@ -395,8 +416,7 @@ export function createServer(
         GET: async (req) => {
           try {
             const { name, id } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
             const record = getRecord(name, id, authContext);
             if (!record) {
               return errorResponse(
@@ -431,8 +451,7 @@ export function createServer(
         PATCH: async (req) => {
           try {
             const { name, id } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
 
             let record: Record<string, unknown>;
 
@@ -478,8 +497,7 @@ export function createServer(
         DELETE: async (req) => {
           try {
             const { name, id } = req.params;
-            const user = await optionalUser(req);
-            const authContext = { isAdmin: false, user };
+            const authContext = await buildAuthContext(req);
             await deleteRecordWithHooks(name, id, hookManager, req, authContext);
             return new Response(null, { status: 204 });
           } catch (error) {
