@@ -9,9 +9,9 @@ Requirements for User Authentication, Files & Realtime milestone. Each maps to r
 
 ### Email Service
 
-- [ ] **EMAIL-01**: SMTP configuration (host, port, user, password) via CLI flags or env vars
-- [ ] **EMAIL-02**: Send email function with to, subject, body (HTML and plain text)
-- [ ] **EMAIL-03**: Template placeholders for tokens/links in email body
+- [x] **EMAIL-01**: SMTP configuration (host, port, user, password) via CLI flags or env vars
+- [x] **EMAIL-02**: Send email function with to, subject, body (HTML and plain text)
+- [x] **EMAIL-03**: Template placeholders for tokens/links in email body
 
 ### User Authentication
 
@@ -120,9 +120,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMAIL-01 | Phase 9 | Pending |
-| EMAIL-02 | Phase 9 | Pending |
-| EMAIL-03 | Phase 9 | Pending |
+| EMAIL-01 | Phase 9 | Complete |
+| EMAIL-02 | Phase 9 | Complete |
+| EMAIL-03 | Phase 9 | Complete |
 | AUTH-01 | Phase 10 | Pending |
 | AUTH-02 | Phase 10 | Pending |
 | AUTH-03 | Phase 10 | Pending |

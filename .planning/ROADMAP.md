@@ -26,10 +26,12 @@
 
 **Plans:** 3 plans
 
+**Status:** ✓ Complete (2026-01-27)
+
 Plans:
-- [ ] 09-01-PLAN.md — Config types and template utilities
-- [ ] 09-02-PLAN.md — Nodemailer transport and sendEmail function
-- [ ] 09-03-PLAN.md — CLI integration and tests
+- [x] 09-01-PLAN.md — Config types and template utilities
+- [x] 09-02-PLAN.md — Nodemailer transport and sendEmail function
+- [x] 09-03-PLAN.md — CLI integration and tests
 
 **Requirements:**
 - EMAIL-01: SMTP configuration (host, port, user, password) via CLI flags or env vars
@@ -177,3 +179,4 @@ Phase 9 (Email) ──┐
 ---
 *Roadmap created: 2026-01-26*
 *Phase 9 planned: 2026-01-27*
+*Phase 9 complete: 2026-01-27*
