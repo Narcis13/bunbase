@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 10 - User Authentication
-Plan: 02 of 6 complete
+Plan: 02 of 6 complete (10-01 and 10-02)
 Status: In progress
-Last activity: 2026-01-27 — Completed 10-02-PLAN.md (User JWT Infrastructure)
+Last activity: 2026-01-27 — Completed 10-01-PLAN.md (Auth Types & Collection Schema)
 
 Progress: [██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 33% (4/12 v0.2 plans)
 
@@ -49,6 +49,9 @@ v0.2 decisions made:
 - Token expiration: 15min access + 7day refresh (decided in 10-02)
 - Store token_id in DB, not actual token (security)
 - Reuse JWT_SECRET for admin and user tokens
+- Auth collections use type field ('base' | 'auth') rather than separate table
+- Password requires 8+ chars, at least 1 letter, at least 1 number (configurable minLength)
+- Auth system fields (email, password_hash, verified) auto-added to table
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -64,7 +67,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 10-02-PLAN.md
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
 ## Next Steps
@@ -72,4 +75,4 @@ Resume file: None
 Continue Phase 10 — Execute 10-03-PLAN.md (Auth Collection & Routes)
 
 ---
-*State updated: 2026-01-27 after completing 10-02-PLAN.md*
+*State updated: 2026-01-27 after completing 10-01-PLAN.md*
