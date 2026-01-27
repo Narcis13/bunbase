@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 12 - Realtime/SSE (IN PROGRESS)
-Plan: 04 of 6 complete (12-01, 12-02, 12-03, 12-04)
-Status: Executing Wave 2
-Last activity: 2026-01-27 — Completed 12-04-PLAN.md (Subscription Management)
+Plan: 05 of 6 complete (12-01, 12-02, 12-03, 12-04, 12-05)
+Status: Executing Wave 3
+Last activity: 2026-01-27 — Completed 12-05-PLAN.md (Event Broadcasting)
 
-Progress: [██████████████████████████████████████████░░] 95% (19/20 v0.2 plans)
+Progress: [███████████████████████████████████████████░] 96% (20/21 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -105,6 +105,10 @@ v0.2 decisions made:
 - Invalid topics silently filtered (fail-safe parsing) (12-04)
 - Auth mismatch returns 403 (session hijacking prevention) (12-04)
 - Auth context captured once, cannot be changed mid-session (12-04)
+- Use listRule for wildcard subscriptions, viewRule for specific record (12-05)
+- Fire-and-forget broadcasting: don't block API responses (12-05)
+- Event format: { action, record } following PocketBase convention (12-05)
+- Remove client from manager on send error (disconnected cleanup) (12-05)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -120,13 +124,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 12-04-PLAN.md (Subscription Management)
+Stopped at: Completed 12-05-PLAN.md (Event Broadcasting)
 Resume file: None
 
 ## Next Steps
 
-Phase 12 (Realtime/SSE) Wave 2 in progress.
-Next: Continue with 12-05 (Event Broadcasting) or remaining Wave 2 plans.
+Phase 12 (Realtime/SSE) Wave 3 complete.
+Next: 12-06 (Connection Lifecycle) to complete Phase 12, then Phase 13 (UI Polish).
 
 ---
-*State updated: 2026-01-27 after completing 12-04-PLAN.md*
+*State updated: 2026-01-27 after completing 12-05-PLAN.md*
