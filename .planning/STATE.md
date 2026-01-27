@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 12 - Realtime/SSE (IN PROGRESS)
-Plan: 02 of 6 complete (12-02)
+Plan: 02 of 6 complete (12-01, 12-02)
 Status: Executing Wave 1
-Last activity: 2026-01-27 — Completed 12-02-PLAN.md (Topic Parsing)
+Last activity: 2026-01-27 — Completed 12-01-PLAN.md (SSE Foundation)
 
-Progress: [█████████████████████████████████████░░░░░░░] 80% (16/20 v0.2 plans)
+Progress: [██████████████████████████████████████░░░░░░] 85% (17/20 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -89,6 +89,11 @@ v0.2 decisions made:
 - URL transformation happens at response time, not storage time (11-05)
 - File cleanup hook uses afterDelete, logs errors but doesn't throw (11-06)
 - Cleanup only runs for collections with file fields (optimization) (11-06)
+- SSE messages end with double newline (\n\n) per spec (12-01)
+- Field order: event, id, retry, data (consistent with spec examples) (12-01)
+- Comments use colon prefix (: comment\n\n) for keep-alive (12-01)
+- RealtimeClient tracks controller, subscriptions, user, lastActivity (12-01)
+- Activity timestamp updated on auth/subscription changes (12-01)
 - Topic format: collection/* for wildcard, collection/recordId for specific (12-02)
 - Collection names: alphanumeric + underscore, must start with letter (12-02)
 - Invalid topics return null (fail-safe parsing, not exceptions) (12-02)
@@ -107,13 +112,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 12-02-PLAN.md (Topic Parsing)
+Stopped at: Completed 12-01-PLAN.md (SSE Foundation)
 Resume file: None
 
 ## Next Steps
 
 Phase 12 (Realtime/SSE) Wave 1 in progress.
-Next: Continue with 12-01 (SSE types), 12-03 (Subscription Manager), or remaining Wave 1 plans.
+Next: Continue with 12-03 (SSE Endpoint) or remaining Wave 1 plans.
 
 ---
-*State updated: 2026-01-27 after completing 12-02-PLAN.md*
+*State updated: 2026-01-27 after completing 12-01-PLAN.md*
