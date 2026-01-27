@@ -131,15 +131,15 @@ Plans:
 
 **Plans:** 6 plans
 
-**Status:** Planned (2026-01-27)
+**Status:** Complete (2026-01-27)
 
 Plans:
-- [ ] 12-01-PLAN.md — SSE message formatting and RealtimeManager class (Wave 1)
-- [ ] 12-02-PLAN.md — Topic parsing and subscription matching (Wave 1)
-- [ ] 12-03-PLAN.md — SSE connection endpoint with keep-alive (Wave 2)
-- [ ] 12-04-PLAN.md — Subscription management endpoint (Wave 2)
-- [ ] 12-05-PLAN.md — Event broadcasting with permission filtering (Wave 3)
-- [ ] 12-06-PLAN.md — Inactivity cleanup and integration tests (Wave 4)
+- [x] 12-01-PLAN.md — SSE message formatting and RealtimeManager class (Wave 1)
+- [x] 12-02-PLAN.md — Topic parsing and subscription matching (Wave 1)
+- [x] 12-03-PLAN.md — SSE connection endpoint with keep-alive (Wave 2)
+- [x] 12-04-PLAN.md — Subscription management endpoint (Wave 2)
+- [x] 12-05-PLAN.md — Event broadcasting with permission filtering (Wave 3)
+- [x] 12-06-PLAN.md — Inactivity cleanup and integration tests (Wave 4)
 
 **Requirements:**
 - SSE-01: SSE connection endpoint `GET /api/realtime`
@@ -221,3 +221,4 @@ Phase 9 (Email) ──┐
 *Phase 11 planned: 2026-01-27*
 *Phase 11 complete: 2026-01-27*
 *Phase 12 planned: 2026-01-27*
+*Phase 12 complete: 2026-01-27*

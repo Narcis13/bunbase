@@ -42,16 +42,16 @@ Requirements for User Authentication, Files & Realtime milestone. Each maps to r
 
 ### Realtime/SSE
 
-- [ ] **SSE-01**: SSE connection endpoint `GET /api/realtime`
-- [ ] **SSE-02**: Client ID assignment sent on connect (`PB_CONNECT` event)
-- [ ] **SSE-03**: Subscribe to collection changes (`POST /api/realtime` with subscriptions)
-- [ ] **SSE-04**: Subscribe to specific record changes
-- [ ] **SSE-05**: Create events broadcast to subscribers
-- [ ] **SSE-06**: Update events broadcast to subscribers
-- [ ] **SSE-07**: Delete events broadcast to subscribers
-- [ ] **SSE-08**: Unsubscribe from topics
-- [ ] **SSE-09**: Connection keep-alive (periodic ping)
-- [ ] **SSE-10**: Auto-disconnect inactive connections (5 min timeout)
+- [x] **SSE-01**: SSE connection endpoint `GET /api/realtime`
+- [x] **SSE-02**: Client ID assignment sent on connect (`PB_CONNECT` event)
+- [x] **SSE-03**: Subscribe to collection changes (`POST /api/realtime` with subscriptions)
+- [x] **SSE-04**: Subscribe to specific record changes
+- [x] **SSE-05**: Create events broadcast to subscribers
+- [x] **SSE-06**: Update events broadcast to subscribers
+- [x] **SSE-07**: Delete events broadcast to subscribers
+- [x] **SSE-08**: Unsubscribe from topics
+- [x] **SSE-09**: Connection keep-alive (periodic ping)
+- [x] **SSE-10**: Auto-disconnect inactive connections (5 min timeout)
 
 ### UI Polish
 
@@ -144,16 +144,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-08 | Phase 11 | Complete |
 | FILE-09 | Phase 11 | Complete |
 | FILE-10 | Phase 11 | Complete |
-| SSE-01 | Phase 12 | Pending |
-| SSE-02 | Phase 12 | Pending |
-| SSE-03 | Phase 12 | Pending |
-| SSE-04 | Phase 12 | Pending |
-| SSE-05 | Phase 12 | Pending |
-| SSE-06 | Phase 12 | Pending |
-| SSE-07 | Phase 12 | Pending |
-| SSE-08 | Phase 12 | Pending |
-| SSE-09 | Phase 12 | Pending |
-| SSE-10 | Phase 12 | Pending |
+| SSE-01 | Phase 12 | Complete |
+| SSE-02 | Phase 12 | Complete |
+| SSE-03 | Phase 12 | Complete |
+| SSE-04 | Phase 12 | Complete |
+| SSE-05 | Phase 12 | Complete |
+| SSE-06 | Phase 12 | Complete |
+| SSE-07 | Phase 12 | Complete |
+| SSE-08 | Phase 12 | Complete |
+| SSE-09 | Phase 12 | Complete |
+| SSE-10 | Phase 12 | Complete |
 | UI-01 | Phase 13 | Pending |
 | UI-02 | Phase 13 | Pending |
 | UI-03 | Phase 13 | Pending |
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-26*
-*Last updated: 2026-01-27 after Phase 11 completion*
+*Last updated: 2026-01-27 after Phase 12 completion*
