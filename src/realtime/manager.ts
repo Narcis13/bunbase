@@ -58,6 +58,8 @@ export interface RealtimeClient {
  */
 export class RealtimeManager {
   private clients: Map<string, RealtimeClient> = new Map();
+  private inactivityTimeout: number = 5 * 60 * 1000; // 5 minutes
+  private cleanupInterval: Timer | null = null;
 
   /**
    * Register a new client connection.
@@ -241,5 +243,69 @@ export class RealtimeManager {
     }
 
     return subscribers;
+  }
+
+  /**
+   * Clean up inactive client connections.
+   * Removes clients that haven't had activity within the inactivity timeout.
+   *
+   * @returns Number of clients cleaned up
+   */
+  cleanupInactive(): number {
+    const now = Date.now();
+    let cleaned = 0;
+
+    for (const [clientId, client] of this.clients) {
+      if (now - client.lastActivity > this.inactivityTimeout) {
+        try {
+          client.controller.close();
+        } catch {
+          // Controller may already be closed
+        }
+        this.clients.delete(clientId);
+        cleaned++;
+      }
+    }
+
+    return cleaned;
+  }
+
+  /**
+   * Start periodic inactivity cleanup.
+   * Runs cleanup at the specified interval.
+   *
+   * @param intervalMs - Cleanup interval in milliseconds (default: 60000 = 1 minute)
+   */
+  startInactivityCleanup(intervalMs: number = 60000): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+
+    this.cleanupInterval = setInterval(() => {
+      const cleaned = this.cleanupInactive();
+      if (cleaned > 0) {
+        console.log(`Realtime: cleaned up ${cleaned} inactive connection(s)`);
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Stop periodic inactivity cleanup.
+   */
+  stopInactivityCleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+  }
+
+  /**
+   * Set the inactivity timeout duration.
+   * Useful for testing with shorter timeouts.
+   *
+   * @param ms - Timeout in milliseconds
+   */
+  setInactivityTimeout(ms: number): void {
+    this.inactivityTimeout = ms;
   }
 }

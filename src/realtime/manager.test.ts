@@ -334,4 +334,140 @@ describe("RealtimeManager", () => {
       expect(subscribers[0].id).toBe("client-1");
     });
   });
+
+  describe("cleanupInactive", () => {
+    test("removes clients that exceed inactivity timeout", () => {
+      // Mock controller with close method
+      const controllerWithClose = {
+        close: () => {},
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("inactive-client", controllerWithClose);
+
+      // Set short timeout for testing
+      manager.setInactivityTimeout(100);
+
+      // Make client inactive by setting old timestamp
+      const client = manager.getClient("inactive-client")!;
+      client.lastActivity = Date.now() - 200;
+
+      const cleaned = manager.cleanupInactive();
+
+      expect(cleaned).toBe(1);
+      expect(manager.getClient("inactive-client")).toBeUndefined();
+    });
+
+    test("preserves clients within timeout", () => {
+      manager.registerClient("active-client", mockController);
+
+      // Set short timeout for testing
+      manager.setInactivityTimeout(100);
+
+      // Client is recently active (default timestamp is now)
+      const cleaned = manager.cleanupInactive();
+
+      expect(cleaned).toBe(0);
+      expect(manager.getClient("active-client")).toBeDefined();
+    });
+
+    test("handles mixed active and inactive clients", () => {
+      const controllerWithClose = {
+        close: () => {},
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("active", controllerWithClose);
+      manager.registerClient("inactive", controllerWithClose);
+
+      manager.setInactivityTimeout(100);
+
+      // Make one client inactive
+      const inactiveClient = manager.getClient("inactive")!;
+      inactiveClient.lastActivity = Date.now() - 200;
+
+      const cleaned = manager.cleanupInactive();
+
+      expect(cleaned).toBe(1);
+      expect(manager.getClient("active")).toBeDefined();
+      expect(manager.getClient("inactive")).toBeUndefined();
+    });
+
+    test("returns correct count of cleaned clients", () => {
+      const controllerWithClose = {
+        close: () => {},
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("inactive-1", controllerWithClose);
+      manager.registerClient("inactive-2", controllerWithClose);
+      manager.registerClient("inactive-3", controllerWithClose);
+      manager.registerClient("active", controllerWithClose);
+
+      manager.setInactivityTimeout(100);
+
+      // Make three clients inactive
+      manager.getClient("inactive-1")!.lastActivity = Date.now() - 200;
+      manager.getClient("inactive-2")!.lastActivity = Date.now() - 300;
+      manager.getClient("inactive-3")!.lastActivity = Date.now() - 400;
+
+      const cleaned = manager.cleanupInactive();
+
+      expect(cleaned).toBe(3);
+      expect(manager.getClientCount()).toBe(1);
+    });
+
+    test("handles controller.close() throwing error", () => {
+      const throwingController = {
+        close: () => {
+          throw new Error("Already closed");
+        },
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("client", throwingController);
+      manager.setInactivityTimeout(100);
+      manager.getClient("client")!.lastActivity = Date.now() - 200;
+
+      // Should not throw
+      expect(() => manager.cleanupInactive()).not.toThrow();
+      expect(manager.getClient("client")).toBeUndefined();
+    });
+  });
+
+  describe("setInactivityTimeout", () => {
+    test("changes the inactivity timeout", () => {
+      const controllerWithClose = {
+        close: () => {},
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("client", controllerWithClose);
+
+      // Default is 5 minutes, client with 3 min inactivity should not be cleaned
+      manager.getClient("client")!.lastActivity = Date.now() - 3 * 60 * 1000;
+      expect(manager.cleanupInactive()).toBe(0);
+
+      // Now set to 2 minutes, same client should be cleaned
+      manager.setInactivityTimeout(2 * 60 * 1000);
+      expect(manager.cleanupInactive()).toBe(1);
+    });
+  });
+
+  describe("updateActivity prevents cleanup", () => {
+    test("updating activity resets timeout", () => {
+      const controllerWithClose = {
+        close: () => {},
+      } as unknown as ReadableStreamDirectController;
+
+      manager.registerClient("client", controllerWithClose);
+      manager.setInactivityTimeout(100);
+
+      // Make client old
+      manager.getClient("client")!.lastActivity = Date.now() - 200;
+
+      // Update activity
+      manager.updateActivity("client");
+
+      // Now client should not be cleaned
+      const cleaned = manager.cleanupInactive();
+      expect(cleaned).toBe(0);
+      expect(manager.getClient("client")).toBeDefined();
+    });
+  });
 });
