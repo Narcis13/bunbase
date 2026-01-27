@@ -302,6 +302,120 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         },
       },
 
+      "/api/collections/:name/auth/request-verification": {
+        /**
+         * POST /api/collections/:name/auth/request-verification
+         * Request email verification (requires user auth)
+         */
+        POST: async (req) => {
+          try {
+            const { name } = req.params;
+
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+
+            // Get user from token using extractBearerToken
+            const token = extractBearerToken(req);
+            if (!token) {
+              return errorResponse("Unauthorized", 401);
+            }
+
+            const payload = await verifyUserToken(token, "access");
+            if (!payload || payload.collectionName !== name) {
+              return errorResponse("Unauthorized", 401);
+            }
+
+            // Determine base URL from request
+            const url = new URL(req.url);
+            const baseUrl = `${url.protocol}//${url.host}`;
+
+            const result = await requestEmailVerification(
+              name,
+              payload.userId,
+              baseUrl
+            );
+            if (!result.success) {
+              return errorResponse(result.error!, 400);
+            }
+
+            return Response.json({ message: "Verification email sent" });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, 400);
+          }
+        },
+      },
+
+      "/api/collections/:name/auth/confirm-verification": {
+        /**
+         * POST /api/collections/:name/auth/confirm-verification
+         * Confirm email verification with token
+         * Also supports GET for direct link clicking
+         */
+        POST: async (req) => {
+          try {
+            const { name } = req.params;
+
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+
+            const { token } = await req.json();
+            if (!token) {
+              return errorResponse("Token required", 400);
+            }
+
+            const result = await confirmEmailVerification(token);
+            if (!result.success) {
+              return errorResponse(result.error!, 400);
+            }
+
+            return Response.json({ message: "Email verified successfully" });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, 400);
+          }
+        },
+
+        GET: async (req) => {
+          try {
+            const { name } = req.params;
+
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+
+            const url = new URL(req.url);
+            const token = url.searchParams.get("token");
+            if (!token) {
+              return errorResponse("Token required", 400);
+            }
+
+            const result = await confirmEmailVerification(token);
+            if (!result.success) {
+              // Return HTML error for GET requests (user clicked link)
+              return new Response(
+                `<html><body><h1>Verification Failed</h1><p>${result.error}</p></body></html>`,
+                { status: 400, headers: { "Content-Type": "text/html" } }
+              );
+            }
+
+            // Return HTML success for GET requests
+            return new Response(
+              `<html><body><h1>Email Verified!</h1><p>Your email has been verified successfully. You can close this page.</p></body></html>`,
+              { headers: { "Content-Type": "text/html" } }
+            );
+          } catch (error) {
+            const err = error as Error;
+            return new Response(
+              `<html><body><h1>Error</h1><p>${err.message}</p></body></html>`,
+              { status: 400, headers: { "Content-Type": "text/html" } }
+            );
+          }
+        },
+      },
+
       // Admin authentication routes
       "/_/api/auth/login": {
         /**
