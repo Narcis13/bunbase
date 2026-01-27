@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 10 - User Authentication (COMPLETE)
-Plan: 06 of 6 complete (10-01 through 10-06)
-Status: Phase complete
-Last activity: 2026-01-27 — Completed 10-06-PLAN.md (Authenticated Routes)
+Phase: 11 - File Uploads (IN PROGRESS)
+Plan: 01 of 6 complete (11-01)
+Status: In progress
+Last activity: 2026-01-27 — Completed 11-01-PLAN.md (File Field Type and Sanitization)
 
-Progress: [████████████████████░░░░░░░░░░░░░░░░░░░░░] 67% (8/12 v0.2 plans)
+Progress: [█████████████████████░░░░░░░░░░░░░░░░░░░░] 75% (9/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [████████████████████░░░
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | Pending |
+| 11 | File Uploads | 10 | In Progress (1/6) |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 
@@ -67,6 +67,10 @@ v0.2 decisions made:
 - Auth context undefined = skip checks for backward compatibility (10-06)
 - Public API enforces rules, admin API bypasses rules (10-06)
 - Access denied returns 403, not 401 (10-06)
+- File field type maps to TEXT (JSON array of filenames) (11-01)
+- 10-char nanoid suffix for filename uniqueness (11-01)
+- Normalize Windows backslashes for cross-platform path handling (11-01)
+- Truncate base filename to 100 chars max (11-01)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -82,14 +86,17 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 10-06-PLAN.md (Phase 10 complete)
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Phase 10 (User Authentication) is complete. Ready to proceed to:
-- Phase 11: File Uploads
-- Phase 12: Realtime/SSE
+Phase 11 (File Uploads) in progress. Next:
+- 11-02: File Storage Provider
+- 11-03: Upload Endpoint
+- 11-04: File Serving
+- 11-05: File Deletion
+- 11-06: Admin UI
 
 ---
-*State updated: 2026-01-27 after completing 10-06-PLAN.md*
+*State updated: 2026-01-27 after completing 11-01-PLAN.md*
