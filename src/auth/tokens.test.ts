@@ -8,7 +8,10 @@ import {
   requestEmailVerification,
   confirmEmailVerification,
   cleanupExpiredVerificationTokens,
+  requestPasswordReset,
+  confirmPasswordReset,
 } from "./tokens";
+import { createUserRefreshToken, checkRefreshTokenValid } from "./user-jwt";
 
 // Mock the email send function
 const mockSendEmail = mock(() =>
@@ -393,6 +396,193 @@ describe("tokens", () => {
         .query<{ id: string }, []>(`SELECT id FROM _verification_tokens`)
         .all();
       expect(remaining.length).toBe(1);
+    });
+  });
+
+  describe("requestPasswordReset", () => {
+    test("sends email for existing user", async () => {
+      const result = await requestPasswordReset(
+        testCollectionName,
+        "test@example.com",
+        "http://localhost:8090"
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+
+      const callArgs = mockSendEmail.mock.calls[0][0] as {
+        to: string;
+        subject: string;
+        placeholders?: { link: string };
+      };
+      expect(callArgs.to).toBe("test@example.com");
+      expect(callArgs.subject).toBe("Reset your password");
+      expect(callArgs.placeholders?.link).toContain(
+        "/api/collections/test_users/auth/confirm-reset?token="
+      );
+    });
+
+    test("returns success for non-existing user (no enumeration)", async () => {
+      const result = await requestPasswordReset(
+        testCollectionName,
+        "nonexistent@example.com",
+        "http://localhost:8090"
+      );
+
+      // Should return success to prevent email enumeration
+      expect(result.success).toBe(true);
+      // But should NOT send email
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    test("returns success for non-auth collection (no enumeration)", async () => {
+      // Create a base collection
+      createCollection("base_collection", [], { type: "base" });
+
+      const result = await requestPasswordReset(
+        "base_collection",
+        "test@example.com",
+        "http://localhost:8090"
+      );
+
+      // Should return success to prevent collection type enumeration
+      expect(result.success).toBe(true);
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("confirmPasswordReset", () => {
+    test("updates password with valid token", async () => {
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+
+      const result = await confirmPasswordReset(token, "newPassword123");
+
+      expect(result.success).toBe(true);
+
+      // Verify password was updated (check hash changed)
+      const db = getDatabase();
+      const user = db
+        .query<{ password_hash: string }, [string]>(
+          `SELECT password_hash FROM "${testCollectionName}" WHERE id = ?`
+        )
+        .get(testUserId);
+
+      expect(user!.password_hash).not.toBe(
+        "$argon2id$v=19$m=65536,t=2,p=1$dummy$dummy"
+      );
+
+      // Verify new password works
+      const verified = await Bun.password.verify(
+        "newPassword123",
+        user!.password_hash
+      );
+      expect(verified).toBe(true);
+    });
+
+    test("rejects invalid password (too short)", async () => {
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+
+      const result = await confirmPasswordReset(token, "short1");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("at least 8 characters");
+    });
+
+    test("rejects invalid password (no number)", async () => {
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+
+      const result = await confirmPasswordReset(token, "passwordonly");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("at least one number");
+    });
+
+    test("rejects expired token", async () => {
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+
+      // Manually expire the token
+      const db = getDatabase();
+      const pastDate = new Date(Date.now() - 1000).toISOString();
+      db.run(`UPDATE _verification_tokens SET expires_at = ?`, [pastDate]);
+
+      const result = await confirmPasswordReset(token, "newPassword123");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid or expired token");
+    });
+
+    test("rejects used token", async () => {
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+
+      // First use succeeds
+      const result1 = await confirmPasswordReset(token, "newPassword123");
+      expect(result1.success).toBe(true);
+
+      // Second use fails
+      const result2 = await confirmPasswordReset(token, "anotherPassword456");
+      expect(result2.success).toBe(false);
+      expect(result2.error).toBe("Invalid or expired token");
+    });
+
+    test("rejects invalid token", async () => {
+      const result = await confirmPasswordReset(
+        "invalid-token-xyz",
+        "newPassword123"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid or expired token");
+    });
+
+    test("revokes all refresh tokens after reset", async () => {
+      // First, get collection id for refresh token creation
+      const db = getDatabase();
+      const collection = db
+        .query<{ id: string }, [string]>(
+          `SELECT id FROM _collections WHERE name = ?`
+        )
+        .get(testCollectionName);
+
+      // Create a refresh token for this user
+      const { tokenId } = await createUserRefreshToken(
+        testUserId,
+        collection!.id,
+        testCollectionName
+      );
+
+      // Verify refresh token is valid
+      expect(checkRefreshTokenValid(tokenId)).toBe(true);
+
+      // Create password reset token and confirm
+      const { token } = await createVerificationToken(
+        testUserId,
+        testCollectionName,
+        "password_reset"
+      );
+      await confirmPasswordReset(token, "newPassword123");
+
+      // Verify refresh token is now revoked
+      expect(checkRefreshTokenValid(tokenId)).toBe(false);
     });
   });
 });
