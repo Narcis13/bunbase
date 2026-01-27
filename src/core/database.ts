@@ -89,7 +89,26 @@ export function initDatabase(path: string): Database {
   // Create metadata tables
   db.exec(INIT_METADATA_SQL);
 
+  // Run migrations for existing databases
+  runMigrations(db);
+
   return db;
+}
+
+/**
+ * Run schema migrations for existing databases.
+ * These handle adding new columns/tables that were introduced after
+ * the initial schema was created.
+ */
+function runMigrations(db: Database): void {
+  // Migration 1: Add 'type' column to _collections if it doesn't exist
+  // This column was added in Phase 10 (User Authentication)
+  const collectionsInfo = db.query("PRAGMA table_info(_collections)").all() as Array<{ name: string }>;
+  const hasTypeColumn = collectionsInfo.some(col => col.name === "type");
+
+  if (!hasTypeColumn) {
+    db.run("ALTER TABLE _collections ADD COLUMN type TEXT NOT NULL DEFAULT 'base' CHECK(type IN ('base', 'auth'))");
+  }
 }
 
 /**
