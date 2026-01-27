@@ -29,16 +29,16 @@ Requirements for User Authentication, Files & Realtime milestone. Each maps to r
 
 ### File Uploads
 
-- [ ] **FILE-01**: File field type in schema definition
-- [ ] **FILE-02**: Multipart upload via records API (create and update)
-- [ ] **FILE-03**: Local filesystem storage in `{data_dir}/storage/{collection}/{record}/`
-- [ ] **FILE-04**: File serving endpoint `GET /api/files/{collection}/{record}/{filename}`
-- [ ] **FILE-05**: Filename sanitization (remove special chars, add random suffix)
-- [ ] **FILE-06**: Configurable file size limit (default 10MB)
-- [ ] **FILE-07**: MIME type validation (allowed types per field)
-- [ ] **FILE-08**: Multiple files per field support
-- [ ] **FILE-09**: File deletion when record is deleted (cleanup via hook)
-- [ ] **FILE-10**: File URL generation helper in API responses
+- [x] **FILE-01**: File field type in schema definition
+- [x] **FILE-02**: Multipart upload via records API (create and update)
+- [x] **FILE-03**: Local filesystem storage in `{data_dir}/storage/{collection}/{record}/`
+- [x] **FILE-04**: File serving endpoint `GET /api/files/{collection}/{record}/{filename}`
+- [x] **FILE-05**: Filename sanitization (remove special chars, add random suffix)
+- [x] **FILE-06**: Configurable file size limit (default 10MB)
+- [x] **FILE-07**: MIME type validation (allowed types per field)
+- [x] **FILE-08**: Multiple files per field support
+- [x] **FILE-09**: File deletion when record is deleted (cleanup via hook)
+- [x] **FILE-10**: File URL generation helper in API responses
 
 ### Realtime/SSE
 
@@ -134,16 +134,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-09 | Phase 10 | Complete |
 | AUTH-10 | Phase 10 | Complete |
 | AUTH-11 | Phase 10 | Complete |
-| FILE-01 | Phase 11 | Pending |
-| FILE-02 | Phase 11 | Pending |
-| FILE-03 | Phase 11 | Pending |
-| FILE-04 | Phase 11 | Pending |
-| FILE-05 | Phase 11 | Pending |
-| FILE-06 | Phase 11 | Pending |
-| FILE-07 | Phase 11 | Pending |
-| FILE-08 | Phase 11 | Pending |
-| FILE-09 | Phase 11 | Pending |
-| FILE-10 | Phase 11 | Pending |
+| FILE-01 | Phase 11 | Complete |
+| FILE-02 | Phase 11 | Complete |
+| FILE-03 | Phase 11 | Complete |
+| FILE-04 | Phase 11 | Complete |
+| FILE-05 | Phase 11 | Complete |
+| FILE-06 | Phase 11 | Complete |
+| FILE-07 | Phase 11 | Complete |
+| FILE-08 | Phase 11 | Complete |
+| FILE-09 | Phase 11 | Complete |
+| FILE-10 | Phase 11 | Complete |
 | SSE-01 | Phase 12 | Pending |
 | SSE-02 | Phase 12 | Pending |
 | SSE-03 | Phase 12 | Pending |
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-26*
-*Last updated: 2026-01-27 after Phase 10 completion*
+*Last updated: 2026-01-27 after Phase 11 completion*

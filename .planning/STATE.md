@@ -14,7 +14,7 @@ Plan: 06 of 6 complete (11-01, 11-02, 11-03, 11-04, 11-05, 11-06)
 Status: Phase complete
 Last activity: 2026-01-27 — Completed 11-06-PLAN.md (File Cleanup Hooks)
 
-Progress: [███████████████████████████████████████████] 100% (13/13 v0.2 plans)
+Progress: [████████████████████████████████████░░░░░░░░] 75% (15/20 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [███████████████████████
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | Complete |
+| 11 | File Uploads | 10 | Verified |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 

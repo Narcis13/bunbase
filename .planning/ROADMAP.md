@@ -93,15 +93,15 @@ Plans:
 
 **Plans:** 6 plans
 
-**Status:** Planned (2026-01-27)
+**Status:** Complete (2026-01-27)
 
 Plans:
-- [ ] 11-01-PLAN.md — File field type and filename sanitization (Wave 1)
-- [ ] 11-02-PLAN.md — File storage operations (Wave 1)
-- [ ] 11-03-PLAN.md — File validation (size, MIME, count) (Wave 2)
-- [ ] 11-04-PLAN.md — Multipart upload and records API integration (Wave 2)
-- [ ] 11-05-PLAN.md — File serving endpoint and URL generation (Wave 3)
-- [ ] 11-06-PLAN.md — File cleanup hook on record deletion (Wave 3)
+- [x] 11-01-PLAN.md — File field type and filename sanitization (Wave 1)
+- [x] 11-02-PLAN.md — File storage operations (Wave 1)
+- [x] 11-03-PLAN.md — File validation (size, MIME, count) (Wave 2)
+- [x] 11-04-PLAN.md — Multipart upload and records API integration (Wave 2)
+- [x] 11-05-PLAN.md — File serving endpoint and URL generation (Wave 3)
+- [x] 11-06-PLAN.md — File cleanup hook on record deletion (Wave 3)
 
 **Requirements:**
 - FILE-01: File field type in schema definition
@@ -207,3 +207,4 @@ Phase 9 (Email) ──┐
 *Phase 10 planned: 2026-01-27*
 *Phase 10 complete: 2026-01-27*
 *Phase 11 planned: 2026-01-27*
+*Phase 11 complete: 2026-01-27*
