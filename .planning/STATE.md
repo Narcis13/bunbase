@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 10 - User Authentication
-Plan: 05 of 6 complete (10-01, 10-02, 10-03, 10-04, 10-05)
-Status: In progress
-Last activity: 2026-01-27 — Completed 10-05-PLAN.md (Password Reset)
+Phase: 10 - User Authentication (COMPLETE)
+Plan: 06 of 6 complete (10-01 through 10-06)
+Status: Phase complete
+Last activity: 2026-01-27 — Completed 10-06-PLAN.md (Authenticated Routes)
 
-Progress: [█████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 58% (7/12 v0.2 plans)
+Progress: [████████████████████░░░░░░░░░░░░░░░░░░░░░] 67% (8/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -25,7 +25,7 @@ Progress: [█████████████████░░░░░░
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
-| 10 | User Authentication | 11 | In Progress (5/6 plans) |
+| 10 | User Authentication | 11 | Complete |
 | 11 | File Uploads | 10 | Pending |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
@@ -63,6 +63,10 @@ v0.2 decisions made:
 - Password reset always returns success regardless of email existence (enumeration prevention) (10-05)
 - All refresh tokens revoked after password reset (session invalidation) (10-05)
 - GET endpoint for confirm-reset returns HTML form for direct link clicking (10-05)
+- Rule semantics: null = admin only, '' = public, string = expression (10-06)
+- Auth context undefined = skip checks for backward compatibility (10-06)
+- Public API enforces rules, admin API bypasses rules (10-06)
+- Access denied returns 403, not 401 (10-06)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -78,12 +82,14 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 10-05-PLAN.md
+Stopped at: Completed 10-06-PLAN.md (Phase 10 complete)
 Resume file: None
 
 ## Next Steps
 
-Continue Phase 10 — Execute 10-06-PLAN.md (Authenticated Routes)
+Phase 10 (User Authentication) is complete. Ready to proceed to:
+- Phase 11: File Uploads
+- Phase 12: Realtime/SSE
 
 ---
-*State updated: 2026-01-27 after completing 10-05-PLAN.md*
+*State updated: 2026-01-27 after completing 10-06-PLAN.md*
