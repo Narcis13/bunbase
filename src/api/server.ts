@@ -56,6 +56,7 @@ import { isAuthCollection } from "../core/schema";
 import { registerFileCleanupHook } from "../storage/hooks";
 import { RealtimeManager } from "../realtime/manager";
 import { formatSSEMessage, formatSSEComment } from "../realtime/sse";
+import { registerRealtimeHooks } from "../realtime/hooks";
 import { nanoid } from "nanoid";
 
 // Import pre-built admin UI assets for embedding in binary
@@ -1151,6 +1152,9 @@ export async function startServer(
 
   // Register file cleanup hook for automatic file deletion on record delete
   registerFileCleanupHook(hookManager);
+
+  // Register realtime hooks for broadcasting record changes to SSE subscribers
+  registerRealtimeHooks(hookManager, realtimeManager);
 
   // Initialize email service if configured
   if (smtpConfig) {
