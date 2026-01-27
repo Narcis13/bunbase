@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { createCollection, type FieldInput } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -106,6 +107,7 @@ export function CreateCollectionSheet({
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Spinner className="mr-2" size="sm" />}
             {loading ? "Creating..." : "Create Collection"}
           </Button>
         </form>
