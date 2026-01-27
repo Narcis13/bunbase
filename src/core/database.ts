@@ -34,6 +34,19 @@ const INIT_METADATA_SQL = `
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS _refresh_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    collection_id TEXT NOT NULL,
+    token_id TEXT UNIQUE NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked INTEGER DEFAULT 0
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON _refresh_tokens(user_id);
+  CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_id ON _refresh_tokens(token_id);
 `;
 
 /**
