@@ -23,7 +23,7 @@ const INIT_METADATA_SQL = `
     id TEXT PRIMARY KEY,
     collection_id TEXT NOT NULL REFERENCES _collections(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    type TEXT NOT NULL CHECK(type IN ('text', 'number', 'boolean', 'datetime', 'json', 'relation')),
+    type TEXT NOT NULL CHECK(type IN ('text', 'number', 'boolean', 'datetime', 'json', 'relation', 'file')),
     required INTEGER DEFAULT 0,
     options TEXT,
     created_at TEXT DEFAULT (datetime('now')),
