@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 
 ## Current Position
 
-Phase: 9 - Email Service (not started)
-Plan: —
-Status: Roadmap complete, ready for planning
-Last activity: 2026-01-26 — Roadmap created for v0.2
+Phase: 9 - Email Service (in progress)
+Plan: 01 of 03
+Status: In progress
+Last activity: 2026-01-27 — Completed 09-01-PLAN.md (Email Foundation)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
+Progress: [███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 8% (1/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -24,7 +24,7 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 9 | Email Service | 3 | Pending |
+| 9 | Email Service | 3 | In Progress (1/3 plans) |
 | 10 | User Authentication | 11 | Pending |
 | 11 | File Uploads | 10 | Pending |
 | 12 | Realtime/SSE | 10 | Pending |
@@ -37,6 +37,11 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 Full decision log in PROJECT.md Key Decisions table.
 All v0.1 decisions marked as Good.
 
+v0.2 decisions made:
+- Graceful degradation: loadSmtpConfig returns null when SMTP unconfigured
+- Auto-detect secure mode from port (465 = implicit TLS, others = STARTTLS)
+- Template placeholders: preserve unmatched {{key}} patterns
+
 v0.2 decisions pending:
 - Token expiration strategy (15min access + 7day refresh vs 24h access only)
 - Email templates design (plain text vs HTML) - start with plain text
@@ -47,17 +52,17 @@ None.
 
 ### Blockers/Concerns
 
-None — roadmap complete, ready to plan Phase 9.
+None.
 
 ## Session Continuity
 
-Last session: 2026-01-26
-Stopped at: Roadmap complete
-Resume file: None
+Last session: 2026-01-27
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-email-service/09-02-PLAN.md
 
 ## Next Steps
 
-Run `/gsd:plan-phase 9` to plan Email Service phase.
+Execute 09-02-PLAN.md (Transport and Send Functions).
 
 ---
-*State updated: 2026-01-26 after roadmap creation*
+*State updated: 2026-01-27 after completing 09-01-PLAN.md*
