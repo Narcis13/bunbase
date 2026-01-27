@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 12 - Realtime/SSE (IN PROGRESS)
-Plan: 02 of 6 complete (12-01, 12-02)
-Status: Executing Wave 1
-Last activity: 2026-01-27 — Completed 12-01-PLAN.md (SSE Foundation)
+Plan: 03 of 6 complete (12-01, 12-02, 12-03)
+Status: Executing Wave 2
+Last activity: 2026-01-27 — Completed 12-03-PLAN.md (SSE Connection Endpoint)
 
-Progress: [██████████████████████████████████████░░░░░░] 85% (17/20 v0.2 plans)
+Progress: [████████████████████████████████████████░░░░] 90% (18/20 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -97,6 +97,10 @@ v0.2 decisions made:
 - Topic format: collection/* for wildcard, collection/recordId for specific (12-02)
 - Collection names: alphanumeric + underscore, must start with letter (12-02)
 - Invalid topics return null (fail-safe parsing, not exceptions) (12-02)
+- ReadableStream type:direct for efficient SSE streaming (12-03)
+- 30-second ping interval for keep-alive (12-03)
+- RealtimeManager follows HookManager injection pattern (12-03)
+- Client ID generated with nanoid on connect (12-03)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -112,13 +116,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 12-01-PLAN.md (SSE Foundation)
+Stopped at: Completed 12-03-PLAN.md (SSE Connection Endpoint)
 Resume file: None
 
 ## Next Steps
 
-Phase 12 (Realtime/SSE) Wave 1 in progress.
-Next: Continue with 12-03 (SSE Endpoint) or remaining Wave 1 plans.
+Phase 12 (Realtime/SSE) Wave 2 in progress.
+Next: Continue with 12-04 (Subscription Management) or remaining Wave 2 plans.
 
 ---
-*State updated: 2026-01-27 after completing 12-01-PLAN.md*
+*State updated: 2026-01-27 after completing 12-03-PLAN.md*
