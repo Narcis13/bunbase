@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 11 - File Uploads (IN PROGRESS)
-Plan: 01 of 6 complete (11-01)
+Plan: 02 of 6 complete (11-01, 11-02)
 Status: In progress
-Last activity: 2026-01-27 — Completed 11-01-PLAN.md (File Field Type and Sanitization)
+Last activity: 2026-01-27 — Completed 11-02-PLAN.md (File Storage Operations)
 
-Progress: [█████████████████████░░░░░░░░░░░░░░░░░░░░] 75% (9/12 v0.2 plans)
+Progress: [██████████████████████░░░░░░░░░░░░░░░░░░░░] 83% (10/12 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [█████████████████████░░
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | In Progress (1/6) |
+| 11 | File Uploads | 10 | In Progress (2/6) |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 
@@ -71,6 +71,10 @@ v0.2 decisions made:
 - 10-char nanoid suffix for filename uniqueness (11-01)
 - Normalize Windows backslashes for cross-platform path handling (11-01)
 - Truncate base filename to 100 chars max (11-01)
+- BUNBASE_STORAGE_DIR env var for storage path override (11-02)
+- Storage structure: {storageDir}/{collectionName}/{recordId}/filename (11-02)
+- Idempotent delete operations - no throw on missing files/directories (11-02)
+- listRecordFiles returns empty array for non-existent directories (11-02)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -86,17 +90,16 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 11-01-PLAN.md
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
 
 ## Next Steps
 
 Phase 11 (File Uploads) in progress. Next:
-- 11-02: File Storage Provider
 - 11-03: Upload Endpoint
 - 11-04: File Serving
 - 11-05: File Deletion
 - 11-06: Admin UI
 
 ---
-*State updated: 2026-01-27 after completing 11-01-PLAN.md*
+*State updated: 2026-01-27 after completing 11-02-PLAN.md*
