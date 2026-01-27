@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 12 - Realtime/SSE (IN PROGRESS)
-Plan: 03 of 6 complete (12-01, 12-02, 12-03)
+Plan: 04 of 6 complete (12-01, 12-02, 12-03, 12-04)
 Status: Executing Wave 2
-Last activity: 2026-01-27 — Completed 12-03-PLAN.md (SSE Connection Endpoint)
+Last activity: 2026-01-27 — Completed 12-04-PLAN.md (Subscription Management)
 
-Progress: [████████████████████████████████████████░░░░] 90% (18/20 v0.2 plans)
+Progress: [██████████████████████████████████████████░░] 95% (19/20 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -101,6 +101,10 @@ v0.2 decisions made:
 - 30-second ping interval for keep-alive (12-03)
 - RealtimeManager follows HookManager injection pattern (12-03)
 - Client ID generated with nanoid on connect (12-03)
+- setSubscriptions accepts topic strings, parses internally (12-04)
+- Invalid topics silently filtered (fail-safe parsing) (12-04)
+- Auth mismatch returns 403 (session hijacking prevention) (12-04)
+- Auth context captured once, cannot be changed mid-session (12-04)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -116,13 +120,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 12-03-PLAN.md (SSE Connection Endpoint)
+Stopped at: Completed 12-04-PLAN.md (Subscription Management)
 Resume file: None
 
 ## Next Steps
 
 Phase 12 (Realtime/SSE) Wave 2 in progress.
-Next: Continue with 12-04 (Subscription Management) or remaining Wave 2 plans.
+Next: Continue with 12-05 (Event Broadcasting) or remaining Wave 2 plans.
 
 ---
-*State updated: 2026-01-27 after completing 12-03-PLAN.md*
+*State updated: 2026-01-27 after completing 12-04-PLAN.md*
