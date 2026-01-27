@@ -7,7 +7,8 @@ export type FieldType =
   | "boolean"
   | "datetime"
   | "json"
-  | "relation";
+  | "relation"
+  | "file";
 
 /**
  * Type-specific options for fields.
@@ -24,6 +25,12 @@ export interface FieldOptions {
   min?: number;
   /** For number fields: maximum value */
   max?: number;
+  /** For file fields: maximum number of files (default 1) */
+  maxFiles?: number;
+  /** For file fields: maximum file size in bytes (default 10MB = 10485760) */
+  maxSize?: number;
+  /** For file fields: allowed MIME types (e.g., ["image/jpeg", "image/png", "image/*"]) */
+  allowedTypes?: string[];
 }
 
 /**
@@ -94,6 +101,7 @@ export const FIELD_TYPE_MAP: Record<FieldType, string> = {
   datetime: "TEXT", // ISO 8601 string
   json: "TEXT", // JSON stringified
   relation: "TEXT", // Foreign ID
+  file: "TEXT", // JSON array of filenames
 } as const;
 
 /**
