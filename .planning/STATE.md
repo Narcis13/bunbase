@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 13 - UI Polish (IN PROGRESS)
-Plan: 01 of 7 complete (13-01)
+Plan: 02 of 7 complete (13-01, 13-02)
 Status: In progress
-Last activity: 2027-01-27 — Completed 13-01-PLAN.md (Loading Spinners)
+Last activity: 2026-01-27 — Completed 13-02-PLAN.md (Form Validation Accessibility)
 
-Progress: [██████████████████████████████████████████░░░] 95% (22/23 v0.2 plans)
+Progress: [███████████████████████████████████████████░░] 96% (23/24 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -28,7 +28,7 @@ Progress: [███████████████████████
 | 10 | User Authentication | 11 | Complete |
 | 11 | File Uploads | 10 | Verified |
 | 12 | Realtime/SSE | 10 | Verified |
-| 13 | UI Polish | 7 | In Progress (1/7) |
+| 13 | UI Polish | 7 | In Progress (2/7) |
 
 ## Accumulated Context
 
@@ -116,6 +116,9 @@ v0.2 decisions made:
 - Spinner uses Lucide Loader2 icon with Tailwind animate-spin (13-01)
 - Size variants: sm (16px), md (20px), lg (24px) matching icon conventions (13-01)
 - Spinner is decorative (aria-hidden) - screen readers get loading text from button (13-01)
+- aria-invalid bound to error existence (!!error) for boolean conversion (13-02)
+- Boolean Switch excluded from aria-invalid (always valid true/false state) (13-02)
+- LoginPage uses single error state for both email/password (generic credentials error) (13-02)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -130,14 +133,14 @@ None.
 
 ## Session Continuity
 
-Last session: 2027-01-27
-Stopped at: Completed 13-01-PLAN.md (Loading Spinners)
+Last session: 2026-01-27
+Stopped at: Completed 13-02-PLAN.md (Form Validation Accessibility)
 Resume file: None
 
 ## Next Steps
 
-Phase 13 (UI Polish) in progress. Plan 01 (Loading Spinners) complete.
+Phase 13 (UI Polish) in progress. Plans 01-02 complete.
 Next: Execute remaining Phase 13 plans to complete v0.2 milestone.
 
 ---
-*State updated: 2027-01-27 after completing 13-01-PLAN.md*
+*State updated: 2026-01-27 after completing 13-02-PLAN.md*
