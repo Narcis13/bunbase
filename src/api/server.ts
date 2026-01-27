@@ -13,7 +13,13 @@ import {
   createRecordWithHooks,
   updateRecordWithHooks,
   deleteRecordWithHooks,
+  createRecordWithFiles,
+  updateRecordWithFiles,
 } from "../core/records";
+import {
+  isMultipartRequest,
+  parseMultipartRequest,
+} from "../storage/multipart";
 import {
   getAllCollections,
   getFields,
@@ -138,6 +144,7 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * POST /api/collections/:name/records
          * Create a new record in a collection (with lifecycle hooks)
+         * Supports both JSON and multipart/form-data for file uploads
          * Respects collection create rules
          */
         POST: async (req) => {
@@ -145,9 +152,25 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
             const { name } = req.params;
             const user = await optionalUser(req);
             const authContext = { isAdmin: false, user };
-            const body = await req.json();
-            const record = await createRecordWithHooks(name, body, hookManager, req, authContext);
-            return Response.json(record, { status: 201 });
+
+            if (isMultipartRequest(req)) {
+              // Handle multipart form data (with files)
+              const { data, files } = await parseMultipartRequest(req);
+              const record = await createRecordWithFiles(
+                name,
+                data,
+                files,
+                hookManager,
+                req,
+                authContext
+              );
+              return Response.json(record, { status: 201 });
+            } else {
+              // Handle JSON request (no files)
+              const body = await req.json();
+              const record = await createRecordWithHooks(name, body, hookManager, req, authContext);
+              return Response.json(record, { status: 201 });
+            }
           } catch (error) {
             const err = error as Error;
             if (err.message === 'Access denied') {
@@ -190,6 +213,7 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
         /**
          * PATCH /api/collections/:name/records/:id
          * Update a record by ID (with lifecycle hooks)
+         * Supports both JSON and multipart/form-data for file uploads
          * Respects collection update rules
          */
         PATCH: async (req) => {
@@ -197,9 +221,26 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
             const { name, id } = req.params;
             const user = await optionalUser(req);
             const authContext = { isAdmin: false, user };
-            const body = await req.json();
-            const record = await updateRecordWithHooks(name, id, body, hookManager, req, authContext);
-            return Response.json(record);
+
+            if (isMultipartRequest(req)) {
+              // Handle multipart form data (with files)
+              const { data, files } = await parseMultipartRequest(req);
+              const record = await updateRecordWithFiles(
+                name,
+                id,
+                data,
+                files,
+                hookManager,
+                req,
+                authContext
+              );
+              return Response.json(record);
+            } else {
+              // Handle JSON request (no files)
+              const body = await req.json();
+              const record = await updateRecordWithHooks(name, id, body, hookManager, req, authContext);
+              return Response.json(record);
+            }
           } catch (error) {
             const err = error as Error;
             if (err.message === 'Access denied') {
