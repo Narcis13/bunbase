@@ -39,6 +39,8 @@ import { initEmailService, type SmtpConfig } from "../email";
 import {
   requestEmailVerification,
   confirmEmailVerification,
+  requestPasswordReset,
+  confirmPasswordReset,
 } from "../auth/tokens";
 import { verifyUserToken } from "../auth/user-jwt";
 import { createUser, loginUser, refreshTokens } from "../auth/user";
@@ -413,6 +415,149 @@ export function createServer(port: number = 8090, hooks?: HookManager) {
               { status: 400, headers: { "Content-Type": "text/html" } }
             );
           }
+        },
+      },
+
+      "/api/collections/:name/auth/request-reset": {
+        /**
+         * POST /api/collections/:name/auth/request-reset
+         * Request password reset (email enumeration safe - always returns same message)
+         */
+        POST: async (req) => {
+          try {
+            const { name } = req.params;
+
+            if (!isAuthCollection(name)) {
+              // Don't reveal collection type info
+              return Response.json({
+                message: "If an account exists, a reset email has been sent",
+              });
+            }
+
+            const { email } = await req.json();
+            if (!email) {
+              return errorResponse("Email required", 400);
+            }
+
+            const url = new URL(req.url);
+            const baseUrl = `${url.protocol}//${url.host}`;
+
+            await requestPasswordReset(name, email, baseUrl);
+
+            return Response.json({
+              message: "If an account exists, a reset email has been sent",
+            });
+          } catch {
+            // Always return success to prevent enumeration
+            return Response.json({
+              message: "If an account exists, a reset email has been sent",
+            });
+          }
+        },
+      },
+
+      "/api/collections/:name/auth/confirm-reset": {
+        /**
+         * POST /api/collections/:name/auth/confirm-reset
+         * Confirm password reset with token and new password
+         */
+        POST: async (req) => {
+          try {
+            const { name } = req.params;
+
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+
+            const { token, newPassword } = await req.json();
+            if (!token || !newPassword) {
+              return errorResponse("Token and new password required", 400);
+            }
+
+            const result = await confirmPasswordReset(token, newPassword);
+            if (!result.success) {
+              return errorResponse(result.error!, 400);
+            }
+
+            return Response.json({ message: "Password reset successfully" });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, 400);
+          }
+        },
+
+        /**
+         * GET /api/collections/:name/auth/confirm-reset
+         * Return HTML form for password reset (user clicked link)
+         */
+        GET: async (req) => {
+          const url = new URL(req.url);
+          const token = url.searchParams.get("token");
+
+          if (!token) {
+            return new Response(
+              `<html><body><h1>Error</h1><p>Token required</p></body></html>`,
+              { status: 400, headers: { "Content-Type": "text/html" } }
+            );
+          }
+
+          return new Response(
+            `<!DOCTYPE html>
+<html>
+<head>
+  <title>Reset Password</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+    input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #0066cc; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0055aa; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>Reset Password</h1>
+  <form id="resetForm">
+    <input type="hidden" name="token" value="${token}">
+    <label>New Password:</label>
+    <input type="password" name="newPassword" required minlength="8" placeholder="Enter new password">
+    <label>Confirm Password:</label>
+    <input type="password" name="confirmPassword" required placeholder="Confirm new password">
+    <button type="submit">Reset Password</button>
+  </form>
+  <p id="message"></p>
+  <script>
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const newPassword = form.newPassword.value;
+      const confirmPassword = form.confirmPassword.value;
+      if (newPassword !== confirmPassword) {
+        document.getElementById('message').innerHTML = '<span class="error">Passwords do not match</span>';
+        return;
+      }
+      try {
+        const res = await fetch('', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: form.token.value, newPassword })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('message').innerHTML = '<span class="success">Password reset! You can now log in.</span>';
+          form.style.display = 'none';
+        } else {
+          document.getElementById('message').innerHTML = '<span class="error">' + (data.error || 'Reset failed') + '</span>';
+        }
+      } catch (err) {
+        document.getElementById('message').innerHTML = '<span class="error">Request failed</span>';
+      }
+    });
+  </script>
+</body>
+</html>`,
+            { headers: { "Content-Type": "text/html" } }
+          );
         },
       },
 
