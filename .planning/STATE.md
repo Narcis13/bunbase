@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-26)
 ## Current Position
 
 Phase: 11 - File Uploads (IN PROGRESS)
-Plan: 04 of 6 complete (11-01, 11-02, 11-03, 11-04)
+Plan: 05 of 6 complete (11-01, 11-02, 11-03, 11-04, 11-05)
 Status: In progress
-Last activity: 2026-01-27 — Completed 11-04-PLAN.md (Multipart Upload Integration)
+Last activity: 2026-01-27 — Completed 11-05-PLAN.md (File Serving)
 
-Progress: [█████████████████████████░░░░░░░░░░░░░░░░░] 92% (11/12 v0.2 plans)
+Progress: [█████████████████████████████░░░░░░░░░░░░░] 94% (12/13 v0.2 plans)
 
 ## Milestone v0.2 Overview
 
@@ -26,7 +26,7 @@ Progress: [███████████████████████
 |-------|------|--------------|--------|
 | 9 | Email Service | 3 | Verified |
 | 10 | User Authentication | 11 | Complete |
-| 11 | File Uploads | 10 | In Progress (4/6) |
+| 11 | File Uploads | 10 | In Progress (5/6) |
 | 12 | Realtime/SSE | 10 | Pending |
 | 13 | UI Polish | 7 | Pending |
 
@@ -84,6 +84,9 @@ v0.2 decisions made:
 - Skip empty file inputs (size=0, no name) from browser (11-04)
 - Create record first, then save files and update with filenames (11-04)
 - File fields stored as string (single) or JSON array (maxFiles > 1) (11-04)
+- File access uses same view rules as record access (11-05)
+- Bun.file() handles Content-Type automatically from extension (11-05)
+- URL transformation happens at response time, not storage time (11-05)
 
 v0.2 decisions pending:
 - Email templates design (plain text vs HTML) - start with plain text
@@ -99,14 +102,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed 11-04-PLAN.md
+Stopped at: Completed 11-05-PLAN.md
 Resume file: None
 
 ## Next Steps
 
 Phase 11 (File Uploads) in progress. Next:
-- 11-05: File Serving
-- 11-06: Admin UI
+- 11-06: Admin UI (final plan in phase)
 
 ---
-*State updated: 2026-01-27 after completing 11-04-PLAN.md*
+*State updated: 2026-01-27 after completing 11-05-PLAN.md*
