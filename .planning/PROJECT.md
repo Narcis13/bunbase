@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A PocketBase alternative built with Bun, Hono-style routing, and SQLite — a complete backend-in-a-box that compiles to a single 56MB binary. Features schema-driven REST API generation, embedded React admin UI, lifecycle hooks, and JWT authentication.
+A PocketBase alternative built with Bun, Hono-style routing, and SQLite — a complete backend-in-a-box that compiles to a single 56MB binary. Features schema-driven REST API generation, embedded React admin UI, lifecycle hooks, JWT authentication, user authentication with email/password, file uploads, and realtime/SSE subscriptions.
 
 ## Core Value
 
@@ -21,17 +21,20 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 - ✓ Single binary compilation via `bun build --compile` — v0.1
 - ✓ SQLite as the database layer — v0.1
 - ✓ All 6 field types: text, number, boolean, datetime, json, relation — v0.1
+- ✓ Email service with SMTP configuration and template placeholders — v0.2
+- ✓ User authentication (email/password signup, login, JWT tokens, sessions) — v0.2
+- ✓ Email verification and password reset flows — v0.2
+- ✓ Collection-level auth rules for fine-grained access control — v0.2
+- ✓ File uploads with local filesystem storage (7th field type: file) — v0.2
+- ✓ File validation (size limits, MIME types, multiple files per field) — v0.2
+- ✓ Automatic file cleanup on record deletion — v0.2
+- ✓ Realtime/SSE subscriptions for record changes — v0.2
+- ✓ Permission-filtered event broadcasting — v0.2
+- ✓ Admin UI polish (spinners, form validation, keyboard navigation, responsive) — v0.2
 
 ### Active
 
-**Current Milestone: v0.2 — User Authentication, Files & Realtime**
-
-- [ ] User authentication (email/password signup, login, password reset, sessions)
-- [ ] File uploads with local filesystem storage
-- [ ] Realtime/SSE subscriptions for record changes
-- [ ] Admin UI visual polish (styling, animations, responsive design)
-
-**Deferred to v0.3+:**
+**Next Milestone: v0.3 — OAuth & Advanced Features**
 
 - [ ] OAuth login (Google, GitHub)
 - [ ] Unique field constraints
@@ -50,25 +53,29 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 
 ## Context
 
-**Current state (v0.1 shipped):**
-- ~5,000 lines TypeScript
-- 209 automated tests
-- Tech stack: Bun, bun:sqlite, React, Tailwind CSS v4, shadcn/ui, jose (JWT), zod
+**Current state (v0.2 shipped):**
+- ~20,300 lines TypeScript
+- 470 automated tests
+- Tech stack: Bun, bun:sqlite, React, Tailwind CSS v4, shadcn/ui, jose (JWT), zod, nodemailer, argon2
 
 **Codebase structure:**
 ```
 src/
-├── api/        # HTTP server, routes, auth endpoints
-├── auth/       # Admin CRUD, JWT, middleware
+├── api/        # HTTP server, routes, auth endpoints, realtime
+├── auth/       # Admin/user CRUD, JWT, middleware, rules
 ├── core/       # Database, schema, records, validation, hooks, query
+├── email/      # SMTP configuration, email sending, templates
+├── storage/    # File uploads, validation, cleanup hooks
+├── realtime/   # SSE manager, topics, broadcasting
 ├── admin/      # React admin UI components
 └── cli.ts      # CLI entry point
 ```
 
 **How to use:**
-1. Build: `bun run build` → produces `bunbase` binary (56MB)
+1. Build: `bun run build` → produces `bunbase` binary (~60MB)
 2. Run: `./bunbase --port 8090 --db app.db`
 3. Admin: http://localhost:8090/_/
+4. SMTP (optional): `--smtp-host mail.example.com --smtp-port 587 --smtp-user user --smtp-pass pass`
 
 ## Constraints
 
@@ -91,14 +98,20 @@ src/
 | No file uploads in v0.1 | Storage layer adds significant scope | ✓ Good |
 | No realtime/SSE in v0.1 | REST-only sufficient to prove API generation | ✓ Good |
 | Hooks in v0.1 | Critical for extensibility, worth the scope | ✓ Good |
+| Auth rules: null=admin, ''=public | PocketBase-compatible semantics | ✓ Good |
+| Token rotation on refresh | Old token immediately revoked | ✓ Good |
+| 5-minute SSE inactivity timeout | Cleans stale connections without impacting active users | ✓ Good |
+| Permission-filtered broadcasting | Events only sent to authorized subscribers | ✓ Good |
+| File cleanup via afterDelete hook | Automatic storage cleanup on record deletion | ✓ Good |
+| Local filesystem storage | Simple, no external dependencies | ✓ Good |
 
 ## Tech Debt
 
-Minor items to address in v0.2:
+Minor items to address in v0.3:
 
 - TypeScript type definitions for bun:sqlite need updating (runtime works)
-- 2 orphaned exports to remove (listRecords, default hooks singleton)
 - CSS warnings during build (cosmetic, no functional impact)
+- Test isolation issues (4 tests fail due to parallel execution reusing database state)
 
 ---
-*Last updated: 2026-01-26 after starting v0.2 milestone*
+*Last updated: 2026-01-28 after v0.2 milestone*
