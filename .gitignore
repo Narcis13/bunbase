@@ -38,3 +38,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 *.db-wal
 *.db-shm
 bunbase
+
+# Data directory (database and file storage)
+data/

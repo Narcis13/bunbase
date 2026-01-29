@@ -23,13 +23,18 @@ export async function fetchWithAuth(
     throw new Error("Not authenticated");
   }
 
+  const isFormData = options.body instanceof FormData;
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+    Authorization: `Bearer ${token}`,
+  };
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers,
   });
 
   if (response.status === 401) {
@@ -90,6 +95,31 @@ export function isAuthenticated(): boolean {
   return !!localStorage.getItem("bunbase_token");
 }
 
+/**
+ * Get the current auth token.
+ *
+ * @returns Token string or null if not authenticated
+ */
+export function getToken(): string | null {
+  return localStorage.getItem("bunbase_token");
+}
+
+/**
+ * Append auth token to a file URL for direct browser access.
+ * When you open a file URL in a new tab, the browser can't send
+ * Authorization headers, so we pass the token as a query parameter.
+ *
+ * @param url - The file URL
+ * @returns URL with token appended
+ */
+export function getAuthenticatedFileUrl(url: string): string {
+  const token = getToken();
+  if (!token) return url;
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
+}
+
 // ============================================================================
 // Schema API Functions
 // ============================================================================
@@ -99,9 +129,14 @@ export function isAuthenticated(): boolean {
  */
 export interface FieldInput {
   name: string;
-  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation";
+  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation" | "file";
   required?: boolean;
-  options?: { target?: string } | null;
+  options?: {
+    target?: string;
+    maxFiles?: number;
+    maxSize?: number;
+    allowedTypes?: string[];
+  } | null;
 }
 
 /**
@@ -111,9 +146,14 @@ export interface Field {
   id: string;
   collection_id: string;
   name: string;
-  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation";
+  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation" | "file";
   required: boolean;
-  options: { target?: string } | null;
+  options: {
+    target?: string;
+    maxFiles?: number;
+    maxSize?: number;
+    allowedTypes?: string[];
+  } | null;
   created_at: string;
 }
 
@@ -123,6 +163,7 @@ export interface Field {
 export interface Collection {
   id: string;
   name: string;
+  type: "base" | "auth";
   created_at: string;
   updated_at: string;
   fieldCount?: number;
@@ -138,11 +179,12 @@ export interface Collection {
  */
 export async function createCollection(
   name: string,
-  fields: FieldInput[] = []
+  fields: FieldInput[] = [],
+  type: "base" | "auth" = "base"
 ): Promise<Collection> {
   const response = await fetchWithAuth("/_/api/collections", {
     method: "POST",
-    body: JSON.stringify({ name, fields }),
+    body: JSON.stringify({ name, fields, type }),
   });
   return response.json();
 }
@@ -259,4 +301,91 @@ export async function fetchFields(collection: string): Promise<Field[]> {
 export async function fetchCollections(): Promise<Collection[]> {
   const response = await fetchWithAuth("/_/api/collections");
   return response.json();
+}
+
+// ============================================================================
+// Auth User Management API Functions
+// ============================================================================
+
+/**
+ * Create a user in an auth collection via the public signup endpoint.
+ *
+ * @param collection - Auth collection name
+ * @param email - User email
+ * @param password - User password
+ * @returns Created user object
+ */
+export async function createAuthUser(
+  collection: string,
+  email: string,
+  password: string
+): Promise<{ user: Record<string, unknown> }> {
+  const response = await fetchWithAuth(
+    `/api/collections/${collection}/auth/signup`,
+    {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }
+  );
+  return response.json();
+}
+
+/**
+ * Toggle a user's verified status.
+ *
+ * @param collection - Auth collection name
+ * @param userId - User record ID
+ * @param verified - New verified status (0 or 1)
+ */
+export async function toggleUserVerified(
+  collection: string,
+  userId: string,
+  verified: number
+): Promise<Record<string, unknown>> {
+  const response = await fetchWithAuth(
+    `/api/collections/${collection}/records/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ verified }),
+    }
+  );
+  return response.json();
+}
+
+/**
+ * Send verification email to a user (admin endpoint).
+ *
+ * @param collection - Auth collection name
+ * @param userId - User record ID
+ */
+export async function sendVerificationEmail(
+  collection: string,
+  userId: string
+): Promise<{ message: string }> {
+  const response = await fetchWithAuth(
+    `/_/api/collections/${collection}/auth/send-verification`,
+    {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    }
+  );
+  return response.json();
+}
+
+/**
+ * Delete a user from an auth collection.
+ *
+ * @param collection - Auth collection name
+ * @param userId - User record ID
+ */
+export async function deleteAuthUser(
+  collection: string,
+  userId: string
+): Promise<void> {
+  await fetchWithAuth(
+    `/api/collections/${collection}/records/${userId}`,
+    {
+      method: "DELETE",
+    }
+  );
 }

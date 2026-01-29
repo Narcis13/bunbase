@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
+import { Database, Shield } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -27,6 +28,7 @@ interface CreateCollectionSheetProps {
 
 interface FormData {
   name: string;
+  type: "base" | "auth";
 }
 
 /**
@@ -44,16 +46,19 @@ export function CreateCollectionSheet({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
-    defaultValues: { name: "" },
+    defaultValues: { name: "", type: "base" as const },
   });
+
+  const selectedType = watch("type");
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      // Create empty collection (no fields initially)
-      await createCollection(data.name, []);
+      await createCollection(data.name, [], data.type);
       toast.success(`Collection "${data.name}" created`);
       reset();
       onOpenChange(false);
@@ -76,7 +81,7 @@ export function CreateCollectionSheet({
             after creation.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6 px-4">
           <div className="space-y-2">
             <Label htmlFor="collection-name">Collection Name</Label>
             <Input
@@ -104,6 +109,44 @@ export function CreateCollectionSheet({
             <p className="text-xs text-muted-foreground">
               Use lowercase letters and underscores (e.g., blog_posts)
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Collection Type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setValue("type", "base")}
+                className={`flex items-center gap-2 rounded-md border p-3 text-left text-sm transition-colors ${
+                  selectedType === "base"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "hover:bg-accent"
+                }`}
+                disabled={loading}
+              >
+                <Database className="h-4 w-4 shrink-0" />
+                <div>
+                  <div className="font-medium">Base</div>
+                  <div className="text-xs text-muted-foreground">Data records</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setValue("type", "auth")}
+                className={`flex items-center gap-2 rounded-md border p-3 text-left text-sm transition-colors ${
+                  selectedType === "auth"
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "hover:bg-accent"
+                }`}
+                disabled={loading}
+              >
+                <Shield className="h-4 w-4 shrink-0" />
+                <div>
+                  <div className="font-medium">Auth</div>
+                  <div className="text-xs text-muted-foreground">User accounts</div>
+                </div>
+              </button>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

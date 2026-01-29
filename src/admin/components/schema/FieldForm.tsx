@@ -34,6 +34,7 @@ const FIELD_TYPES = [
   { value: "datetime", label: "DateTime", description: "Date and time" },
   { value: "json", label: "JSON", description: "Complex data structures" },
   { value: "relation", label: "Relation", description: "Link to another collection" },
+  { value: "file", label: "File", description: "File uploads" },
 ] as const;
 
 const RESERVED_NAMES = ["id", "created_at", "updated_at"];
@@ -56,12 +57,13 @@ export function FieldForm({
     watch,
     reset,
     formState: { errors },
-  } = useForm<FieldInput>({
+  } = useForm<FieldInput & { _allowedTypesStr?: string }>({
     defaultValues: {
       name: field?.name ?? "",
       type: field?.type ?? "text",
       required: field?.required ?? false,
       options: field?.options ?? null,
+      _allowedTypesStr: field?.options?.allowedTypes?.join(", ") ?? "",
     },
   });
 
@@ -72,6 +74,7 @@ export function FieldForm({
       type: field?.type ?? "text",
       required: field?.required ?? false,
       options: field?.options ?? null,
+      _allowedTypesStr: field?.options?.allowedTypes?.join(", ") ?? "",
     });
   }, [field, reset]);
 
@@ -82,8 +85,23 @@ export function FieldForm({
     (c) => c.name !== currentCollection
   );
 
+  const handleFormSubmit = (data: FieldInput & { _allowedTypesStr?: string }) => {
+    const { _allowedTypesStr, ...fieldData } = data;
+    if (fieldData.type === "file") {
+      const allowedTypes = _allowedTypesStr
+        ? _allowedTypesStr.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+      fieldData.options = {
+        maxFiles: fieldData.options?.maxFiles ?? 1,
+        maxSize: fieldData.options?.maxSize ?? 5242880,
+        ...(allowedTypes.length > 0 ? { allowedTypes } : {}),
+      };
+    }
+    onSubmit(fieldData);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Field Name */}
       <div className="space-y-2">
         <Label htmlFor="name">Field Name</Label>
@@ -212,6 +230,53 @@ export function FieldForm({
               {errors.options.target.message}
             </p>
           )}
+        </div>
+      )}
+
+      {/* File Options (conditional) */}
+      {fieldType === "file" && (
+        <div className="space-y-4 rounded-lg border p-4">
+          <p className="text-sm font-medium">File Options</p>
+          <div className="space-y-2">
+            <Label htmlFor="maxFiles">Max Files</Label>
+            <Input
+              id="maxFiles"
+              type="number"
+              min={1}
+              {...register("options.maxFiles", { valueAsNumber: true })}
+              placeholder="1"
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Maximum number of files allowed (default: 1)
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="maxSize">Max Size (bytes)</Label>
+            <Input
+              id="maxSize"
+              type="number"
+              min={1}
+              {...register("options.maxSize", { valueAsNumber: true })}
+              placeholder="5242880"
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Maximum file size in bytes (default: 5 MB)
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="allowedTypes">Allowed Types</Label>
+            <Input
+              id="allowedTypes"
+              {...register("_allowedTypesStr")}
+              placeholder="image/*, application/pdf"
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Comma-separated MIME types (leave empty for any)
+            </p>
+          </div>
         </div>
       )}
 

@@ -20,6 +20,26 @@ export function extractBearerToken(req: Request): string | null {
 }
 
 /**
+ * Extract token from Authorization header OR query parameter.
+ * Useful for file downloads where browser can't set headers.
+ *
+ * @param req - The incoming request
+ * @returns The token string or null if not present
+ */
+export function extractToken(req: Request): string | null {
+  // Try header first
+  const headerToken = extractBearerToken(req);
+  if (headerToken) {
+    return headerToken;
+  }
+
+  // Fall back to query parameter
+  const url = new URL(req.url);
+  const queryToken = url.searchParams.get("token");
+  return queryToken || null;
+}
+
+/**
  * Verify request has valid admin JWT.
  * Returns Admin if valid, or 401 Response if not.
  *
@@ -92,6 +112,14 @@ export async function optionalUser(req: Request): Promise<AuthenticatedUser | nu
   const token = extractBearerToken(req);
   if (!token) return null;
 
+  return verifyUserFromToken(token);
+}
+
+/**
+ * Verify user from a token string directly.
+ * Returns authenticated user or null if invalid.
+ */
+export async function verifyUserFromToken(token: string): Promise<AuthenticatedUser | null> {
   const payload = await verifyUserToken(token, 'access');
   if (!payload) return null;
 

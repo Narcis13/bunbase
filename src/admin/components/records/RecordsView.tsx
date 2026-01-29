@@ -1,9 +1,10 @@
 /**
  * Records view component with table, pagination, and CRUD forms.
  * Container component for browsing and managing collection records.
+ * Auto-refreshes on realtime events from other sessions.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { RecordsTable } from "./RecordsTable";
@@ -13,14 +14,22 @@ import { useRecords } from "@/hooks/useRecords";
 import { useCollectionFields } from "@/hooks/useCollectionFields";
 import { fetchWithAuth } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { useRealtimeContext } from "@/contexts/RealtimeContext";
 
 interface RecordsViewProps {
   collection: string;
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  create: "Record created",
+  update: "Record updated",
+  delete: "Record deleted",
+};
+
 /**
  * RecordsView displays a collection's records with full CRUD capabilities.
  * Integrates data fetching, table display, forms, and pagination.
+ * Listens for SSE events and auto-refreshes the table.
  *
  * @param collection - Name of the collection to display
  */
@@ -50,7 +59,48 @@ export function RecordsView({ collection }: RecordsViewProps) {
   > | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Track own mutations to avoid double-toasting
+  const ownMutationRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const totalPages = Math.ceil(totalItems / perPage);
+
+  // Realtime auto-refresh
+  const realtime = useRealtimeContext();
+
+  const debouncedRefetch = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      refetch();
+    }, 500);
+  }, [refetch]);
+
+  useEffect(() => {
+    const unsub = realtime.onEvent(collection, (event) => {
+      // Skip toast for own mutations (within 2 seconds)
+      if (ownMutationRef.current) return;
+
+      const label = ACTION_LABELS[event.action] || "Record changed";
+      toast.info(label, {
+        description: `${collection} / ${event.record.id}`,
+        duration: 3000,
+      });
+      debouncedRefetch();
+    });
+
+    return () => {
+      unsub();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [collection, realtime, debouncedRefetch]);
+
+  // Mark own mutation window
+  const markOwnMutation = () => {
+    ownMutationRef.current = true;
+    setTimeout(() => {
+      ownMutationRef.current = false;
+    }, 2000);
+  };
 
   // Handle create
   const handleCreate = () => {
@@ -71,24 +121,26 @@ export function RecordsView({ collection }: RecordsViewProps) {
   };
 
   // Submit create/edit
-  const handleSubmit = async (data: Record<string, unknown>) => {
+  const handleSubmit = async (data: Record<string, unknown> | FormData) => {
     setSaving(true);
     try {
+      const isFormData = data instanceof FormData;
+      const body = isFormData ? data : JSON.stringify(data);
+
+      markOwnMutation();
+
       if (editingRecord) {
         // Update existing record
         await fetchWithAuth(
           `/api/collections/${collection}/records/${editingRecord.id}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify(data),
-          }
+          { method: "PATCH", body }
         );
         toast.success("Record updated successfully");
       } else {
         // Create new record
         await fetchWithAuth(`/api/collections/${collection}/records`, {
           method: "POST",
-          body: JSON.stringify(data),
+          body,
         });
         toast.success("Record created successfully");
       }
@@ -107,6 +159,8 @@ export function RecordsView({ collection }: RecordsViewProps) {
 
     setDeleting(true);
     try {
+      markOwnMutation();
+
       await fetchWithAuth(
         `/api/collections/${collection}/records/${deletingRecord.id}`,
         {

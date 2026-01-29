@@ -8,12 +8,13 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { DynamicField } from "./DynamicField";
+import type { FileFieldValue } from "./FileField";
 import type { Field } from "@/hooks/useCollectionFields";
 
 interface RecordFormProps {
   fields: Field[];
   record?: Record<string, unknown> | null;
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  onSubmit: (data: Record<string, unknown> | FormData) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
 }
@@ -56,7 +57,72 @@ export function RecordForm({
     const cleanedData = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== undefined)
     );
-    await onSubmit(cleanedData);
+
+    // Check if any file fields have new files to upload
+    const fileFields = fields.filter((f) => f.type === "file");
+    let hasNewFiles = false;
+
+    for (const ff of fileFields) {
+      const val = cleanedData[ff.name] as FileFieldValue | undefined;
+      if (val && typeof val === "object" && "newFiles" in val && val.newFiles.length > 0) {
+        hasNewFiles = true;
+        break;
+      }
+    }
+
+    if (hasNewFiles) {
+      // Build FormData for multipart upload
+      const formData = new FormData();
+
+      for (const [key, value] of Object.entries(cleanedData)) {
+        const ff = fileFields.find((f) => f.name === key);
+        if (ff) {
+          const fileVal = value as FileFieldValue;
+          // Append existing filenames as a JSON data field
+          if (fileVal.existing.length > 0) {
+            for (const url of fileVal.existing) {
+              // Extract filename from URL
+              const filename = url.split("/").pop() || url;
+              formData.append(`${key}_existing`, filename);
+            }
+          }
+          // Append new File objects
+          for (const file of fileVal.newFiles) {
+            formData.append(key, file);
+          }
+        } else {
+          // Non-file fields as JSON string values
+          formData.append(
+            key,
+            typeof value === "object" && value !== null
+              ? JSON.stringify(value)
+              : String(value ?? "")
+          );
+        }
+      }
+
+      await onSubmit(formData);
+    } else {
+      // No new files — send JSON with raw filenames for file fields
+      const jsonData: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(cleanedData)) {
+        const ff = fileFields.find((f) => f.name === key);
+        if (ff) {
+          const fileVal = value as FileFieldValue | string | string[];
+          if (fileVal && typeof fileVal === "object" && "existing" in fileVal) {
+            const fv = fileVal as FileFieldValue;
+            const maxFiles = ff.options?.maxFiles ?? 1;
+            const filenames = fv.existing.map((url) => url.split("/").pop() || url);
+            jsonData[key] = maxFiles > 1 ? filenames : (filenames[0] ?? null);
+          } else {
+            jsonData[key] = value;
+          }
+        } else {
+          jsonData[key] = value;
+        }
+      }
+      await onSubmit(jsonData);
+    }
   };
 
   return (

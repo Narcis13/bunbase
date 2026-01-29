@@ -753,7 +753,7 @@ async function saveRecordFiles(
 
     // Store as array if maxFiles > 1, else single string
     const maxFiles = field.options?.maxFiles ?? 1;
-    fileData[field.name] = maxFiles > 1 ? savedFilenames : savedFilenames[0];
+    fileData[field.name] = maxFiles > 1 ? savedFilenames : savedFilenames[0]!;
   }
 
   return fileData;
@@ -851,8 +851,37 @@ export async function updateRecordWithFiles(
   if (files.size > 0) {
     const fileData = await saveRecordFiles(collectionName, id, files);
 
-    // Update record with file references if we saved any files
+    // Merge new filenames with existing filenames for multi-file fields
     if (Object.keys(fileData).length > 0) {
+      const fileFields = getFileFields(collectionName);
+      for (const field of fileFields) {
+        const maxFiles = field.options?.maxFiles ?? 1;
+        const savedValue = fileData[field.name];
+        if (maxFiles > 1 && savedValue) {
+          // Get existing filenames passed in data (from the admin form)
+          const existingFromData = data[`${field.name}_existing`];
+          const existingFilenames: string[] = [];
+          if (Array.isArray(existingFromData)) {
+            existingFilenames.push(...existingFromData.map(String));
+          } else if (typeof existingFromData === "string" && existingFromData) {
+            existingFilenames.push(existingFromData);
+          }
+          // Also check the data field itself for existing filenames
+          const dataFieldValue = data[field.name];
+          if (Array.isArray(dataFieldValue)) {
+            for (const v of dataFieldValue) {
+              if (typeof v === "string" && !existingFilenames.includes(v)) {
+                existingFilenames.push(v);
+              }
+            }
+          }
+          // Merge existing + new
+          const newFilenames = Array.isArray(savedValue)
+            ? savedValue
+            : [savedValue];
+          fileData[field.name] = [...existingFilenames, ...newFilenames];
+        }
+      }
       record = updateRecord(collectionName, id, fileData);
     }
   }

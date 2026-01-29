@@ -118,6 +118,27 @@ function runMigrations(db: Database): void {
   if (!existingColumns.has("updated_at")) {
     db.run("ALTER TABLE _collections ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
   }
+
+  // Migration: Recreate _fields table to update CHECK constraint to include 'file' type.
+  // SQLite doesn't support ALTER TABLE to modify CHECK constraints, so we recreate the table.
+  const fieldsSql = db.query("SELECT sql FROM sqlite_master WHERE type='table' AND name='_fields'").get() as { sql: string } | null;
+  if (fieldsSql && !fieldsSql.sql.includes("'file'")) {
+    db.exec(`
+      CREATE TABLE _fields_new (
+        id TEXT PRIMARY KEY,
+        collection_id TEXT NOT NULL REFERENCES _collections(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('text', 'number', 'boolean', 'datetime', 'json', 'relation', 'file')),
+        required INTEGER DEFAULT 0,
+        options TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(collection_id, name)
+      );
+      INSERT INTO _fields_new SELECT * FROM _fields;
+      DROP TABLE _fields;
+      ALTER TABLE _fields_new RENAME TO _fields;
+    `);
+  }
 }
 
 /**

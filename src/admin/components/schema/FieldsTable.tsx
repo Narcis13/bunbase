@@ -45,6 +45,7 @@ const TYPE_COLORS: Record<string, string> = {
   datetime: "bg-orange-100 text-orange-800",
   json: "bg-gray-100 text-gray-800",
   relation: "bg-pink-100 text-pink-800",
+  file: "bg-amber-100 text-amber-800",
 };
 
 /**
@@ -96,6 +97,20 @@ export function FieldsTable({
               -&gt; {row.original.options.target}
             </span>
           );
+        }
+        if (row.original.type === "file" && row.original.options) {
+          const opts = row.original.options;
+          const parts: string[] = [];
+          if (opts.maxFiles) parts.push(`max ${opts.maxFiles} file${opts.maxFiles > 1 ? "s" : ""}`);
+          if (opts.maxSize) parts.push(`${(opts.maxSize / 1024 / 1024).toFixed(1)} MB`);
+          if (opts.allowedTypes?.length) parts.push(opts.allowedTypes.join(", "));
+          if (parts.length > 0) {
+            return (
+              <span className="text-sm text-muted-foreground">
+                {parts.join(" · ")}
+              </span>
+            );
+          }
         }
         return <span className="text-muted-foreground">-</span>;
       },

@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/cli.ts serve",
+    "dev": "bun run build:admin && bun run --watch src/cli.ts serve",
     "build:admin": "bun scripts/build-admin.ts",
     "build": "bun run build:admin && bun build --compile --minify src/cli.ts --outfile bunbase",
     "typecheck": "bun run --bun tsc --noEmit"

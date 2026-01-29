@@ -10,9 +10,14 @@ export interface Field {
   id: string;
   collection_id: string;
   name: string;
-  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation";
+  type: "text" | "number" | "boolean" | "datetime" | "json" | "relation" | "file";
   required: boolean;
-  options: { target?: string } | null;
+  options: {
+    target?: string;
+    maxFiles?: number;
+    maxSize?: number;
+    allowedTypes?: string[];
+  } | null;
   created_at: string;
 }
 

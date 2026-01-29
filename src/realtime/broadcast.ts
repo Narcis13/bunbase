@@ -59,7 +59,7 @@ export async function broadcastRecordEvent(
 
     // Build auth context for rule evaluation
     const authContext: RuleContext = {
-      isAdmin: false, // SSE clients are never admin
+      isAdmin: client.isAdmin ?? false,
       auth: client.user,
       record,
     };

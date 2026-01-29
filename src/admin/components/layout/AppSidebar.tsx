@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Database, Settings, Plus, LayoutDashboard } from "lucide-react";
+import { Database, Settings, Plus, LayoutDashboard, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import { CreateCollectionSheet } from "@/components/schema/CreateCollectionSheet
 
 interface AppSidebarProps {
   currentCollection?: string;
-  onNavigate: (view: { type: string; collection?: string }) => void;
+  onNavigate: (view: { type: string; collection?: string; collectionType?: "base" | "auth" }) => void;
   onSchemaEdit?: (collection: string) => void;
   onRefreshCollections?: () => void;
 }
@@ -94,12 +94,17 @@ export function AppSidebar({
                           onNavigate({
                             type: "collection",
                             collection: collection.name,
+                            collectionType: collection.type,
                           })
                         }
                         isActive={currentCollection === collection.name}
                         className="flex-1"
                       >
-                        <Database className="h-4 w-4" />
+                        {collection.type === "auth" ? (
+                          <Users className="h-4 w-4" />
+                        ) : (
+                          <Database className="h-4 w-4" />
+                        )}
                         <span className="truncate">{collection.name}</span>
                         <span className="ml-auto text-xs text-muted-foreground">
                           {collection.recordCount}

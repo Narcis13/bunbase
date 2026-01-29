@@ -46,7 +46,7 @@ export function FieldSheet({
               : "Add a new field to this collection."}
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="mt-6 px-4">
           <FieldForm
             field={field}
             collections={collections}

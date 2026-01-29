@@ -34,6 +34,8 @@ export interface RealtimeClient {
   subscriptions: Subscription[];
   /** Authenticated user context, null if unauthenticated */
   user: AuthenticatedUser | null;
+  /** Whether this client is authenticated as an admin */
+  isAdmin: boolean;
   /** Timestamp of last activity (for inactivity tracking) */
   lastActivity: number;
 }
@@ -77,6 +79,7 @@ export class RealtimeManager {
       controller,
       subscriptions: [],
       user: null,
+      isAdmin: false,
       lastActivity: Date.now(),
     };
     this.clients.set(clientId, client);
@@ -112,6 +115,20 @@ export class RealtimeManager {
     const client = this.clients.get(clientId);
     if (client) {
       client.user = user;
+      client.lastActivity = Date.now();
+    }
+  }
+
+  /**
+   * Set the admin status for a client.
+   *
+   * @param clientId - Client ID to update
+   * @param isAdmin - Whether the client is an admin
+   */
+  setClientAdmin(clientId: string, isAdmin: boolean): void {
+    const client = this.clients.get(clientId);
+    if (client) {
+      client.isAdmin = isAdmin;
       client.lastActivity = Date.now();
     }
   }

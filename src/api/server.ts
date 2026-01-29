@@ -42,7 +42,7 @@ import {
   updateAdminPassword,
 } from "../auth/admin";
 import { createAdminToken, verifyAdminToken } from "../auth/jwt";
-import { requireAdmin, extractBearerToken, optionalUser, AuthenticatedUser } from "../auth/middleware";
+import { requireAdmin, extractBearerToken, extractToken, optionalUser, verifyUserFromToken, AuthenticatedUser } from "../auth/middleware";
 import { initEmailService, type SmtpConfig } from "../email";
 import {
   requestEmailVerification,
@@ -133,6 +133,31 @@ async function buildAuthContext(req: Request): Promise<{ isAdmin: boolean; user:
 
   // Fall back to user token
   const user = await optionalUser(req);
+  return { isAdmin: false, user };
+}
+
+/**
+ * Build auth context for file downloads.
+ * Supports token from Authorization header OR query parameter.
+ * This allows direct file URL access in browser tabs.
+ *
+ * @param req - The incoming request
+ * @returns Auth context with isAdmin flag and optional user
+ */
+async function buildFileAuthContext(req: Request): Promise<{ isAdmin: boolean; user: AuthenticatedUser | null }> {
+  const token = extractToken(req);
+  if (!token) {
+    return { isAdmin: false, user: null };
+  }
+
+  // Check for admin token first
+  const adminPayload = await verifyAdminToken(token);
+  if (adminPayload) {
+    return { isAdmin: true, user: null };
+  }
+
+  // Fall back to user token
+  const user = await verifyUserFromToken(token);
   return { isAdmin: false, user };
 }
 
@@ -244,11 +269,12 @@ export function createServer(
          * GET /api/files/:collection/:record/:filename
          * Serve a file from storage with access control
          * Respects collection view rules (uses same auth as record view)
+         * Supports token via query parameter for direct browser access
          */
         GET: async (req) => {
           try {
             const { collection, record: recordId, filename } = req.params;
-            const authContext = await buildAuthContext(req);
+            const authContext = await buildFileAuthContext(req);
 
             // Verify record exists and user can view it
             // This enforces collection view rules for file access
@@ -375,20 +401,36 @@ export function createServer(
               );
             }
 
-            // Extract optional user auth
-            const user = await optionalUser(req);
+            // Extract auth context — try admin token first, then user token
+            const token = extractBearerToken(req);
+            let user: AuthenticatedUser | null = null;
+            let isAdminToken = false;
 
-            // If client already has auth, verify it matches (prevent hijacking)
-            if (client.user && user && client.user.id !== user.id) {
-              return Response.json(
-                { error: "Authorization mismatch" },
-                { status: 403 }
-              );
+            if (token) {
+              const adminPayload = await verifyAdminToken(token);
+              if (adminPayload) {
+                isAdminToken = true;
+              } else {
+                user = await optionalUser(req);
+              }
             }
 
-            // Set auth context if provided and not already set
-            if (user && !client.user) {
-              realtimeManager.setClientAuth(body.clientId, user);
+            if (isAdminToken) {
+              // Admin token: set admin flag on client
+              realtimeManager.setClientAdmin(body.clientId, true);
+            } else if (user) {
+              // If client already has auth, verify it matches (prevent hijacking)
+              if (client.user && client.user.id !== user.id) {
+                return Response.json(
+                  { error: "Authorization mismatch" },
+                  { status: 403 }
+                );
+              }
+
+              // Set auth context if provided and not already set
+              if (!client.user) {
+                realtimeManager.setClientAuth(body.clientId, user);
+              }
             }
 
             // Update subscriptions (empty array = unsubscribe all)
@@ -933,6 +975,38 @@ export function createServer(
         },
       },
 
+      // Admin auth management
+      "/_/api/collections/:name/auth/send-verification": {
+        /**
+         * POST /_/api/collections/:name/auth/send-verification
+         * Send verification email to a user (requires admin auth)
+         */
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+            const { userId } = await req.json();
+            if (!userId) {
+              return errorResponse("userId is required", 400);
+            }
+            const url = new URL(req.url);
+            const baseUrl = `${url.protocol}//${url.host}`;
+            const result = await requestEmailVerification(name, userId, baseUrl);
+            if (!result.success) {
+              return errorResponse(result.error!, 400);
+            }
+            return Response.json({ message: "Verification email sent" });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
       // Collections API for admin UI
       "/_/api/collections/:name/fields/:fieldName": {
         /**
@@ -1084,11 +1158,12 @@ export function createServer(
           const adminOrError = await requireAdmin(req);
           if (adminOrError instanceof Response) return adminOrError;
           try {
-            const { name, fields } = await req.json();
+            const { name, fields, type } = await req.json();
             if (!name || typeof name !== "string") {
               return errorResponse("Collection name is required", 400);
             }
-            const collection = createCollection(name, fields || []);
+            const options = type ? { type } : undefined;
+            const collection = createCollection(name, fields || [], options);
             return Response.json(collection, { status: 201 });
           } catch (error) {
             const err = error as Error;

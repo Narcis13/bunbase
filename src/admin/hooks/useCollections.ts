@@ -9,6 +9,7 @@ import { fetchWithAuth } from "@/lib/api";
 interface Collection {
   id: string;
   name: string;
+  type: "base" | "auth";
   fieldCount: number;
   recordCount: number;
   created_at: string;

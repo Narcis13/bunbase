@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { FileField, type FileFieldValue } from "./FileField";
 import type { Field } from "@/hooks/useCollectionFields";
 
 interface DynamicFieldProps {
@@ -135,6 +136,38 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
                   aria-invalid={!!error}
                 />
               );
+
+            case "file": {
+              // Normalize current value into FileFieldValue
+              const currentVal = formField.value as FileFieldValue | string | string[] | null;
+              let fileValue: FileFieldValue;
+              if (
+                currentVal &&
+                typeof currentVal === "object" &&
+                "existing" in currentVal
+              ) {
+                fileValue = currentVal as FileFieldValue;
+              } else if (Array.isArray(currentVal)) {
+                fileValue = {
+                  existing: currentVal.filter((v): v is string => typeof v === "string"),
+                  newFiles: [],
+                };
+              } else if (typeof currentVal === "string" && currentVal) {
+                fileValue = { existing: [currentVal], newFiles: [] };
+              } else {
+                fileValue = { existing: [], newFiles: [] };
+              }
+
+              return (
+                <FileField
+                  value={fileValue}
+                  onChange={formField.onChange}
+                  maxFiles={field.options?.maxFiles ?? 1}
+                  maxSize={field.options?.maxSize ?? 5242880}
+                  allowedTypes={field.options?.allowedTypes ?? []}
+                />
+              );
+            }
 
             default:
               return (

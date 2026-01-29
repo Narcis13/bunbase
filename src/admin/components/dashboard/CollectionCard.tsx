@@ -3,7 +3,7 @@
  * Displays collection statistics in a clickable card.
  */
 
-import { Database, FileText, Clock } from "lucide-react";
+import { Database, FileText, Clock, Users } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 
 interface CollectionCardProps {
   name: string;
+  type?: "base" | "auth";
   recordCount: number;
   fieldCount: number;
   updatedAt: string;
@@ -27,11 +28,13 @@ interface CollectionCardProps {
  */
 export function CollectionCard({
   name,
+  type,
   recordCount,
   fieldCount,
   updatedAt,
   onClick,
 }: CollectionCardProps) {
+  const Icon = type === "auth" ? Users : Database;
   return (
     <Card
       className="cursor-pointer transition-colors hover:bg-accent"
@@ -39,7 +42,7 @@ export function CollectionCard({
     >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Database className="h-4 w-4" />
+          <Icon className="h-4 w-4" />
           {name}
         </CardTitle>
         <CardDescription>

@@ -80,6 +80,7 @@ export function Dashboard({ onNavigateToCollection }: DashboardProps) {
               <CollectionCard
                 key={collection.id}
                 name={collection.name}
+                type={collection.type}
                 recordCount={collection.recordCount}
                 fieldCount={collection.fieldCount}
                 updatedAt={collection.updated_at}

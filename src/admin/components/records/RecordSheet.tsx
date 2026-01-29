@@ -21,7 +21,7 @@ interface RecordSheetProps {
   fields: Field[];
   fieldsLoading: boolean;
   record?: Record<string, unknown> | null;
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  onSubmit: (data: Record<string, unknown> | FormData) => Promise<void>;
   loading?: boolean;
 }
 
@@ -50,7 +50,7 @@ export function RecordSheet({
 }: RecordSheetProps) {
   const isEditing = !!record;
 
-  const handleSubmit = async (data: Record<string, unknown>) => {
+  const handleSubmit = async (data: Record<string, unknown> | FormData) => {
     await onSubmit(data);
     onOpenChange(false);
   };
@@ -69,7 +69,7 @@ export function RecordSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
+        <div className="mt-6 px-4">
           {fieldsLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (

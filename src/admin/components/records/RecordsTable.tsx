@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getAuthenticatedFileUrl } from "@/lib/api";
 import type { Field } from "@/hooks/useCollectionFields";
 
 interface RecordsTableProps {
@@ -45,6 +46,60 @@ interface RecordsTableProps {
  * @param type - The field type (text, number, boolean, etc.)
  * @returns Formatted React node for display
  */
+function getFilenameFromUrl(url: string): string {
+  try {
+    const parts = url.split("/");
+    return parts[parts.length - 1] || url;
+  } catch {
+    return url;
+  }
+}
+
+function isImageUrl(url: string): boolean {
+  const lower = url.toLowerCase();
+  return /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?|$)/.test(lower);
+}
+
+function renderFileValue(value: unknown): React.ReactNode {
+  if (!value) return <span className="text-muted-foreground">-</span>;
+
+  const urls: string[] = Array.isArray(value) ? value : [String(value)];
+  if (urls.length === 0) return <span className="text-muted-foreground">-</span>;
+
+  const first = urls[0]!;
+  const remaining = urls.length - 1;
+
+  // Append auth token for direct browser access
+  const authUrl = getAuthenticatedFileUrl(first);
+
+  return (
+    <div className="flex items-center gap-2">
+      {isImageUrl(first) ? (
+        <img
+          src={authUrl}
+          alt={getFilenameFromUrl(first)}
+          className="h-8 w-8 rounded object-cover"
+        />
+      ) : (
+        <a
+          href={authUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-primary underline truncate max-w-[120px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {getFilenameFromUrl(first)}
+        </a>
+      )}
+      {remaining > 0 && (
+        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+          +{remaining}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function formatCellValue(value: unknown, type: string): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">-</span>;
@@ -67,6 +122,8 @@ function formatCellValue(value: unknown, type: string): React.ReactNode {
           {String(value).slice(0, 8)}...
         </span>
       );
+    case "file":
+      return renderFileValue(value);
     default:
       return String(value);
   }
