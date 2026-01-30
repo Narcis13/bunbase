@@ -111,8 +111,27 @@ async function main(): Promise<void> {
     from: values["smtp-from"],
   });
 
-  // Start server with parsed configuration
-  await startServer(port, dbPath, undefined, smtpConfig);
+  // Create managers for route building (these will be reused by startServer)
+  const hookManager = new HookManager();
+  const realtimeManager = new RealtimeManager();
+
+  // Build custom routes with context dependencies
+  const customRoutes = buildCustomRoutes({
+    hooks: hookManager,
+    realtime: realtimeManager,
+  });
+
+  // Log routes in development mode
+  const isDev = Bun.env.NODE_ENV === 'development' || Bun.env.BUNBASE_DEV === 'true';
+  if (isDev && routeManifest.routes.length > 0) {
+    console.log(`Custom routes (${routeManifest.routes.length}):`);
+    for (const route of routeManifest.routes) {
+      console.log(`  ${route.methods.join(',')} ${route.path}`);
+    }
+  }
+
+  // Start server with custom routes
+  await startServer(port, dbPath, hookManager, smtpConfig, realtimeManager, customRoutes);
 }
 
 // Run main entry point
