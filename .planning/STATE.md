@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** v0.3 Phase 17 - Build Pipeline & Testing
+**Current focus:** v0.3 Complete - Custom API Endpoints milestone finished
 
 ## Current Position
 
-Phase: 17 of 17 (Build Pipeline & Testing) - IN PROGRESS
-Plan: 1 of 2 complete
-Status: Plan 17-01 complete, ready for Plan 17-02
-Last activity: 2026-01-30 - Completed 17-01-PLAN.md (route manifest and dev mode tests)
+Phase: 17 of 17 (Build Pipeline & Testing) - COMPLETE
+Plan: 2 of 2 complete
+Status: v0.3 milestone complete
+Last activity: 2026-01-30 - Completed 17-02-PLAN.md (binary integration tests)
 
-Progress: [####################################--------] 87%
+Progress: [############################################] 100%
 
 ## Current Milestone: v0.3 - Custom API Endpoints
 
@@ -24,16 +24,16 @@ Progress: [####################################--------] 87%
 - Phase 14: Foundation (Context & Errors) - COMPLETE
 - Phase 15: Route Loading - COMPLETE (2/2 plans)
 - Phase 16: Server Integration - COMPLETE (2/2 plans)
-- Phase 17: Build Pipeline & Testing - IN PROGRESS (1/2 plans)
+- Phase 17: Build Pipeline & Testing - COMPLETE (2/2 plans)
 
-**Total:** 27 requirements across 4 phases, 8 plans
+**Total:** 27 requirements across 4 phases, 8 plans - ALL COMPLETE
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7 (v0.3)
-- Average duration: 2m 53s
-- Total execution time: 0.34 hours
+- Total plans completed: 8 (v0.3)
+- Average duration: 2m 49s
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
@@ -42,7 +42,7 @@ Progress: [####################################--------] 87%
 | 14 | 2/2 | 7m 11s | 3m 36s |
 | 15 | 2/2 | 5m 41s | 2m 51s |
 | 16 | 2/2 | 5m 00s | 2m 30s |
-| 17 | 1/2 | 2m 00s | 2m 00s |
+| 17 | 2/2 | 4m 00s | 2m 00s |
 
 *Updated after each plan completion*
 
@@ -67,6 +67,7 @@ Progress: [####################################--------] 87%
 | cli-managers-shared | CLI creates HookManager/RealtimeManager and passes to both buildCustomRoutes and startServer | Same instances used throughout for dependency injection | 16-02 |
 | test-port-8097 | Use port 8097 for routes tests | Avoid conflicts with server.test.ts on port 8091 | 17-01 |
 | spawnsync-build-test | Use Bun.spawnSync to test build:routes script | Tests actual script execution, not just module imports | 17-01 |
+| port-8099-binary | Use port 8099 for binary integration tests | Avoids conflicts with other test ports (8091 server, 8097 routes) | 17-02 |
 
 ### Pending Todos
 
@@ -74,12 +75,12 @@ None.
 
 ### Blockers/Concerns
 
-None.
+Pre-existing test failures in src/api/*.test.ts files (context.test.ts, hooks.test.ts, server.test.ts) due to collection name collisions when running full test suite. Not blocking for custom routes feature.
 
 ## Session Continuity
 
 Last session: 2026-01-30 22:07 UTC
-Stopped at: Completed 17-01-PLAN.md
+Stopped at: v0.3 milestone complete
 Resume file: None
 
 ## Phase Commits
@@ -93,6 +94,7 @@ Resume file: None
 | 16-01 | 7ccfbc0 | .planning/phases/16-server-integration/ | 2026-01-30 |
 | 16-02 | 2cfe864 | .planning/phases/16-server-integration/ | 2026-01-30 |
 | 17-01 | fb5dfb0 | .planning/phases/17-build-pipeline-testing/ | 2026-01-30 |
+| 17-02 | d9c8f1b | .planning/phases/17-build-pipeline-testing/ | 2026-01-30 |
 
 ---
-*State updated: 2026-01-30 after 17-01-PLAN.md completion*
+*State updated: 2026-01-30 after 17-02-PLAN.md completion - v0.3 milestone complete*
