@@ -8,7 +8,10 @@
     "build:routes": "bun scripts/build-routes.ts",
     "build:admin": "bun scripts/build-admin.ts",
     "build": "bun run build:routes && bun run build:admin && bun build --compile --minify src/cli.ts --outfile bunbase",
-    "typecheck": "bun run --bun tsc --noEmit"
+    "typecheck": "bun run --bun tsc --noEmit",
+    "test": "bun test",
+    "test:routes": "bun test tests/routes.test.ts",
+    "test:binary": "bun test tests/binary.test.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
