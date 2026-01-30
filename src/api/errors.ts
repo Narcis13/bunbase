@@ -59,6 +59,10 @@ export class ApiError extends Error {
 
 /**
  * 400 Bad Request - invalid input, malformed JSON, missing required fields.
+ *
+ * @example
+ * throw new BadRequestError('Invalid JSON payload');
+ * throw new BadRequestError('Missing fields', { name: { code: 'required', message: 'Name is required' } });
  */
 export class BadRequestError extends ApiError {
   constructor(message = 'Bad request', data?: Record<string, ValidationError>) {
@@ -69,6 +73,10 @@ export class BadRequestError extends ApiError {
 
 /**
  * 401 Unauthorized - missing or invalid authentication.
+ *
+ * @example
+ * throw new UnauthorizedError(); // Uses default message
+ * throw new UnauthorizedError('Invalid or expired token');
  */
 export class UnauthorizedError extends ApiError {
   constructor(message = 'Unauthorized') {
@@ -79,6 +87,10 @@ export class UnauthorizedError extends ApiError {
 
 /**
  * 403 Forbidden - authenticated but insufficient permissions.
+ *
+ * @example
+ * throw new ForbiddenError(); // Uses default message
+ * throw new ForbiddenError('Admin access required');
  */
 export class ForbiddenError extends ApiError {
   constructor(message = 'Forbidden') {
@@ -89,6 +101,10 @@ export class ForbiddenError extends ApiError {
 
 /**
  * 404 Not Found - resource doesn't exist.
+ *
+ * @example
+ * throw new NotFoundError(); // Uses default message
+ * throw new NotFoundError('User not found');
  */
 export class NotFoundError extends ApiError {
   constructor(message = 'Not found') {
@@ -99,6 +115,10 @@ export class NotFoundError extends ApiError {
 
 /**
  * 409 Conflict - resource already exists (duplicate).
+ *
+ * @example
+ * throw new ConflictError(); // Uses default message
+ * throw new ConflictError('Email already exists');
  */
 export class ConflictError extends ApiError {
   constructor(message = 'Conflict') {
@@ -110,6 +130,12 @@ export class ConflictError extends ApiError {
 /**
  * 422 Validation Failed - request understood but validation failed.
  * Use data parameter to provide field-level error details.
+ *
+ * @example
+ * throw new ValidationFailedError('Validation failed', {
+ *   email: { code: 'invalid_email', message: 'Invalid email format' },
+ *   password: { code: 'too_short', message: 'Password must be at least 8 characters' }
+ * });
  */
 export class ValidationFailedError extends ApiError {
   constructor(message = 'Validation failed', data: Record<string, ValidationError> = {}) {
