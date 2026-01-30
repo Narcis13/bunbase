@@ -169,7 +169,7 @@ describe('parseRouteExports', () => {
         export const OPTIONS = () => new Response('ok');
       `;
       const result = parseRouteExports(code, 'test.ts');
-      expect(result.methods).toEqual(VALID_METHODS);
+      expect(result.methods).toEqual([...VALID_METHODS]);
     });
   });
 
@@ -179,8 +179,8 @@ describe('parseRouteExports', () => {
       const result = parseRouteExports(code, 'test.ts');
       expect(result.methods).not.toContain('get');
       expect(result.warnings.length).toBe(1);
-      expect(result.warnings[0].message).toContain('GET');
-      expect(result.warnings[0].message).toContain('get');
+      expect(result.warnings[0]!.message).toContain('GET');
+      expect(result.warnings[0]!.message).toContain('get');
     });
 
     test('warns on lowercase post function', () => {
@@ -188,7 +188,7 @@ describe('parseRouteExports', () => {
       const result = parseRouteExports(code, 'test.ts');
       expect(result.methods).not.toContain('post');
       expect(result.warnings.length).toBe(1);
-      expect(result.warnings[0].message).toContain('POST');
+      expect(result.warnings[0]!.message).toContain('POST');
     });
 
     test('warns on multiple lowercase methods', () => {
