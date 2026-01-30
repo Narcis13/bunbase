@@ -39,12 +39,12 @@ Requirements for v0.3 milestone. Each maps to roadmap phases.
 
 ### Server Integration (SRV)
 
-- [ ] **SRV-01**: Custom routes are merged into Bun.serve() routes object
-- [ ] **SRV-02**: Route handlers receive request and BunBaseContext as parameters
-- [ ] **SRV-03**: All handlers are wrapped with error handling middleware
-- [ ] **SRV-04**: CLI loads custom routes at startup and passes to server
-- [ ] **SRV-05**: Custom routes work in development mode with hot reload
-- [ ] **SRV-06**: Custom routes work in compiled binary
+- [x] **SRV-01**: Custom routes are merged into Bun.serve() routes object
+- [x] **SRV-02**: Route handlers receive request and BunBaseContext as parameters
+- [x] **SRV-03**: All handlers are wrapped with error handling middleware
+- [x] **SRV-04**: CLI loads custom routes at startup and passes to server
+- [x] **SRV-05**: Custom routes work in development mode with hot reload
+- [x] **SRV-06**: Custom routes work in compiled binary
 
 ### Build & Testing (BLD)
 
@@ -118,12 +118,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RTE-06 | Phase 15 | Complete |
 | RTE-07 | Phase 15 | Complete |
 | RTE-08 | Phase 15 | Complete |
-| SRV-01 | Phase 16 | Pending |
-| SRV-02 | Phase 16 | Pending |
-| SRV-03 | Phase 16 | Pending |
-| SRV-04 | Phase 16 | Pending |
-| SRV-05 | Phase 16 | Pending |
-| SRV-06 | Phase 16 | Pending |
+| SRV-01 | Phase 16 | Complete |
+| SRV-02 | Phase 16 | Complete |
+| SRV-03 | Phase 16 | Complete |
+| SRV-04 | Phase 16 | Complete |
+| SRV-05 | Phase 16 | Complete |
+| SRV-06 | Phase 16 | Complete |
 | BLD-01 | Phase 17 | Pending |
 | BLD-02 | Phase 17 | Pending |
 | BLD-03 | Phase 17 | Pending |
