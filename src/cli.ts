@@ -6,8 +6,9 @@
  */
 
 import { parseArgs } from "util";
-import { startServer } from "./api/server";
+import { startServer, HookManager, RealtimeManager } from "./api/server";
 import { loadSmtpConfig } from "./email";
+import { buildCustomRoutes, routeManifest } from "./routes-generated";
 
 /**
  * Display usage information and exit.
