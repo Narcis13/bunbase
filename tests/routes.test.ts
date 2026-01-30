@@ -93,3 +93,99 @@ describe("Route Manifest Generation", () => {
     expect(statsRoute.methods).toContain("GET");
   });
 });
+
+// ============================================================================
+// Development Mode Integration Tests
+// ============================================================================
+
+describe("Development Mode Integration", () => {
+  const TEST_PORT = 8097;
+  const BASE_URL = `http://localhost:${TEST_PORT}`;
+
+  let server: ReturnType<typeof import("../src/api/server").createServer>;
+  let db: ReturnType<typeof import("../src/core/database").getDatabase>;
+
+  beforeAll(async () => {
+    // Run build:routes first (required for routes-generated.ts)
+    Bun.spawnSync(["bun", "run", "build:routes"], {
+      cwd: "/Users/narcisbrindusescu/newme/bunbase",
+    });
+
+    // Import dependencies
+    const { initDatabase, closeDatabase, getDatabase } = await import("../src/core/database");
+    const { createServer } = await import("../src/api/server");
+    const { buildCustomRoutes } = await import("../src/routes-generated");
+    const { HookManager } = await import("../src/core/hooks");
+    const { RealtimeManager } = await import("../src/realtime/manager");
+
+    // Initialize in-memory database
+    initDatabase(":memory:");
+    db = getDatabase();
+
+    // Create HookManager and RealtimeManager instances
+    const hooks = new HookManager();
+    const realtime = new RealtimeManager();
+
+    // Build custom routes with dependencies
+    const customRoutes = buildCustomRoutes({ hooks, realtime });
+
+    // Start server
+    server = createServer(TEST_PORT, hooks, realtime, customRoutes);
+  });
+
+  afterAll(async () => {
+    // Stop server
+    if (server) {
+      server.stop();
+    }
+
+    // Close database
+    const { closeDatabase } = await import("../src/core/database");
+    closeDatabase();
+  });
+
+  test("health route returns 200 with status ok", async () => {
+    const res = await fetch(`${BASE_URL}/api/health`);
+
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.status).toBe("ok");
+  });
+
+  test("health route returns timestamp", async () => {
+    const res = await fetch(`${BASE_URL}/api/health`);
+
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.timestamp).toBeDefined();
+    expect(typeof data.timestamp).toBe("string");
+  });
+
+  test("stats route returns 200 with collections array", async () => {
+    const res = await fetch(`${BASE_URL}/api/stats`);
+
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.collections).toBeArray();
+    expect(typeof data.count).toBe("number");
+  });
+
+  test("stats route uses database context", async () => {
+    // The stats route queries _collections table
+    // If no collections exist, response should have count: 0, collections: []
+    const res = await fetch(`${BASE_URL}/api/stats`);
+
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    // Verify that the response structure indicates database access worked
+    expect(data).toHaveProperty("collections");
+    expect(data).toHaveProperty("count");
+    // With in-memory database, should have empty collections
+    expect(data.collections).toEqual([]);
+    expect(data.count).toBe(0);
+  });
+});
