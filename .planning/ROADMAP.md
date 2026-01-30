@@ -28,11 +28,11 @@ BunBase v0.3 enables developers to add custom business logic endpoints beyond au
   2. Unhandled exceptions in route handlers return consistent 500 responses without leaking internal details
   3. RouteContext TypeScript interface provides access to db, records, auth, realtime, files, and hooks
   4. Context factory creates properly typed context from initialized BunBase managers
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: Error System
-- [ ] 14-02: RouteContext Interface
+- [ ] 14-01-PLAN.md — ApiError class hierarchy and handleApiError utility
+- [ ] 14-02-PLAN.md — RouteContext interface and createRouteContext factory
 
 ### Phase 15: Route Loading
 **Goal**: Discover and load custom route handlers from routes/ directory with build-time manifest generation
@@ -89,7 +89,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation | 0/2 | Not started | - |
+| 14. Foundation | 0/2 | Planned | - |
 | 15. Route Loading | 0/2 | Not started | - |
 | 16. Server Integration | 0/2 | Not started | - |
 | 17. Build Pipeline | 0/2 | Not started | - |
