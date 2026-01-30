@@ -48,12 +48,12 @@ Requirements for v0.3 milestone. Each maps to roadmap phases.
 
 ### Build & Testing (BLD)
 
-- [ ] **BLD-01**: `bun run build:routes` generates route manifest
-- [ ] **BLD-02**: `bun run build` includes route generation step
-- [ ] **BLD-03**: Compiled binary includes all custom route handlers
-- [ ] **BLD-04**: Example health route exists (`routes/health.ts`) that returns `{ status: "ok" }`
-- [ ] **BLD-05**: Example stats route exists that uses database context
-- [ ] **BLD-06**: Tests verify routes work in both development and compiled binary
+- [x] **BLD-01**: `bun run build:routes` generates route manifest
+- [x] **BLD-02**: `bun run build` includes route generation step
+- [x] **BLD-03**: Compiled binary includes all custom route handlers
+- [x] **BLD-04**: Example health route exists (`routes/health.ts`) that returns `{ status: "ok" }`
+- [x] **BLD-05**: Example stats route exists that uses database context
+- [x] **BLD-06**: Tests verify routes work in both development and compiled binary
 
 ## Future Requirements
 
@@ -124,12 +124,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRV-04 | Phase 16 | Complete |
 | SRV-05 | Phase 16 | Complete |
 | SRV-06 | Phase 16 | Complete |
-| BLD-01 | Phase 17 | Pending |
-| BLD-02 | Phase 17 | Pending |
-| BLD-03 | Phase 17 | Pending |
-| BLD-04 | Phase 17 | Pending |
-| BLD-05 | Phase 17 | Pending |
-| BLD-06 | Phase 17 | Pending |
+| BLD-01 | Phase 17 | Complete |
+| BLD-02 | Phase 17 | Complete |
+| BLD-03 | Phase 17 | Complete |
+| BLD-04 | Phase 17 | Complete |
+| BLD-05 | Phase 17 | Complete |
+| BLD-06 | Phase 17 | Complete |
 
 **Coverage:**
 - v0.3 requirements: 27 total
@@ -138,4 +138,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-30*
-*Last updated: 2026-01-30 after initial definition*
+*Last updated: 2026-01-31 after Phase 17 complete*

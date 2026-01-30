@@ -8,14 +8,14 @@ BunBase v0.3 enables developers to add custom business logic endpoints beyond au
 
 - v0.1 MVP (Phases 1-8) - shipped 2026-01-26
 - v0.2 User Auth, Files & Realtime (Phases 9-13) - shipped 2026-01-28
-- v0.3 Custom API Endpoints (Phases 14-17) - in progress
+- v0.3 Custom API Endpoints (Phases 14-17) - shipped 2026-01-31
 
 ## Phases
 
 - [x] **Phase 14: Foundation (Context & Errors)** - Error system and RouteContext for custom routes
 - [x] **Phase 15: Route Loading** - File-based route discovery and manifest generation
 - [x] **Phase 16: Server Integration** - Wire custom routes into Bun.serve()
-- [ ] **Phase 17: Build Pipeline & Testing** - Binary embedding and verification
+- [x] **Phase 17: Build Pipeline & Testing** - Binary embedding and verification
 
 ## Phase Details
 
@@ -80,8 +80,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Route manifest generation tests and development mode integration tests
-- [ ] 17-02-PLAN.md — Compiled binary integration tests and test scripts
+- [x] 17-01-PLAN.md — Route manifest generation tests and development mode integration tests
+- [x] 17-02-PLAN.md — Compiled binary integration tests and test scripts
 
 ## Progress
 
@@ -92,7 +92,7 @@ Plans:
 | 14. Foundation | 2/2 | Complete | 2026-01-30 |
 | 15. Route Loading | 2/2 | Complete | 2026-01-30 |
 | 16. Server Integration | 2/2 | Complete | 2026-01-30 |
-| 17. Build Pipeline | 0/2 | Not started | - |
+| 17. Build Pipeline | 2/2 | Complete | 2026-01-31 |
 
 ---
 *Roadmap created: 2026-01-30*
