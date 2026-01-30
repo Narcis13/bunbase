@@ -12,7 +12,7 @@ BunBase v0.3 enables developers to add custom business logic endpoints beyond au
 
 ## Phases
 
-- [ ] **Phase 14: Foundation (Context & Errors)** - Error system and RouteContext for custom routes
+- [x] **Phase 14: Foundation (Context & Errors)** - Error system and RouteContext for custom routes
 - [ ] **Phase 15: Route Loading** - File-based route discovery and manifest generation
 - [ ] **Phase 16: Server Integration** - Wire custom routes into Bun.serve()
 - [ ] **Phase 17: Build Pipeline & Testing** - Binary embedding and verification
@@ -31,8 +31,8 @@ BunBase v0.3 enables developers to add custom business logic endpoints beyond au
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — ApiError class hierarchy and handleApiError utility
-- [ ] 14-02-PLAN.md — RouteContext interface and createRouteContext factory
+- [x] 14-01-PLAN.md — ApiError class hierarchy and handleApiError utility
+- [x] 14-02-PLAN.md — RouteContext interface and createRouteContext factory
 
 ### Phase 15: Route Loading
 **Goal**: Discover and load custom route handlers from routes/ directory with build-time manifest generation
@@ -89,7 +89,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation | 0/2 | Planned | - |
+| 14. Foundation | 2/2 | ✓ Complete | 2026-01-30 |
 | 15. Route Loading | 0/2 | Not started | - |
 | 16. Server Integration | 0/2 | Not started | - |
 | 17. Build Pipeline | 0/2 | Not started | - |

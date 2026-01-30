@@ -9,22 +9,22 @@ Requirements for v0.3 milestone. Each maps to roadmap phases.
 
 ### Error System (ERR)
 
-- [ ] **ERR-01**: All API endpoints return PocketBase-compatible error format `{ code, message, data }`
-- [ ] **ERR-02**: ApiError class hierarchy exists with common error types (BadRequest, Unauthorized, NotFound, Forbidden, Validation)
-- [ ] **ERR-03**: Error factory helpers allow throwing typed errors (`throw new BadRequestError(message)`)
-- [ ] **ERR-04**: Unhandled errors in route handlers are caught and return consistent 500 response
-- [ ] **ERR-05**: Error messages in production hide internal details (stack traces, SQL, paths)
+- [x] **ERR-01**: All API endpoints return PocketBase-compatible error format `{ code, message, data }`
+- [x] **ERR-02**: ApiError class hierarchy exists with common error types (BadRequest, Unauthorized, NotFound, Forbidden, Validation)
+- [x] **ERR-03**: Error factory helpers allow throwing typed errors (`throw new BadRequestError(message)`)
+- [x] **ERR-04**: Unhandled errors in route handlers are caught and return consistent 500 response
+- [x] **ERR-05**: Error messages in production hide internal details (stack traces, SQL, paths)
 
 ### Route Context (CTX)
 
-- [ ] **CTX-01**: RouteContext TypeScript interface defines all available context
-- [ ] **CTX-02**: Context provides database access via `ctx.db`
-- [ ] **CTX-03**: Context provides records API via `ctx.records` (get, list, create, update, delete)
-- [ ] **CTX-04**: Context provides auth helpers via `ctx.auth` (buildContext, requireAdmin, optionalUser)
-- [ ] **CTX-05**: Context provides realtime access via `ctx.realtime`
-- [ ] **CTX-06**: Context provides file storage via `ctx.files`
-- [ ] **CTX-07**: Context provides hook system via `ctx.hooks`
-- [ ] **CTX-08**: Context factory function creates context from initialized managers
+- [x] **CTX-01**: RouteContext TypeScript interface defines all available context
+- [x] **CTX-02**: Context provides database access via `ctx.db`
+- [x] **CTX-03**: Context provides records API via `ctx.records` (get, list, create, update, delete)
+- [x] **CTX-04**: Context provides auth helpers via `ctx.auth` (buildContext, requireAdmin, optionalUser)
+- [x] **CTX-05**: Context provides realtime access via `ctx.realtime`
+- [x] **CTX-06**: Context provides file storage via `ctx.files`
+- [x] **CTX-07**: Context provides hook system via `ctx.hooks`
+- [x] **CTX-08**: Context factory function creates context from initialized managers
 
 ### Route Loading (RTE)
 
@@ -97,19 +97,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ERR-01 | Phase 14 | Pending |
-| ERR-02 | Phase 14 | Pending |
-| ERR-03 | Phase 14 | Pending |
-| ERR-04 | Phase 14 | Pending |
-| ERR-05 | Phase 14 | Pending |
-| CTX-01 | Phase 14 | Pending |
-| CTX-02 | Phase 14 | Pending |
-| CTX-03 | Phase 14 | Pending |
-| CTX-04 | Phase 14 | Pending |
-| CTX-05 | Phase 14 | Pending |
-| CTX-06 | Phase 14 | Pending |
-| CTX-07 | Phase 14 | Pending |
-| CTX-08 | Phase 14 | Pending |
+| ERR-01 | Phase 14 | Complete |
+| ERR-02 | Phase 14 | Complete |
+| ERR-03 | Phase 14 | Complete |
+| ERR-04 | Phase 14 | Complete |
+| ERR-05 | Phase 14 | Complete |
+| CTX-01 | Phase 14 | Complete |
+| CTX-02 | Phase 14 | Complete |
+| CTX-03 | Phase 14 | Complete |
+| CTX-04 | Phase 14 | Complete |
+| CTX-05 | Phase 14 | Complete |
+| CTX-06 | Phase 14 | Complete |
+| CTX-07 | Phase 14 | Complete |
+| CTX-08 | Phase 14 | Complete |
 | RTE-01 | Phase 15 | Pending |
 | RTE-02 | Phase 15 | Pending |
 | RTE-03 | Phase 15 | Pending |
