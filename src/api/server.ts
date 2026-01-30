@@ -186,8 +186,15 @@ export function createServer(
   // Create default realtime instance if not provided
   const realtimeManager = realtime ?? new RealtimeManager();
 
+  // Detect development mode
+  const isDev = Bun.env.NODE_ENV === 'development' || Bun.env.BUNBASE_DEV === 'true';
+
   return Bun.serve({
     port,
+    development: isDev ? {
+      hmr: true,      // Enable hot module replacement
+      console: true,  // Stream browser console to terminal
+    } : false,
     routes: {
       // List records and create record
       "/api/collections/:name/records": {
