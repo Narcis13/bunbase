@@ -41,3 +41,6 @@ bunbase
 
 # Data directory (database and file storage)
 data/
+
+# Generated files
+src/routes-generated.ts

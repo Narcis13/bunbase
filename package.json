@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run build:admin && bun run --watch src/cli.ts serve",
+    "dev": "bun run build:routes && bun run build:admin && bun run --watch src/cli.ts serve",
+    "build:routes": "bun scripts/build-routes.ts",
     "build:admin": "bun scripts/build-admin.ts",
-    "build": "bun run build:admin && bun build --compile --minify src/cli.ts --outfile bunbase",
+    "build": "bun run build:routes && bun run build:admin && bun build --compile --minify src/cli.ts --outfile bunbase",
     "typecheck": "bun run --bun tsc --noEmit"
   },
   "devDependencies": {
