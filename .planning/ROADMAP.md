@@ -77,11 +77,11 @@ Plans:
   4. Example health route (routes/health.ts) returns { status: "ok" }
   5. Example stats route uses database context to return collection statistics
   6. Tests verify routes work in both development mode and compiled binary
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 17-01: Build Scripts and Example Routes
-- [ ] 17-02: Binary Embedding Tests
+- [ ] 17-01-PLAN.md — Route manifest generation tests and development mode integration tests
+- [ ] 17-02-PLAN.md — Compiled binary integration tests and test scripts
 
 ## Progress
 
