@@ -34,11 +34,21 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 
 ### Active
 
-**Next Milestone: v0.3 — OAuth & Advanced Features**
+**Current Milestone: v0.3 — Custom API Endpoints**
 
-- [ ] OAuth login (Google, GitHub)
-- [ ] Unique field constraints
-- [ ] Select field type (predefined options)
+- [ ] Custom API routes with directory convention (`routes/` folder)
+- [ ] Route handler exports (`export const GET/POST`)
+- [ ] Full BunBase context access in route handlers (db, auth, records, files, realtime)
+- [ ] Routes embedded in compiled binary at build time
+- [ ] Unified PocketBase-style error response system across all endpoints
+
+### Deferred
+
+**v0.4+:**
+
+- OAuth login (Google, GitHub)
+- Unique field constraints
+- Select field type (predefined options)
 
 ### Out of Scope
 
@@ -114,4 +124,4 @@ Minor items to address in v0.3:
 - Test isolation issues (4 tests fail due to parallel execution reusing database state)
 
 ---
-*Last updated: 2026-01-28 after v0.2 milestone*
+*Last updated: 2026-01-30 after v0.3 milestone start*

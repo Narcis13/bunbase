@@ -5,30 +5,27 @@
 See: .planning/PROJECT.md (updated 2026-01-28)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** v0.2 shipped — preparing for v0.3
+**Current focus:** v0.3 — Custom API Endpoints
 
 ## Current Position
 
-Phase: 13 of 13 — Milestone v0.2 COMPLETE
-Plan: All plans complete
-Status: Ready for next milestone
-Last activity: 2026-01-28 — v0.2 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-30 — Milestone v0.3 started
 
-Progress: [████████████████████████████████████████████] 100% (24/24 v0.2 plans)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
 
-## Milestone v0.2 Summary
+## Current Milestone: v0.3 — Custom API Endpoints
 
-**Shipped:** 2026-01-28
-**Phases:** 9-13 (5 phases, 24 plans)
-**Requirements:** 41/41 complete
+**Goal:** Enable developers to add custom business logic endpoints beyond auto-generated CRUD
 
-Features delivered:
-- Email service with SMTP configuration and templates
-- User authentication (signup, login, JWT, email verification, password reset)
-- Collection-level auth rules
-- File uploads with validation and cleanup
-- Realtime/SSE with permission filtering
-- Admin UI polish (spinners, accessibility, responsive)
+**Target features:**
+- Custom routes with directory convention (routes/ folder)
+- Route handler exports (GET/POST)
+- Full BunBase context access
+- Binary embedding at build time
+- Unified PocketBase-style error responses
 
 ## Accumulated Context
 
@@ -53,7 +50,7 @@ Resume file: None
 
 ## Next Steps
 
-Start next milestone with `/gsd:new-milestone` (includes fresh requirements definition).
+Proceed to requirements definition and roadmap creation.
 
 ---
-*State updated: 2026-01-28 after v0.2 milestone completion*
+*State updated: 2026-01-30 after v0.3 milestone start*
