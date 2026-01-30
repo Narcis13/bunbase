@@ -65,6 +65,10 @@ import adminHtml from "../../dist/admin/index.html" with { type: "text" };
 import adminJs from "../../dist/admin/main.js" with { type: "text" };
 import adminCss from "../../dist/admin/globals.css" with { type: "text" };
 
+// Type aliases for custom routes
+type CustomRouteHandler = (req: Request) => Promise<Response>;
+type CustomRoutes = Record<string, Record<string, CustomRouteHandler>>;
+
 // Re-export HookManager for external registration
 export { HookManager } from "../core/hooks";
 
@@ -167,12 +171,14 @@ async function buildFileAuthContext(req: Request): Promise<{ isAdmin: boolean; u
  * @param port - Port to listen on (default: 8090)
  * @param hooks - Optional HookManager instance for lifecycle hooks
  * @param realtime - Optional RealtimeManager instance for SSE connections
+ * @param customRoutes - Optional custom routes object from buildCustomRoutes()
  * @returns The Bun.Server instance
  */
 export function createServer(
   port: number = 8090,
   hooks?: HookManager,
-  realtime?: RealtimeManager
+  realtime?: RealtimeManager,
+  customRoutes?: CustomRoutes
 ) {
   // Create default hooks instance if not provided
   const hookManager = hooks ?? new HookManager();
@@ -911,6 +917,9 @@ export function createServer(
           );
         },
       },
+
+      // Custom routes (from routes-generated.ts)
+      ...(customRoutes ?? {}),
 
       // Admin authentication routes
       "/_/api/auth/login": {
