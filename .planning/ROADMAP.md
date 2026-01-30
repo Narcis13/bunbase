@@ -60,11 +60,11 @@ Plans:
   3. All custom routes are wrapped with error handling middleware
   4. CLI loads custom routes at startup from generated manifest
   5. Custom routes work in both development mode (with hot reload) and compiled binary
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 16-01: Route Integration and Context Injection
-- [ ] 16-02: CLI and Hot Reload
+- [ ] 16-01-PLAN.md — Server accepts customRoutes parameter, merges into routes, adds dev mode config
+- [ ] 16-02-PLAN.md — CLI loads routes at startup, creates managers, logs in dev mode
 
 ### Phase 17: Build Pipeline & Testing
 **Goal**: Ensure custom routes are embedded in binary and work correctly in both development and production
@@ -91,7 +91,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 14. Foundation | 2/2 | Complete | 2026-01-30 |
 | 15. Route Loading | 2/2 | Complete | 2026-01-30 |
-| 16. Server Integration | 0/2 | Not started | - |
+| 16. Server Integration | 0/2 | Planned | - |
 | 17. Build Pipeline | 0/2 | Not started | - |
 
 ---
