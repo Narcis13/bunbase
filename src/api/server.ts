@@ -1235,6 +1235,7 @@ function generateRandomPassword(): string {
  * @param hooks - Optional HookManager instance for lifecycle hooks
  * @param smtpConfig - Optional SMTP configuration for email service
  * @param realtime - Optional RealtimeManager instance for SSE connections
+ * @param customRoutes - Optional custom routes object from buildCustomRoutes()
  * @returns The Bun.Server instance
  */
 export async function startServer(
@@ -1242,7 +1243,8 @@ export async function startServer(
   dbPath: string = "bunbase.db",
   hooks?: HookManager,
   smtpConfig?: SmtpConfig | null,
-  realtime?: RealtimeManager
+  realtime?: RealtimeManager,
+  customRoutes?: CustomRoutes
 ) {
   initDatabase(dbPath);
 
@@ -1281,7 +1283,7 @@ export async function startServer(
     }
   }
 
-  const server = createServer(port, hookManager, realtimeManager);
+  const server = createServer(port, hookManager, realtimeManager, customRoutes);
   console.log(`BunBase running at http://localhost:${port}`);
   return server;
 }
