@@ -44,11 +44,11 @@ Plans:
   3. Named exports (GET, POST) are extracted as route handlers
   4. Build-time manifest generator produces static imports for binary embedding
   5. Validation warns on lowercase method exports (get instead of GET)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 15-01: Route Discovery and Path Conversion
-- [ ] 15-02: Manifest Generator
+- [ ] 15-01-PLAN.md — Route discovery utilities with TDD (filePathToRoutePath, parseRouteExports)
+- [ ] 15-02-PLAN.md — Build script and manifest generation (scripts/build-routes.ts)
 
 ### Phase 16: Server Integration
 **Goal**: Wire custom routes into BunBase server with context injection and error handling
@@ -89,8 +89,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 14. Foundation | 2/2 | ✓ Complete | 2026-01-30 |
-| 15. Route Loading | 0/2 | Not started | - |
+| 14. Foundation | 2/2 | Complete | 2026-01-30 |
+| 15. Route Loading | 0/2 | Planned | - |
 | 16. Server Integration | 0/2 | Not started | - |
 | 17. Build Pipeline | 0/2 | Not started | - |
 
