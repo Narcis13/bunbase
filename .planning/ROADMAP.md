@@ -13,7 +13,7 @@ BunBase v0.3 enables developers to add custom business logic endpoints beyond au
 ## Phases
 
 - [x] **Phase 14: Foundation (Context & Errors)** - Error system and RouteContext for custom routes
-- [ ] **Phase 15: Route Loading** - File-based route discovery and manifest generation
+- [x] **Phase 15: Route Loading** - File-based route discovery and manifest generation
 - [ ] **Phase 16: Server Integration** - Wire custom routes into Bun.serve()
 - [ ] **Phase 17: Build Pipeline & Testing** - Binary embedding and verification
 
@@ -47,8 +47,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Route discovery utilities with TDD (filePathToRoutePath, parseRouteExports)
-- [ ] 15-02-PLAN.md — Build script and manifest generation (scripts/build-routes.ts)
+- [x] 15-01-PLAN.md — Route discovery utilities with TDD (filePathToRoutePath, parseRouteExports)
+- [x] 15-02-PLAN.md — Build script and manifest generation (scripts/build-routes.ts)
 
 ### Phase 16: Server Integration
 **Goal**: Wire custom routes into BunBase server with context injection and error handling
@@ -90,7 +90,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 14. Foundation | 2/2 | Complete | 2026-01-30 |
-| 15. Route Loading | 0/2 | Planned | - |
+| 15. Route Loading | 2/2 | Complete | 2026-01-30 |
 | 16. Server Integration | 0/2 | Not started | - |
 | 17. Build Pipeline | 0/2 | Not started | - |
 

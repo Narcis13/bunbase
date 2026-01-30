@@ -28,14 +28,14 @@ Requirements for v0.3 milestone. Each maps to roadmap phases.
 
 ### Route Loading (RTE)
 
-- [ ] **RTE-01**: Routes are defined in `routes/` directory with TypeScript files
-- [ ] **RTE-02**: Route path is derived from file path (`routes/stats.ts` → `/api/stats`)
-- [ ] **RTE-03**: Dynamic segments use bracket notation (`routes/users/[id].ts` → `/api/users/:id`)
-- [ ] **RTE-04**: Export named handlers for HTTP methods (`export const GET`, `export const POST`)
-- [ ] **RTE-05**: Route manifest generator scans routes/ and generates static imports
-- [ ] **RTE-06**: Generated routes file contains all route modules with correct paths
-- [ ] **RTE-07**: Build script runs route generation before compilation
-- [ ] **RTE-08**: Validation warns if route exports lowercase method names (get vs GET)
+- [x] **RTE-01**: Routes are defined in `routes/` directory with TypeScript files
+- [x] **RTE-02**: Route path is derived from file path (`routes/stats.ts` → `/api/stats`)
+- [x] **RTE-03**: Dynamic segments use bracket notation (`routes/users/[id].ts` → `/api/users/:id`)
+- [x] **RTE-04**: Export named handlers for HTTP methods (`export const GET`, `export const POST`)
+- [x] **RTE-05**: Route manifest generator scans routes/ and generates static imports
+- [x] **RTE-06**: Generated routes file contains all route modules with correct paths
+- [x] **RTE-07**: Build script runs route generation before compilation
+- [x] **RTE-08**: Validation warns if route exports lowercase method names (get vs GET)
 
 ### Server Integration (SRV)
 
@@ -110,14 +110,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTX-06 | Phase 14 | Complete |
 | CTX-07 | Phase 14 | Complete |
 | CTX-08 | Phase 14 | Complete |
-| RTE-01 | Phase 15 | Pending |
-| RTE-02 | Phase 15 | Pending |
-| RTE-03 | Phase 15 | Pending |
-| RTE-04 | Phase 15 | Pending |
-| RTE-05 | Phase 15 | Pending |
-| RTE-06 | Phase 15 | Pending |
-| RTE-07 | Phase 15 | Pending |
-| RTE-08 | Phase 15 | Pending |
+| RTE-01 | Phase 15 | Complete |
+| RTE-02 | Phase 15 | Complete |
+| RTE-03 | Phase 15 | Complete |
+| RTE-04 | Phase 15 | Complete |
+| RTE-05 | Phase 15 | Complete |
+| RTE-06 | Phase 15 | Complete |
+| RTE-07 | Phase 15 | Complete |
+| RTE-08 | Phase 15 | Complete |
 | SRV-01 | Phase 16 | Pending |
 | SRV-02 | Phase 16 | Pending |
 | SRV-03 | Phase 16 | Pending |
