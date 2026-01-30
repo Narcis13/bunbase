@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Ship a working backend-in-a-box that compiles to a single binary and auto-generates REST APIs from schema definitions
-**Current focus:** v0.3 Phase 16 - Server Integration
+**Current focus:** v0.3 Phase 17 - Build Pipeline & Testing
 
 ## Current Position
 
-Phase: 16 of 17 (Server Integration) - COMPLETE
-Plan: 2 of 2 complete
-Status: Phase 16 complete, verified, ready for Phase 17
-Last activity: 2026-01-30 - Phase 16 verified (5/5 success criteria passed)
+Phase: 17 of 17 (Build Pipeline & Testing) - IN PROGRESS
+Plan: 1 of 2 complete
+Status: Plan 17-01 complete, ready for Plan 17-02
+Last activity: 2026-01-30 - Completed 17-01-PLAN.md (route manifest and dev mode tests)
 
-Progress: [##############################--------------] 75%
+Progress: [####################################--------] 87%
 
 ## Current Milestone: v0.3 - Custom API Endpoints
 
@@ -24,16 +24,16 @@ Progress: [##############################--------------] 75%
 - Phase 14: Foundation (Context & Errors) - COMPLETE
 - Phase 15: Route Loading - COMPLETE (2/2 plans)
 - Phase 16: Server Integration - COMPLETE (2/2 plans)
-- Phase 17: Build Pipeline & Testing - 6 requirements
+- Phase 17: Build Pipeline & Testing - IN PROGRESS (1/2 plans)
 
 **Total:** 27 requirements across 4 phases, 8 plans
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6 (v0.3)
-- Average duration: 3m 05s
-- Total execution time: 0.31 hours
+- Total plans completed: 7 (v0.3)
+- Average duration: 2m 53s
+- Total execution time: 0.34 hours
 
 **By Phase:**
 
@@ -42,7 +42,7 @@ Progress: [##############################--------------] 75%
 | 14 | 2/2 | 7m 11s | 3m 36s |
 | 15 | 2/2 | 5m 41s | 2m 51s |
 | 16 | 2/2 | 5m 00s | 2m 30s |
-| 17 | 0/2 | - | - |
+| 17 | 1/2 | 2m 00s | 2m 00s |
 
 *Updated after each plan completion*
 
@@ -65,6 +65,8 @@ Progress: [##############################--------------] 75%
 | custom-routes-merge-order | Custom routes spread after system routes, before admin routes | Ensures admin wildcard doesn't intercept custom routes | 16-01 |
 | dev-mode-dual-env | Check both NODE_ENV and BUNBASE_DEV for development detection | Flexibility with standard and BunBase-specific flags | 16-01 |
 | cli-managers-shared | CLI creates HookManager/RealtimeManager and passes to both buildCustomRoutes and startServer | Same instances used throughout for dependency injection | 16-02 |
+| test-port-8097 | Use port 8097 for routes tests | Avoid conflicts with server.test.ts on port 8091 | 17-01 |
+| spawnsync-build-test | Use Bun.spawnSync to test build:routes script | Tests actual script execution, not just module imports | 17-01 |
 
 ### Pending Todos
 
@@ -76,8 +78,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-30 19:57 UTC
-Stopped at: Phase 16 complete, verified
+Last session: 2026-01-30 22:07 UTC
+Stopped at: Completed 17-01-PLAN.md
 Resume file: None
 
 ## Phase Commits
@@ -90,6 +92,7 @@ Resume file: None
 | 15-02 | 16ff5b6 | .planning/phases/15-route-loading/ | 2026-01-30 |
 | 16-01 | 7ccfbc0 | .planning/phases/16-server-integration/ | 2026-01-30 |
 | 16-02 | 2cfe864 | .planning/phases/16-server-integration/ | 2026-01-30 |
+| 17-01 | fb5dfb0 | .planning/phases/17-build-pipeline-testing/ | 2026-01-30 |
 
 ---
-*State updated: 2026-01-30 after Phase 16 verification*
+*State updated: 2026-01-30 after 17-01-PLAN.md completion*
