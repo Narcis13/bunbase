@@ -1,5 +1,33 @@
 # Project Milestones: BunBase
 
+## v0.3 Custom API Endpoints (Shipped: 2026-01-31)
+
+**Delivered:** Extended BunBase with custom API endpoints enabling developers to add business logic beyond auto-generated CRUD, with file-based routing, TypeScript context injection, and binary embedding.
+
+**Phases completed:** 14-17 (8 plans total)
+
+**Key accomplishments:**
+
+- API error system with PocketBase-compatible format and 6 typed error classes
+- RouteContext interface providing type-safe access to db, records, auth, realtime, files, and hooks
+- File-based route discovery using TypeScript Compiler API with [param] to :param conversion
+- Build-time manifest generation for static imports embedded in compiled binary
+- Server integration with HMR support in development mode
+- Integration tests verifying routes work in both development and compiled binary
+
+**Stats:**
+
+- 39 files modified
+- ~6,800 lines added (24,823 total LOC TypeScript)
+- 4 phases, 8 plans, 27 requirements
+- 1 day from start to ship (2026-01-30)
+
+**Git range:** `4d33e6b` → `e8d45ea`
+
+**What's next:** OAuth login (v0.4), unique field constraints, select field type
+
+---
+
 ## v0.2 User Auth, Files & Realtime (Shipped: 2026-01-28)
 
 **Delivered:** Extended BunBase with user authentication (email/password, JWT, email verification, password reset), file uploads (multipart, validation, storage), and realtime/SSE subscriptions with permission filtering.

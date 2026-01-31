@@ -31,16 +31,15 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 - ✓ Realtime/SSE subscriptions for record changes — v0.2
 - ✓ Permission-filtered event broadcasting — v0.2
 - ✓ Admin UI polish (spinners, form validation, keyboard navigation, responsive) — v0.2
+- ✓ Custom API routes with directory convention (`routes/` folder) — v0.3
+- ✓ Route handler exports (`export const GET/POST`) — v0.3
+- ✓ Full BunBase context access in route handlers (db, auth, records, files, realtime) — v0.3
+- ✓ Routes embedded in compiled binary at build time — v0.3
+- ✓ Unified PocketBase-style error response system across all endpoints — v0.3
 
 ### Active
 
-**Current Milestone: v0.3 — Custom API Endpoints**
-
-- [ ] Custom API routes with directory convention (`routes/` folder)
-- [ ] Route handler exports (`export const GET/POST`)
-- [ ] Full BunBase context access in route handlers (db, auth, records, files, realtime)
-- [ ] Routes embedded in compiled binary at build time
-- [ ] Unified PocketBase-style error response system across all endpoints
+(None — planning next milestone)
 
 ### Deferred
 
@@ -63,9 +62,9 @@ Ship a working backend-in-a-box that compiles to a single binary and auto-genera
 
 ## Context
 
-**Current state (v0.2 shipped):**
-- ~20,300 lines TypeScript
-- 470 automated tests
+**Current state (v0.3 shipped):**
+- ~24,800 lines TypeScript
+- 500+ automated tests
 - Tech stack: Bun, bun:sqlite, React, Tailwind CSS v4, shadcn/ui, jose (JWT), zod, nodemailer, argon2
 
 **Codebase structure:**
@@ -114,14 +113,18 @@ src/
 | Permission-filtered broadcasting | Events only sent to authorized subscribers | ✓ Good |
 | File cleanup via afterDelete hook | Automatic storage cleanup on record deletion | ✓ Good |
 | Local filesystem storage | Simple, no external dependencies | ✓ Good |
+| PocketBase error format | `{ code, message, data }` for API compatibility | ✓ Good |
+| TypeScript Compiler API for route parsing | More robust than regex, handles comments/strings | ✓ Good |
+| Routes merge order: system → custom → admin | Prevents admin wildcard intercepting custom routes | ✓ Good |
+| Generated manifest gitignored | Regenerated at build time, ensures fresh routes | ✓ Good |
 
 ## Tech Debt
 
-Minor items to address in v0.3:
+Minor items to address in future milestones:
 
 - TypeScript type definitions for bun:sqlite need updating (runtime works)
 - CSS warnings during build (cosmetic, no functional impact)
-- Test isolation issues (4 tests fail due to parallel execution reusing database state)
+- Test isolation issues (collection name collisions in parallel tests)
 
 ---
-*Last updated: 2026-01-30 after v0.3 milestone start*
+*Last updated: 2026-01-31 after v0.3 milestone shipped*
