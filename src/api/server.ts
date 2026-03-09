@@ -12,6 +12,7 @@ import {
   listRecordsWithQuery,
   createRecordWithHooks,
   updateRecordWithHooks,
+  updateRecord,
   deleteRecordWithHooks,
   createRecordWithFiles,
   updateRecordWithFiles,
@@ -24,9 +25,11 @@ import { getFilePath, fileExists } from "../storage/files";
 import { addFileUrls, addFileUrlsToList } from "../storage/urls";
 import {
   getAllCollections,
+  getCollection,
   getFields,
   createCollection,
   updateCollection,
+  updateCollectionRules,
   deleteCollection,
   addField,
   updateField,
@@ -51,7 +54,7 @@ import {
   confirmPasswordReset,
 } from "../auth/tokens";
 import { verifyUserToken } from "../auth/user-jwt";
-import { createUser, loginUser, refreshTokens } from "../auth/user";
+import { createUser, loginUser, refreshTokens, getUserById } from "../auth/user";
 import { isAuthCollection } from "../core/schema";
 import { registerFileCleanupHook } from "../storage/hooks";
 import { RealtimeManager } from "../realtime/manager";
@@ -346,10 +349,15 @@ export function createServer(
                 // Register client with manager
                 realtimeManager.registerClient(clientId, controller);
 
+                // Abort-signal-aware sleep: resolves early when client disconnects
+                const abortPromise = new Promise<void>((resolve) =>
+                  signal.addEventListener("abort", resolve, { once: true })
+                );
+
                 // Ping loop - every 30 seconds
                 const pingInterval = 30000;
                 while (!signal.aborted) {
-                  await Bun.sleep(pingInterval);
+                  await Promise.race([Bun.sleep(pingInterval), abortPromise]);
                   if (!signal.aborted) {
                     try {
                       const ping = formatSSEComment("ping");
@@ -1023,6 +1031,63 @@ export function createServer(
         },
       },
 
+      // Admin: toggle user verified status
+      "/_/api/collections/:name/auth/set-verified": {
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+            const { userId, verified } = await req.json();
+            if (!userId) return errorResponse("userId is required", 400);
+            const db = getDatabase();
+            const now = new Date().toISOString();
+            db.run(`UPDATE "${name}" SET verified = ?, updated_at = ? WHERE id = ?`, [
+              verified ? 1 : 0,
+              now,
+              userId,
+            ]);
+            return Response.json({ success: true });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
+      // Admin: edit auth user (email + custom fields)
+      "/_/api/collections/:name/auth/users/:id": {
+        PATCH: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name, id } = req.params;
+          try {
+            if (!isAuthCollection(name)) {
+              return errorResponse(`"${name}" is not an auth collection`, 400);
+            }
+            const body = await req.json();
+            const { email, ...customFields } = body;
+            const db = getDatabase();
+            const now = new Date().toISOString();
+            if (email !== undefined) {
+              db.run(`UPDATE "${name}" SET email = ?, updated_at = ? WHERE id = ?`, [email, now, id]);
+            }
+            if (Object.keys(customFields).length > 0) {
+              updateRecord(name, id, customFields);
+            }
+            const record = getRecord(name, id);
+            if (!record) return errorResponse("User not found", 404);
+            return Response.json(record);
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
       // Collections API for admin UI
       "/_/api/collections/:name/fields/:fieldName": {
         /**
@@ -1098,6 +1163,56 @@ export function createServer(
               options: fieldData.options ?? null,
             });
             return Response.json(field, { status: 201 });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
+      "/_/api/collections/:name/rules": {
+        /**
+         * GET /_/api/collections/:name/rules
+         * Get access rules for a collection (requires admin auth)
+         */
+        GET: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            const collection = getCollection(name);
+            if (!collection) return errorResponse(`Collection "${name}" not found`, 404);
+            return Response.json(collection.rules ?? {
+              listRule: null,
+              viewRule: null,
+              createRule: null,
+              updateRule: null,
+              deleteRule: null,
+            });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+        /**
+         * PATCH /_/api/collections/:name/rules
+         * Update access rules for a collection (requires admin auth)
+         */
+        PATCH: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+          const { name } = req.params;
+          try {
+            const body = await req.json();
+            const rules = {
+              listRule: body.listRule !== undefined ? body.listRule : null,
+              viewRule: body.viewRule !== undefined ? body.viewRule : null,
+              createRule: body.createRule !== undefined ? body.createRule : null,
+              updateRule: body.updateRule !== undefined ? body.updateRule : null,
+              deleteRule: body.deleteRule !== undefined ? body.deleteRule : null,
+            };
+            const collection = updateCollectionRules(name, rules);
+            return Response.json(collection.rules);
           } catch (error) {
             const err = error as Error;
             return errorResponse(err.message, mapErrorToStatus(err));

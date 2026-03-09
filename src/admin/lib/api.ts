@@ -125,6 +125,40 @@ export function getAuthenticatedFileUrl(url: string): string {
 // ============================================================================
 
 /**
+ * Access rules for a collection.
+ * null = admin only, '' = public, string = filter expression
+ */
+export interface CollectionRules {
+  listRule: string | null;
+  viewRule: string | null;
+  createRule: string | null;
+  updateRule: string | null;
+  deleteRule: string | null;
+}
+
+/**
+ * Fetch access rules for a collection.
+ */
+export async function fetchCollectionRules(collection: string): Promise<CollectionRules> {
+  const response = await fetchWithAuth(`/_/api/collections/${collection}/rules`);
+  return response.json();
+}
+
+/**
+ * Update access rules for a collection.
+ */
+export async function updateCollectionRules(
+  collection: string,
+  rules: CollectionRules
+): Promise<CollectionRules> {
+  const response = await fetchWithAuth(`/_/api/collections/${collection}/rules`, {
+    method: "PATCH",
+    body: JSON.stringify(rules),
+  });
+  return response.json();
+}
+
+/**
  * Field input type for creating/updating fields.
  */
 export interface FieldInput {
@@ -318,13 +352,36 @@ export async function fetchCollections(): Promise<Collection[]> {
 export async function createAuthUser(
   collection: string,
   email: string,
-  password: string
+  password: string,
+  extraFields?: Record<string, unknown>
 ): Promise<{ user: Record<string, unknown> }> {
   const response = await fetchWithAuth(
     `/api/collections/${collection}/auth/signup`,
     {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }
+  );
+  const result = await response.json();
+  if (extraFields && Object.keys(extraFields).length > 0 && result.user?.id) {
+    await updateAuthUser(collection, result.user.id as string, extraFields);
+  }
+  return result;
+}
+
+/**
+ * Update an auth user's fields (email and/or custom fields).
+ */
+export async function updateAuthUser(
+  collection: string,
+  userId: string,
+  data: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const response = await fetchWithAuth(
+    `/_/api/collections/${collection}/auth/users/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
     }
   );
   return response.json();
@@ -343,10 +400,10 @@ export async function toggleUserVerified(
   verified: number
 ): Promise<Record<string, unknown>> {
   const response = await fetchWithAuth(
-    `/api/collections/${collection}/records/${userId}`,
+    `/_/api/collections/${collection}/auth/set-verified`,
     {
-      method: "PATCH",
-      body: JSON.stringify({ verified }),
+      method: "POST",
+      body: JSON.stringify({ userId, verified }),
     }
   );
   return response.json();

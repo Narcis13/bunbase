@@ -238,6 +238,35 @@ export function createCollection(
 }
 
 /**
+ * Update a collection's access rules.
+ *
+ * @param name - Collection name
+ * @param rules - New rules (null = admin-only for all operations)
+ * @returns The updated collection
+ * @throws Error if collection not found
+ */
+export function updateCollectionRules(name: string, rules: CollectionRules | null): Collection {
+  const db = getDatabase();
+
+  const existing = getCollection(name);
+  if (!existing) {
+    throw new Error(`Collection "${name}" not found`);
+  }
+
+  const now = new Date().toISOString();
+  const serializedRules = rules ? JSON.stringify(rules) : null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db.run("UPDATE _collections SET rules = $rules, updated_at = $updated_at WHERE id = $id", {
+    rules: serializedRules,
+    updated_at: now,
+    id: existing.id,
+  } as any);
+
+  return { ...existing, rules, updated_at: now };
+}
+
+/**
  * Update a collection's name.
  *
  * @param name - Current collection name

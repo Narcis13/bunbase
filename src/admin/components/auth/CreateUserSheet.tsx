@@ -1,6 +1,6 @@
 /**
  * Create user sheet for auth collections.
- * Form to create a new user with email and password.
+ * Form to create a new user with email, password, and custom fields.
  */
 
 import { useState } from "react";
@@ -18,31 +18,27 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import type { Field } from "@/hooks/useCollectionFields";
+
+const AUTH_SYSTEM_FIELDS = new Set(["email", "password_hash", "verified"]);
 
 interface CreateUserSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collection: string;
+  fields: Field[];
   onCreated: () => void;
 }
 
-interface FormData {
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-/**
- * CreateUserSheet allows creating a new user in an auth collection.
- * Validates email format and password confirmation before submission.
- */
 export function CreateUserSheet({
   open,
   onOpenChange,
   collection,
+  fields,
   onCreated,
 }: CreateUserSheetProps) {
   const [loading, setLoading] = useState(false);
+  const customFields = fields.filter((f) => !AUTH_SYSTEM_FIELDS.has(f.name));
 
   const {
     register,
@@ -50,17 +46,32 @@ export function CreateUserSheet({
     reset,
     watch,
     formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: { email: "", password: "", confirmPassword: "" },
+  } = useForm<Record<string, string>>({
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      ...Object.fromEntries(customFields.map((f) => [f.name, ""])),
+    },
   });
 
   const password = watch("password");
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: Record<string, string>) => {
     setLoading(true);
     try {
-      await createAuthUser(collection, data.email, data.password);
-      toast.success(`User "${data.email}" created`);
+      const { email, password, confirmPassword: _confirm, ...extra } = data;
+      // Only pass non-empty custom fields
+      const extraFields = Object.fromEntries(
+        Object.entries(extra).filter(([, v]) => v !== "")
+      );
+      await createAuthUser(
+        collection,
+        email,
+        password,
+        Object.keys(extraFields).length > 0 ? extraFields : undefined
+      );
+      toast.success(`User "${email}" created`);
       reset();
       onOpenChange(false);
       onCreated();
@@ -80,7 +91,7 @@ export function CreateUserSheet({
             Create a new user in the {collection} collection.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6 px-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4">
           <div className="space-y-2">
             <Label htmlFor="user-email">Email</Label>
             <Input
@@ -95,7 +106,6 @@ export function CreateUserSheet({
                 },
               })}
               disabled={loading}
-              aria-invalid={!!errors.email}
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -110,18 +120,12 @@ export function CreateUserSheet({
               placeholder="Minimum 8 characters"
               {...register("password", {
                 required: "Password is required",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters",
-                },
+                minLength: { value: 8, message: "Password must be at least 8 characters" },
               })}
               disabled={loading}
-              aria-invalid={!!errors.password}
             />
             {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
+              <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
 
@@ -133,18 +137,34 @@ export function CreateUserSheet({
               placeholder="Re-enter password"
               {...register("confirmPassword", {
                 required: "Please confirm the password",
-                validate: (value) =>
-                  value === password || "Passwords do not match",
+                validate: (value) => value === password || "Passwords do not match",
               })}
               disabled={loading}
-              aria-invalid={!!errors.confirmPassword}
             />
             {errors.confirmPassword && (
-              <p className="text-sm text-destructive">
-                {errors.confirmPassword.message}
-              </p>
+              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
             )}
           </div>
+
+          {customFields.map((field) => (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={`user-${field.name}`}>
+                {field.name}
+                {field.required && <span className="text-destructive ml-1">*</span>}
+              </Label>
+              <Input
+                id={`user-${field.name}`}
+                placeholder={field.name}
+                {...register(field.name, {
+                  required: field.required ? `${field.name} is required` : false,
+                })}
+                disabled={loading}
+              />
+              {errors[field.name] && (
+                <p className="text-sm text-destructive">{errors[field.name]?.message}</p>
+              )}
+            </div>
+          ))}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Spinner className="mr-2" size="sm" />}

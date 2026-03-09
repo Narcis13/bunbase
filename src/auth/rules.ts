@@ -177,6 +177,192 @@ function normalizeForComparison(value: unknown): string | number | boolean {
 }
 
 /**
+ * SQL filter result for row-level list access control.
+ * sql: extra WHERE conditions (empty = no filter, '1=0' = deny all)
+ * params: bound parameters for the conditions
+ */
+export interface SqlFilter {
+  sql: string;
+  params: Record<string, unknown>;
+}
+
+/**
+ * Convert a list rule expression into a SQL WHERE fragment for row-level filtering.
+ *
+ * Returns null if access is completely denied (null rule for non-admin).
+ * Returns SqlFilter with empty sql if no filtering needed (public rule or admin).
+ * Returns SqlFilter with sql conditions for expression rules.
+ *
+ * @param rule - The rule (null = admin only, '' = public, string = expression)
+ * @param context - The evaluation context (without record, since we're filtering)
+ * @param validFieldNames - Valid column names for this collection (prevents SQL injection)
+ */
+export function ruleToSqlFilter(
+  rule: string | null,
+  context: RuleContext,
+  validFieldNames: string[]
+): SqlFilter | null {
+  // Admin always has full access
+  if (context.isAdmin) return { sql: '', params: {} };
+
+  // null = admin only → deny
+  if (rule === null) return null;
+
+  // Empty string = public → no extra filter
+  if (rule === '') return { sql: '', params: {} };
+
+  const counter = { n: 0 };
+  return expressionToSqlFilter(rule.trim(), context, validFieldNames, counter);
+}
+
+/**
+ * Resolve a non-field token to its concrete value from context.
+ * Returns null-boxed value for known references (including null auth fields).
+ * Returns undefined if the token is not a known reference (i.e., it's a field name).
+ */
+function resolveContextValue(token: string, context: RuleContext): { value: unknown } | undefined {
+  // Quoted string literal
+  if ((token.startsWith('"') && token.endsWith('"')) ||
+      (token.startsWith("'") && token.endsWith("'"))) {
+    return { value: token.slice(1, -1) };
+  }
+
+  // Number literal
+  if (/^\d+(\.\d+)?$/.test(token)) return { value: parseFloat(token) };
+
+  // Boolean literal
+  if (token === 'true') return { value: true };
+  if (token === 'false') return { value: false };
+
+  // @request.auth.*
+  if (token.startsWith('@request.auth.')) {
+    const field = token.slice('@request.auth.'.length);
+    if (!context.auth) return { value: null };
+    switch (field) {
+      case 'id':             return { value: context.auth.id };
+      case 'email':          return { value: context.auth.email };
+      case 'verified':       return { value: context.auth.verified };
+      case 'collectionId':   return { value: context.auth.collectionId };
+      case 'collectionName': return { value: context.auth.collectionName };
+      default:               return { value: null };
+    }
+  }
+
+  // @request.body.* — not applicable in list context
+  if (token.startsWith('@request.')) return { value: null };
+
+  // Unknown token — treat as a record field name
+  return undefined;
+}
+
+/**
+ * Reverse a comparison operator for SQL (e.g., `auth_val > field` → `field < auth_val`).
+ */
+function reverseOp(op: string): string {
+  switch (op) {
+    case '>':  return '<';
+    case '<':  return '>';
+    case '>=': return '<=';
+    case '<=': return '>=';
+    default:   return op; // = and != are symmetric
+  }
+}
+
+/**
+ * Recursively convert a rule expression to a SQL filter fragment.
+ */
+function expressionToSqlFilter(
+  expression: string,
+  context: RuleContext,
+  validFieldNames: string[],
+  counter: { n: number }
+): SqlFilter | null {
+  // Handle &&
+  if (expression.includes('&&')) {
+    const parts = expression.split('&&').map(p => p.trim());
+    const clauses: string[] = [];
+    const params: Record<string, unknown> = {};
+
+    for (const part of parts) {
+      const result = expressionToSqlFilter(part, context, validFieldNames, counter);
+      if (result === null) return null;           // invalid expression → deny
+      if (result.sql === '1=0') return { sql: '1=0', params: {} }; // short-circuit
+      if (result.sql) {
+        clauses.push(`(${result.sql})`);
+        Object.assign(params, result.params);
+      }
+      // empty sql = constant true → no clause needed
+    }
+
+    return { sql: clauses.join(' AND '), params };
+  }
+
+  // Handle ||
+  if (expression.includes('||')) {
+    const parts = expression.split('||').map(p => p.trim());
+    const clauses: string[] = [];
+    const params: Record<string, unknown> = {};
+
+    for (const part of parts) {
+      const result = expressionToSqlFilter(part, context, validFieldNames, counter);
+      if (result === null || result.sql === '1=0') continue; // always false → skip branch
+      if (result.sql === '') return { sql: '', params: {} };   // constant true → whole OR passes
+      clauses.push(`(${result.sql})`);
+      Object.assign(params, result.params);
+    }
+
+    if (clauses.length === 0) return { sql: '1=0', params: {} }; // all branches false
+    return { sql: clauses.join(' OR '), params };
+  }
+
+  // Single comparison: left op right
+  const match = expression.match(/^(.+?)\s*(!=|>=|<=|=|>|<)\s*(.+)$/);
+  if (!match) {
+    console.warn(`Invalid rule expression: ${expression}`);
+    return null;
+  }
+
+  const [, leftRaw, operator, rightRaw] = match;
+  const left = leftRaw.trim();
+  const right = rightRaw.trim();
+
+  const leftResolved = resolveContextValue(left, context);
+  const rightResolved = resolveContextValue(right, context);
+
+  const paramName = `rule_${counter.n++}`;
+
+  if (leftResolved === undefined && rightResolved !== undefined) {
+    // left is a field name, right is a resolved value
+    if (!validFieldNames.includes(left)) {
+      console.warn(`Unknown field in rule expression: ${left}`);
+      return null;
+    }
+    return {
+      sql: `"${left}" ${operator} $${paramName}`,
+      params: { [paramName]: rightResolved.value },
+    };
+  }
+
+  if (rightResolved === undefined && leftResolved !== undefined) {
+    // right is a field name, left is a resolved value
+    if (!validFieldNames.includes(right)) {
+      console.warn(`Unknown field in rule expression: ${right}`);
+      return null;
+    }
+    return {
+      sql: `"${right}" ${reverseOp(operator)} $${paramName}`,
+      params: { [paramName]: leftResolved.value },
+    };
+  }
+
+  // Both sides are constants — evaluate and return a constant filter
+  const lVal = leftResolved !== undefined ? leftResolved.value : left;
+  const rVal = rightResolved !== undefined ? rightResolved.value : right;
+  const isTrue = compare(lVal, rVal, operator);
+  return isTrue ? { sql: '', params: {} } : { sql: '1=0', params: {} };
+}
+
+/**
  * Get the appropriate rule for an operation.
  */
 export function getRuleForOperation(

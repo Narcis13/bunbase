@@ -13,6 +13,7 @@ import type {
   SortOption,
   FilterOperator,
 } from "../types/query.ts";
+import type { SqlFilter } from "../auth/rules.ts";
 
 /** System fields that are always valid for filtering/sorting */
 const SYSTEM_FIELDS = ["id", "created_at", "updated_at"];
@@ -274,14 +275,27 @@ export function buildPaginationClause(
 export function buildListQuery(
   collectionName: string,
   options: QueryOptions,
-  fields: Field[]
+  fields: Field[],
+  ruleFilter?: SqlFilter
 ): { sql: string; countSql: string; params: Record<string, unknown> } {
-  // Build WHERE clause
+  // Build WHERE clause from user-provided filters
   const whereResult = buildWhereClause(options.filter || [], fields);
 
+  // Merge rule-based SQL filter with user filters
+  const mergedParams = { ...whereResult.params, ...(ruleFilter?.params ?? {}) };
+  let mergedWhere = '';
+  const userConds = whereResult.sql ? whereResult.sql.slice(6) : ''; // strip leading "WHERE "
+  const ruleConds = ruleFilter?.sql ?? '';
+
+  if (userConds && ruleConds) {
+    mergedWhere = `WHERE (${userConds}) AND (${ruleConds})`;
+  } else if (userConds) {
+    mergedWhere = `WHERE ${userConds}`;
+  } else if (ruleConds) {
+    mergedWhere = `WHERE ${ruleConds}`;
+  }
+
   // Validate and build ORDER BY clause
-  // Note: validation happens inside buildOrderByClause but we need to do it
-  // before calling to get better error messages
   if (options.sort) {
     for (const s of options.sort) {
       if (!validateFieldName(s.field, fields)) {
@@ -300,17 +314,17 @@ export function buildListQuery(
   const baseFrom = `FROM "${collectionName}"`;
 
   // Count query doesn't need ORDER BY or LIMIT
-  const countSql = `SELECT COUNT(*) as count ${baseFrom}${whereResult.sql ? " " + whereResult.sql : ""}`;
+  const countSql = `SELECT COUNT(*) as count ${baseFrom}${mergedWhere ? " " + mergedWhere : ""}`;
 
   // Data query includes all clauses
   const sqlParts = [`SELECT * ${baseFrom}`];
-  if (whereResult.sql) sqlParts.push(whereResult.sql);
+  if (mergedWhere) sqlParts.push(mergedWhere);
   if (orderBy) sqlParts.push(orderBy);
   sqlParts.push(pagination.sql);
 
   return {
     sql: sqlParts.join(" "),
     countSql,
-    params: whereResult.params,
+    params: mergedParams,
   };
 }

@@ -6,6 +6,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/hooks/useAuth";
+import { useCollections } from "@/hooks/useCollections";
 import { LoginPage } from "@/components/views/LoginPage";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { RecordsView } from "@/components/records/RecordsView";
@@ -23,12 +24,34 @@ type View =
   | { type: "collection"; collection: string; collectionType?: "base" | "auth" }
   | { type: "schema"; collection: string };
 
+function parseViewFromUrl(): View {
+  const path = window.location.pathname;
+  const schemaMatch = path.match(/^\/_\/collections\/([^/]+)\/schema$/);
+  if (schemaMatch) return { type: "schema", collection: schemaMatch[1] };
+  const authMatch = path.match(/^\/_\/collections\/([^/]+)\/auth$/);
+  if (authMatch) return { type: "collection", collection: authMatch[1], collectionType: "auth" };
+  const collectionMatch = path.match(/^\/_\/collections\/([^/]+)$/);
+  if (collectionMatch) return { type: "collection", collection: collectionMatch[1], collectionType: "base" };
+  return { type: "dashboard" };
+}
+
+function getUrlForView(view: View): string {
+  if (view.type === "schema") return `/_/collections/${view.collection}/schema`;
+  if (view.type === "collection") {
+    return view.collectionType === "auth"
+      ? `/_/collections/${view.collection}/auth`
+      : `/_/collections/${view.collection}`;
+  }
+  return "/_/";
+}
+
 /**
  * Inner app component that uses the realtime context.
  */
 function AppInner() {
   const { loading, login, logout, isAuthenticated, admin } = useAuth();
-  const [view, setView] = useState<View>({ type: "dashboard" });
+  const [view, setView] = useState<View>(() => parseViewFromUrl());
+  const { collections } = useCollections();
   const [realtimePanelOpen, setRealtimePanelOpen] = useState(false);
 
   const realtime = useRealtimeContext();
@@ -56,6 +79,35 @@ function AppInner() {
     realtime.status,
     realtime.connect,
   ]);
+
+  // Sync URL with view state
+  useEffect(() => {
+    const url = getUrlForView(view);
+    if (window.location.pathname !== url) {
+      window.history.pushState(null, "", url);
+    }
+  }, [view]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => setView(parseViewFromUrl());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Correct collectionType based on actual collection data from API
+  useEffect(() => {
+    if (view.type !== "collection" || collections.length === 0) return;
+    const col = collections.find((c) => c.name === view.collection);
+    if (!col) return;
+    if (view.collectionType !== col.type) {
+      setView((prev) =>
+        prev.type === "collection"
+          ? { ...prev, collectionType: col.type }
+          : prev
+      );
+    }
+  }, [collections, view.type === "collection" ? view.collection : null, collections.length]);
 
   // Auto-subscribe to current collection
   useEffect(() => {

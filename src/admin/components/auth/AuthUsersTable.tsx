@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShieldOff,
   Mail,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ interface AuthUsersTableProps {
   loading: boolean;
   onToggleVerified: (record: Record<string, unknown>) => void;
   onSendVerification: (record: Record<string, unknown>) => void;
+  onEdit: (record: Record<string, unknown>) => void;
   onDelete: (record: Record<string, unknown>) => void;
 }
 
@@ -58,6 +60,7 @@ export function AuthUsersTable({
   loading,
   onToggleVerified,
   onSendVerification,
+  onEdit,
   onDelete,
 }: AuthUsersTableProps) {
   const columns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
@@ -140,6 +143,11 @@ export function AuthUsersTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(row.original)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onToggleVerified(row.original)}
                 >
@@ -177,7 +185,7 @@ export function AuthUsersTable({
       },
     ];
     return cols;
-  }, [fields, onToggleVerified, onSendVerification, onDelete]);
+  }, [fields, onToggleVerified, onSendVerification, onEdit, onDelete]);
 
   const table = useReactTable({
     data: records,

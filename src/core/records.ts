@@ -12,7 +12,7 @@ import {
 import { buildListQuery } from "./query.ts";
 import { expandRelations } from "./expand.ts";
 import { HookManager } from "./hooks.ts";
-import { evaluateRule, getRuleForOperation, RuleContext } from "../auth/rules.ts";
+import { evaluateRule, getRuleForOperation, ruleToSqlFilter, RuleContext } from "../auth/rules.ts";
 import type { AuthenticatedUser } from "../auth/middleware.ts";
 import type { Field } from "../types/collection.ts";
 import type { QueryOptions, PaginatedResponse } from "../types/query.ts";
@@ -426,9 +426,6 @@ export function listRecordsWithQuery(
   options: QueryOptions,
   authContext?: RecordAuthContext
 ): PaginatedResponse<Record<string, unknown>> {
-  // Check list rule access
-  checkRuleAccess(collectionName, 'list', authContext);
-
   const db = getDatabase();
 
   // Verify collection exists
@@ -439,8 +436,30 @@ export function listRecordsWithQuery(
 
   const fields = getFields(collectionName);
 
+  // Build SQL filter from list rule for row-level access control.
+  // Valid field names = schema fields + system fields + auth collection built-ins.
+  let ruleFilter = undefined;
+  if (authContext) {
+    const validFieldNames = [
+      'id', 'created_at', 'updated_at',
+      ...fields.map(f => f.name),
+      // Auth collection built-in fields
+      'email', 'verified',
+    ];
+    const rule = getRuleForOperation(collection.rules, 'list');
+    const evalContext: RuleContext = {
+      isAdmin: authContext.isAdmin,
+      auth: authContext.user,
+    };
+    const sqlFilter = ruleToSqlFilter(rule, evalContext, validFieldNames);
+    if (sqlFilter === null) {
+      throw new Error('Access denied');
+    }
+    ruleFilter = sqlFilter;
+  }
+
   // Build parameterized query (validates field names, throws on invalid)
-  const { sql, countSql, params } = buildListQuery(collectionName, options, fields);
+  const { sql, countSql, params } = buildListQuery(collectionName, options, fields, ruleFilter);
 
   // Execute count query first for pagination metadata
   const countStmt = db.prepare(countSql);

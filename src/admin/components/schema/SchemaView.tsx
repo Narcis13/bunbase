@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { FieldsTable } from "./FieldsTable";
 import { FieldSheet } from "./FieldSheet";
+import { RulesSection } from "./RulesSection";
 import { useSchema } from "@/hooks/useSchema";
 import {
   addField,
@@ -213,6 +214,12 @@ export function SchemaView({
         onEdit={handleEditField}
         onDelete={handleDeleteFieldClick}
       />
+
+      {/* Access rules */}
+      <div className="space-y-3">
+        <h3 className="text-base font-semibold">Access Rules</h3>
+        <RulesSection collection={collection} />
+      </div>
 
       {/* Field sheet */}
       <FieldSheet

@@ -8,6 +8,7 @@ import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { AuthUsersTable } from "./AuthUsersTable";
 import { CreateUserSheet } from "./CreateUserSheet";
+import { EditUserSheet } from "./EditUserSheet";
 import { DeleteConfirmation } from "@/components/records/DeleteConfirmation";
 import { useRecords } from "@/hooks/useRecords";
 import { useCollectionFields } from "@/hooks/useCollectionFields";
@@ -38,6 +39,10 @@ export function AuthUsersView({ collection }: AuthUsersViewProps) {
 
   // Create sheet state
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Edit sheet state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Record<string, unknown> | null>(null);
 
   // Delete dialog state
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -73,6 +78,11 @@ export function AuthUsersView({ collection }: AuthUsersViewProps) {
     } catch (e) {
       toast.error((e as Error).message);
     }
+  };
+
+  const handleEditClick = (record: Record<string, unknown>) => {
+    setEditingRecord(record);
+    setEditOpen(true);
   };
 
   const handleDeleteClick = (record: Record<string, unknown>) => {
@@ -138,6 +148,7 @@ export function AuthUsersView({ collection }: AuthUsersViewProps) {
           loading={loading || fieldsLoading}
           onToggleVerified={handleToggleVerified}
           onSendVerification={handleSendVerification}
+          onEdit={handleEditClick}
           onDelete={handleDeleteClick}
         />
       </div>
@@ -176,7 +187,18 @@ export function AuthUsersView({ collection }: AuthUsersViewProps) {
         open={createOpen}
         onOpenChange={setCreateOpen}
         collection={collection}
+        fields={fields}
         onCreated={refetch}
+      />
+
+      {/* Edit user sheet */}
+      <EditUserSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        collection={collection}
+        fields={fields}
+        record={editingRecord}
+        onUpdated={refetch}
       />
 
       {/* Delete confirmation */}
