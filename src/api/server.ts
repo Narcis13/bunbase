@@ -46,6 +46,7 @@ import {
 } from "../auth/admin";
 import { createAdminToken, verifyAdminToken } from "../auth/jwt";
 import { requireAdmin, extractBearerToken, extractToken, optionalUser, verifyUserFromToken, AuthenticatedUser } from "../auth/middleware";
+import { verifyApiKey } from "../auth/apikeys";
 import { initEmailService, type SmtpConfig } from "../email";
 import {
   requestEmailVerification,
@@ -127,6 +128,13 @@ function getRecordCount(collectionName: string): number {
  * @returns Auth context with isAdmin flag and optional user
  */
 async function buildAuthContext(req: Request): Promise<{ isAdmin: boolean; user: AuthenticatedUser | null }> {
+  // Check X-API-Key header first (API key = admin access)
+  const apiKey = req.headers.get("X-API-Key");
+  if (apiKey) {
+    const keyInfo = await verifyApiKey(apiKey);
+    if (keyInfo) return { isAdmin: true, user: null };
+  }
+
   const token = extractBearerToken(req);
   if (!token) {
     return { isAdmin: false, user: null };
@@ -152,6 +160,13 @@ async function buildAuthContext(req: Request): Promise<{ isAdmin: boolean; user:
  * @returns Auth context with isAdmin flag and optional user
  */
 async function buildFileAuthContext(req: Request): Promise<{ isAdmin: boolean; user: AuthenticatedUser | null }> {
+  // Check X-API-Key header first (API key = admin access)
+  const apiKey = req.headers.get("X-API-Key");
+  if (apiKey) {
+    const keyInfo = await verifyApiKey(apiKey);
+    if (keyInfo) return { isAdmin: true, user: null };
+  }
+
   const token = extractToken(req);
   if (!token) {
     return { isAdmin: false, user: null };

@@ -64,6 +64,16 @@ const INIT_METADATA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_verification_tokens_user_id ON _verification_tokens(user_id);
   CREATE INDEX IF NOT EXISTS idx_verification_tokens_hash ON _verification_tokens(token_hash);
+
+  CREATE TABLE IF NOT EXISTS _api_keys (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    key_prefix TEXT NOT NULL,
+    key_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    last_used_at TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON _api_keys(key_prefix);
 `;
 
 /**
@@ -117,6 +127,22 @@ function runMigrations(db: Database): void {
   }
   if (!existingColumns.has("updated_at")) {
     db.run("ALTER TABLE _collections ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))");
+  }
+
+  // Migration: Add _api_keys table for existing databases
+  const tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='_api_keys'").all();
+  if (tables.length === 0) {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _api_keys (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        key_prefix TEXT NOT NULL,
+        key_hash TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        last_used_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON _api_keys(key_prefix);
+    `);
   }
 
   // Migration: Recreate _fields table to update CHECK constraint to include 'file' type.

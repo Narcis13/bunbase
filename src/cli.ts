@@ -1,141 +1,111 @@
 /**
  * CLI Entry Point for BunBase
  *
- * Parses command-line arguments for port, database path, and help.
- * Serves as the main entry point when compiled to a single binary.
+ * Subcommand dispatcher. Defaults to `serve` for backward compatibility.
  */
 
 import { parseArgs } from "util";
-import { startServer, HookManager, RealtimeManager } from "./api/server";
-import { loadSmtpConfig } from "./email";
-import { buildCustomRoutes, routeManifest } from "./routes-generated";
+import { outputError } from "./cli/output";
+import { initForCli } from "./cli/db-init";
 
-/**
- * Display usage information and exit.
- */
 function showHelp(): void {
   console.log(`BunBase - Backend-in-a-box
 
-Usage: bunbase [options]
+Usage: bunbase <command> [options]
 
-Options:
-  -p, --port <port>  Port to listen on (default: 8090)
-  --db <path>        Database file path (default: bunbase.db)
-  -h, --help         Show this help message
+Commands:
+  serve             Start the HTTP server (default)
+  collections       Manage collections
+  records           Manage records
+  admin             Manage admin accounts
+  apikeys           Manage API keys
 
-SMTP Options:
-  --smtp-host <host>   SMTP server hostname (or SMTP_HOST env var)
-  --smtp-port <port>   SMTP server port (default: 587, or SMTP_PORT)
-  --smtp-user <user>   SMTP username (or SMTP_USER env var)
-  --smtp-pass <pass>   SMTP password (or SMTP_PASS env var)
-  --smtp-from <addr>   Default from address (or SMTP_FROM, defaults to smtp-user)
+Global Options:
+  --db <path>       Database file path (default: BUNBASE_DB env var or bunbase.db)
+  --format <fmt>    Output format: json or table (default: json)
+  --quiet           Suppress non-essential output
+  -h, --help        Show this help message
 
-Examples:
-  bunbase                    # Start on port 8090 with bunbase.db
-  bunbase --port 3000        # Start on port 3000
-  bunbase --db ./data/app.db # Use custom database path`);
+Run 'bunbase <command> --help' for command-specific help.`);
   process.exit(0);
 }
 
-/**
- * Validate port number is within valid range.
- *
- * @param portStr - Port string from CLI argument
- * @returns Valid port number or exits with error
- */
-function validatePort(portStr: string): number {
-  const port = parseInt(portStr, 10);
-  if (isNaN(port) || port < 1 || port > 65535) {
-    console.error("Error: Invalid port number");
-    process.exit(1);
-  }
-  return port;
-}
-
-/**
- * Parse CLI arguments and start the server.
- */
 async function main(): Promise<void> {
-  const { values } = parseArgs({
+  // Parse top-level flags loosely so subcommands can handle their own flags
+  const { values, positionals } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
-      port: {
-        type: "string",
-        short: "p",
-        default: "8090",
-      },
-      db: {
-        type: "string",
-        default: "bunbase.db",
-      },
-      help: {
-        type: "boolean",
-        short: "h",
-        default: false,
-      },
-      "smtp-host": {
-        type: "string",
-      },
-      "smtp-port": {
-        type: "string",
-      },
-      "smtp-user": {
-        type: "string",
-      },
-      "smtp-pass": {
-        type: "string",
-      },
-      "smtp-from": {
-        type: "string",
-      },
+      db: { type: "string" },
+      format: { type: "string", default: "json" },
+      quiet: { type: "boolean", default: false },
+      help: { type: "boolean", short: "h", default: false },
     },
-    strict: true,
+    strict: false,
     allowPositionals: true,
   });
 
-  // Show help if requested
-  if (values.help) {
-    showHelp();
-  }
+  const command = positionals[0];
 
-  // Validate and parse port
-  const port = validatePort(values.port!);
-  const dbPath = values.db!;
+  // Show top-level help
+  if (!command && values.help) showHelp();
 
-  // Load SMTP configuration (CLI flags take precedence over env vars)
-  const smtpConfig = loadSmtpConfig({
-    host: values["smtp-host"],
-    port: values["smtp-port"],
-    user: values["smtp-user"],
-    pass: values["smtp-pass"],
-    from: values["smtp-from"],
-  });
-
-  // Create managers for route building (these will be reused by startServer)
-  const hookManager = new HookManager();
-  const realtimeManager = new RealtimeManager();
-
-  // Build custom routes with context dependencies
-  const customRoutes = buildCustomRoutes({
-    hooks: hookManager,
-    realtime: realtimeManager,
-  });
-
-  // Log routes in development mode
-  const isDev = Bun.env.NODE_ENV === 'development' || Bun.env.BUNBASE_DEV === 'true';
-  if (isDev && routeManifest.routes.length > 0) {
-    console.log(`Custom routes (${routeManifest.routes.length}):`);
-    for (const route of routeManifest.routes) {
-      console.log(`  ${route.methods.join(',')} ${route.path}`);
+  // Build subcommand args by stripping global flags from raw args, then skipping the command name.
+  const rawArgs = Bun.argv.slice(2);
+  const stripped: string[] = [];
+  for (let i = 0; i < rawArgs.length; i++) {
+    const arg = rawArgs[i];
+    if (arg === "--db" || arg === "--format") {
+      i++; // skip flag and its value
+      continue;
     }
+    if (arg === "--quiet") continue;
+    stripped.push(arg);
   }
+  // Skip the command name itself (first element of stripped that matches the command)
+  const cmdIdx = stripped.indexOf(command ?? "");
+  const cmdArgs = cmdIdx >= 0 ? [...stripped.slice(0, cmdIdx), ...stripped.slice(cmdIdx + 1)] : stripped;
 
-  // Start server with custom routes
-  await startServer(port, dbPath, hookManager, smtpConfig, realtimeManager, customRoutes);
+  switch (command) {
+    case "serve":
+    case undefined: {
+      // Serve handles its own --db, so pass raw remaining args (just skip "serve")
+      const serveIdx = rawArgs.indexOf("serve");
+      const serveArgs = serveIdx >= 0 ? [...rawArgs.slice(0, serveIdx), ...rawArgs.slice(serveIdx + 1)] : rawArgs;
+      const { execute } = await import("./cli/commands/serve");
+      await execute(serveArgs);
+      break;
+    }
+    case "collections": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/collections");
+      await execute(cmdArgs, values.format as "json" | "table");
+      break;
+    }
+    case "records": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/records");
+      await execute(cmdArgs, values.format as "json" | "table");
+      break;
+    }
+    case "admin": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/admin");
+      await execute(cmdArgs, values.format as "json" | "table");
+      break;
+    }
+    case "apikeys": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/apikeys");
+      await execute(cmdArgs, values.format as "json" | "table");
+      break;
+    }
+    default:
+      outputError("UNKNOWN_COMMAND", `Unknown command: ${command}`);
+      process.exit(1);
+  }
 }
 
-// Run main entry point
 main().catch((error) => {
-  console.error("Error:", error.message);
+  outputError("FATAL", error.message);
   process.exit(1);
 });
