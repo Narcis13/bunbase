@@ -30,6 +30,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getAuthenticatedFileUrl } from "@/lib/api";
 import type { Field } from "@/hooks/useCollectionFields";
 
+// Map of fieldName -> { recordId -> displayLabel }
+type RelationLabels = Record<string, Record<string, string>>;
+
 interface RecordsTableProps {
   records: Record<string, unknown>[];
   fields: Field[];
@@ -37,6 +40,7 @@ interface RecordsTableProps {
   onEdit: (record: Record<string, unknown>) => void;
   onDelete: (record: Record<string, unknown>) => void;
   onRowClick: (record: Record<string, unknown>) => void;
+  relationLabels?: RelationLabels;
 }
 
 /**
@@ -100,7 +104,12 @@ function renderFileValue(value: unknown): React.ReactNode {
   );
 }
 
-function formatCellValue(value: unknown, type: string): React.ReactNode {
+function formatCellValue(
+  value: unknown,
+  type: string,
+  fieldName?: string,
+  relationLabels?: RelationLabels
+): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">-</span>;
   }
@@ -116,12 +125,20 @@ function formatCellValue(value: unknown, type: string): React.ReactNode {
           {JSON.stringify(value)}
         </span>
       );
-    case "relation":
-      return (
-        <span className="font-mono text-xs">
-          {String(value).slice(0, 8)}...
+    case "relation": {
+      const id = String(value);
+      const label = fieldName && relationLabels?.[fieldName]?.[id];
+      return label ? (
+        <span className="flex items-center gap-1.5" title={id}>
+          <span>{label}</span>
+          <span className="font-mono text-xs text-muted-foreground">{id.slice(0, 6)}…</span>
+        </span>
+      ) : (
+        <span className="font-mono text-xs text-muted-foreground" title={id}>
+          {id.slice(0, 8)}…
         </span>
       );
+    }
     case "file":
       return renderFileValue(value);
     default:
@@ -147,6 +164,7 @@ export function RecordsTable({
   onEdit,
   onDelete,
   onRowClick,
+  relationLabels,
 }: RecordsTableProps) {
   // Build columns from fields + system fields + actions
   const columns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
@@ -155,11 +173,14 @@ export function RecordsTable({
       {
         accessorKey: "id",
         header: "ID",
-        cell: ({ row }) => (
-          <span className="font-mono text-xs">
-            {String(row.getValue("id")).slice(0, 8)}...
-          </span>
-        ),
+        cell: ({ row }) => {
+          const id = String(row.getValue("id"));
+          return (
+            <span className="font-mono text-xs text-muted-foreground" title={id}>
+              {id.slice(0, 8)}…
+            </span>
+          );
+        },
       },
       // Dynamic field columns
       ...fields.map((field) => ({
@@ -167,7 +188,7 @@ export function RecordsTable({
         header: field.name,
         cell: ({ row }: { row: { getValue: (key: string) => unknown } }) => {
           const value = row.getValue(field.name);
-          return formatCellValue(value, field.type);
+          return formatCellValue(value, field.type, field.name, relationLabels);
         },
       })),
       // Created at

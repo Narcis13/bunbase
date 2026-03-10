@@ -16,6 +16,17 @@ import { fetchWithAuth } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useRealtimeContext } from "@/contexts/RealtimeContext";
 
+const SYSTEM_FIELDS = new Set(["id", "created_at", "updated_at", "collection_id"]);
+
+function getRecordLabel(record: Record<string, unknown>): string {
+  for (const [key, val] of Object.entries(record)) {
+    if (SYSTEM_FIELDS.has(key)) continue;
+    if (typeof val === "string" && val.trim()) return val;
+    if (typeof val === "number") return String(val);
+  }
+  return String(record.id ?? "").slice(0, 8);
+}
+
 interface RecordsViewProps {
   collection: string;
 }
@@ -42,6 +53,40 @@ export function RecordsView({ collection }: RecordsViewProps) {
     { page, perPage }
   );
   const { fields, loading: fieldsLoading } = useCollectionFields(collection);
+
+  // Relation labels: fieldName -> { recordId -> displayLabel }
+  const [relationLabels, setRelationLabels] = useState<Record<string, Record<string, string>>>({});
+
+  useEffect(() => {
+    const relationFields = fields.filter((f) => f.type === "relation" && f.options?.target);
+    if (relationFields.length === 0) { setRelationLabels({}); return; }
+
+    const targets = [...new Set(relationFields.map((f) => f.options!.target!))];
+
+    Promise.all(
+      targets.map((target) =>
+        fetchWithAuth(`/api/collections/${target}/records?perPage=500`)
+          .then((r) => r.json())
+          .then((data) => ({ target, items: (data.items ?? []) as Record<string, unknown>[] }))
+          .catch(() => ({ target, items: [] as Record<string, unknown>[] }))
+      )
+    ).then((results) => {
+      // Build target -> { id -> label }
+      const targetMap: Record<string, Record<string, string>> = {};
+      for (const { target, items } of results) {
+        targetMap[target] = {};
+        for (const item of items) {
+          targetMap[target][item.id as string] = getRecordLabel(item);
+        }
+      }
+      // Map by field name
+      const fieldMap: Record<string, Record<string, string>> = {};
+      for (const field of relationFields) {
+        fieldMap[field.name] = targetMap[field.options!.target!] ?? {};
+      }
+      setRelationLabels(fieldMap);
+    });
+  }, [fields]);
 
   // Sheet state
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -217,6 +262,7 @@ export function RecordsView({ collection }: RecordsViewProps) {
           onEdit={handleEdit}
           onDelete={handleDeleteClick}
           onRowClick={handleEdit}
+          relationLabels={relationLabels}
         />
       </div>
 

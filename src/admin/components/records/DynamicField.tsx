@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { FileField, type FileFieldValue } from "./FileField";
+import { RelationField } from "./RelationField";
 import type { Field } from "@/hooks/useCollectionFields";
 
 interface DynamicFieldProps {
@@ -127,13 +128,11 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
 
             case "relation":
               return (
-                <Input
-                  id={field.name}
-                  {...formField}
+                <RelationField
                   value={(formField.value as string) ?? ""}
-                  placeholder={`Enter ${field.options?.target || "record"} ID`}
-                  className="font-mono"
-                  aria-invalid={!!error}
+                  onChange={formField.onChange}
+                  target={field.options?.target ?? ""}
+                  required={field.required}
                 />
               );
 
@@ -186,11 +185,6 @@ export function DynamicField({ field, control, errors }: DynamicFieldProps) {
         <p className="text-sm text-destructive">{error.message as string}</p>
       )}
 
-      {field.type === "relation" && field.options?.target && (
-        <p className="text-xs text-muted-foreground">
-          References: {field.options.target}
-        </p>
-      )}
     </div>
   );
 }
