@@ -8,7 +8,14 @@
 
 import { getDatabase } from "./database.ts";
 import { getCollection, getFields } from "./schema.ts";
+import { evaluateRule, getRuleForOperation } from "../auth/rules.ts";
 import type { Field } from "../types/collection.ts";
+import type { AuthenticatedUser } from "../auth/middleware.ts";
+
+interface ExpandAuthContext {
+  isAdmin: boolean;
+  user: AuthenticatedUser | null;
+}
 
 /**
  * Parse JSON fields from stored string format to objects.
@@ -50,16 +57,19 @@ function parseJsonFields(
  * - Null/undefined relation values (skips gracefully)
  * - Missing target collection (skips gracefully, doesn't crash)
  * - Missing related record (skips gracefully, doesn't crash)
+ * - Target collection access rules (skips gracefully if caller lacks view access)
  *
  * @param records - Array of records to expand
  * @param fields - Field definitions for the collection
  * @param expandFields - Array of field names to expand
+ * @param authContext - Optional auth context used to enforce target collection view rules
  * @returns Records with expand object added where applicable
  */
 export function expandRelations(
   records: Record<string, unknown>[],
   fields: Field[],
-  expandFields: string[]
+  expandFields: string[],
+  authContext?: ExpandAuthContext
 ): Record<string, unknown>[] {
   if (!expandFields || expandFields.length === 0) {
     return records;
@@ -104,6 +114,17 @@ export function expandRelations(
         continue;
       }
 
+      // Enforce target collection view rule when authContext is provided.
+      // Admins always pass; non-admins are denied if viewRule is null (locked).
+      // Per-record rule expressions are evaluated after fetching below.
+      if (authContext) {
+        const viewRule = getRuleForOperation(collection.rules, 'view');
+        // Quick pre-check: if rule is null and not admin → skip entirely
+        if (viewRule === null && !authContext.isAdmin) {
+          continue;
+        }
+      }
+
       // Fetch the related record
       try {
         const stmt = db.prepare(
@@ -115,6 +136,20 @@ export function expandRelations(
         > | null;
 
         if (relatedRecord) {
+          // For expression-based view rules, evaluate with the related record as context.
+          if (authContext) {
+            const viewRule = getRuleForOperation(collection.rules, 'view');
+            const allowed = evaluateRule(viewRule, {
+              isAdmin: authContext.isAdmin,
+              auth: authContext.user,
+              record: relatedRecord,
+            });
+            if (!allowed) {
+              // No access to this related record — skip gracefully
+              continue;
+            }
+          }
+
           // Parse JSON/boolean fields on the related record
           const targetFields = getFields(targetCollection);
           expand[field.name] = parseJsonFields(targetFields, relatedRecord);

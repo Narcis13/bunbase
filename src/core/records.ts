@@ -477,7 +477,7 @@ export function listRecordsWithQuery(
 
   // Expand relations if requested
   if (options.expand && options.expand.length > 0) {
-    items = expandRelations(items, fields, options.expand);
+    items = expandRelations(items, fields, options.expand, authContext);
   }
 
   // Calculate pagination metadata

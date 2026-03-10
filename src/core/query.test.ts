@@ -6,6 +6,7 @@ import {
   buildOrderByClause,
   buildPaginationClause,
   buildListQuery,
+  buildSearchClause,
 } from "./query.ts";
 import type { Field } from "../types/collection.ts";
 import type { FilterCondition, SortOption } from "../types/query.ts";
@@ -104,6 +105,20 @@ describe("parseQueryOptions", () => {
     expect(options.page).toBe(1);
   });
 
+  test("non-numeric perPage defaults to 30", () => {
+    const url = new URL("http://localhost/api/records?perPage=abc");
+    const options = parseQueryOptions(url);
+
+    expect(options.perPage).toBe(30);
+  });
+
+  test("non-numeric page defaults to 1", () => {
+    const url = new URL("http://localhost/api/records?page=abc");
+    const options = parseQueryOptions(url);
+
+    expect(options.page).toBe(1);
+  });
+
   test("parses sort with descending prefix", () => {
     const url = new URL("http://localhost/api/records?sort=-created_at");
     const options = parseQueryOptions(url);
@@ -174,6 +189,43 @@ describe("parseQueryOptions", () => {
       field: "title",
       operator: "~",
       value: "hello",
+    });
+  });
+
+  test("parses != operator (standard form: field!=value)", () => {
+    // URL splits on =, so status!=deleted becomes key="status!", value="deleted"
+    const url = new URL("http://localhost/api/records?status!=deleted");
+    const options = parseQueryOptions(url);
+
+    expect(options.filter).toContainEqual({
+      field: "status",
+      operator: "!=",
+      value: "deleted",
+    });
+  });
+
+  test("parses != operator with %21-encoded ! (field%21=value)", () => {
+    // %21 decodes to !, so key="status!", value="deleted" — identical to standard form
+    const url = new URL("http://localhost/api/records?status%21=deleted");
+    const options = parseQueryOptions(url);
+
+    expect(options.filter).toContainEqual({
+      field: "status",
+      operator: "!=",
+      value: "deleted",
+    });
+  });
+
+  test("parses != operator with fully encoded form (field%21%3Dvalue)", () => {
+    // Both ! and = percent-encoded: %21%3D → !=
+    // URLSearchParams sees no unencoded =, so key="status!=deleted", value=""
+    const url = new URL("http://localhost/api/records?status%21%3Ddeleted");
+    const options = parseQueryOptions(url);
+
+    expect(options.filter).toContainEqual({
+      field: "status",
+      operator: "!=",
+      value: "deleted",
     });
   });
 
@@ -410,6 +462,54 @@ describe("buildWhereClause", () => {
     expect(result.sql).toBe('WHERE "published" = $filter_0');
     expect(result.params).toEqual({ filter_0: true });
   });
+
+  test("coerces boolean string 'true' to 1 for boolean fields", () => {
+    const conditions: FilterCondition[] = [
+      { field: "published", operator: "=", value: "true" },
+    ];
+    const result = buildWhereClause(conditions, mockFields);
+
+    expect(result.sql).toBe('WHERE "published" = $filter_0');
+    expect(result.params).toEqual({ filter_0: 1 });
+  });
+
+  test("coerces boolean string 'false' to 0 for boolean fields", () => {
+    const conditions: FilterCondition[] = [
+      { field: "published", operator: "=", value: "false" },
+    ];
+    const result = buildWhereClause(conditions, mockFields);
+
+    expect(result.sql).toBe('WHERE "published" = $filter_0');
+    expect(result.params).toEqual({ filter_0: 0 });
+  });
+
+  test("coerces boolean string '1' to 1 for boolean fields", () => {
+    const conditions: FilterCondition[] = [
+      { field: "published", operator: "=", value: "1" },
+    ];
+    const result = buildWhereClause(conditions, mockFields);
+
+    expect(result.params).toEqual({ filter_0: 1 });
+  });
+
+  test("coerces boolean string '0' to 0 for boolean fields", () => {
+    const conditions: FilterCondition[] = [
+      { field: "published", operator: "=", value: "0" },
+    ];
+    const result = buildWhereClause(conditions, mockFields);
+
+    expect(result.params).toEqual({ filter_0: 0 });
+  });
+
+  test("does not coerce boolean strings for non-boolean fields", () => {
+    const conditions: FilterCondition[] = [
+      { field: "status", operator: "=", value: "true" },
+    ];
+    const result = buildWhereClause(conditions, mockFields);
+
+    // 'status' is a text field — value should remain the string "true"
+    expect(result.params).toEqual({ filter_0: "true" });
+  });
 });
 
 // =============================================================================
@@ -629,5 +729,163 @@ describe("buildListQuery", () => {
     // Should work with system fields even when no schema fields
     expect(result.sql).toContain('WHERE "id" = $filter_0');
     expect(result.sql).toContain('ORDER BY "created_at" DESC');
+  });
+
+  test("includes search clause when search option provided", () => {
+    const options = { search: "hello" };
+    const result = buildListQuery("posts", options, mockFields);
+
+    expect(result.sql).toContain("LIKE $search");
+    expect(result.countSql).toContain("LIKE $search");
+    expect(result.params).toMatchObject({ search: "%hello%" });
+  });
+
+  test("combines filter and search with AND", () => {
+    const options = {
+      filter: [{ field: "status", operator: "=" as const, value: "active" }],
+      search: "hello",
+    };
+    const result = buildListQuery("posts", options, mockFields);
+
+    expect(result.sql).toContain('"status" = $filter_0');
+    expect(result.sql).toContain("LIKE $search");
+    // Both conditions must appear, joined with AND
+    expect(result.sql).toMatch(/WHERE.*AND/);
+  });
+});
+
+// =============================================================================
+// buildSearchClause Tests
+// =============================================================================
+
+describe("buildSearchClause", () => {
+  test("returns null for empty search term", () => {
+    expect(buildSearchClause("", mockFields)).toBeNull();
+  });
+
+  test("always includes id in searchable fields", () => {
+    const result = buildSearchClause("test", []);
+    expect(result).not.toBeNull();
+    expect(result!.sql).toContain('"id" LIKE $search');
+  });
+
+  test("includes text fields", () => {
+    const result = buildSearchClause("hello", mockFields);
+    expect(result!.sql).toContain('"title" LIKE $search');
+    expect(result!.sql).toContain('"status" LIKE $search');
+  });
+
+  test("does not include number, boolean, relation, or file fields", () => {
+    const result = buildSearchClause("hello", mockFields);
+    expect(result!.sql).not.toContain('"views"');
+    expect(result!.sql).not.toContain('"published"');
+    expect(result!.sql).not.toContain('"author"');
+  });
+
+  test("wraps clauses in OR and parentheses", () => {
+    const result = buildSearchClause("x", mockFields);
+    expect(result!.sql).toMatch(/^\(.*\)$/);
+    expect(result!.sql).toContain(" OR ");
+  });
+
+  test("wraps search term in percent wildcards", () => {
+    const result = buildSearchClause("foo", mockFields);
+    expect(result!.params.search).toBe("%foo%");
+  });
+
+  test("escapes special LIKE characters in search term", () => {
+    const result = buildSearchClause("50%", mockFields);
+    expect(result!.params.search).toBe("%50\\%%");
+  });
+});
+
+// =============================================================================
+// parseQueryOptions search Tests
+// =============================================================================
+
+describe("parseQueryOptions search", () => {
+  test("parses search parameter", () => {
+    const url = new URL("http://localhost/api/records?search=hello");
+    const options = parseQueryOptions(url);
+    expect(options.search).toBe("hello");
+  });
+
+  test("search is not included in filter array", () => {
+    const url = new URL("http://localhost/api/records?search=hello&status=active");
+    const options = parseQueryOptions(url);
+    expect(options.search).toBe("hello");
+    expect(options.filter?.every((f) => f.field !== "search")).toBe(true);
+  });
+
+  test("search is undefined when not present", () => {
+    const url = new URL("http://localhost/api/records");
+    const options = parseQueryOptions(url);
+    expect(options.search).toBeUndefined();
+  });
+});
+
+// =============================================================================
+// parseQueryOptions filter expression Tests
+// =============================================================================
+
+describe("parseQueryOptions filterExpr", () => {
+  test("parses ?filter= as filterExpr", () => {
+    const url = new URL(
+      "http://localhost/api/records?filter=status%3D'active'%7C%7Cstatus%3D'draft'"
+    );
+    const options = parseQueryOptions(url);
+    expect(options.filterExpr).toBe("status='active'||status='draft'");
+  });
+
+  test("filter param is not treated as a field filter", () => {
+    const url = new URL("http://localhost/api/records?filter=status%3D'active'");
+    const options = parseQueryOptions(url);
+    expect(options.filter?.every((f) => f.field !== "filter")).toBe(true);
+  });
+
+  test("filterExpr is undefined when ?filter not present", () => {
+    const url = new URL("http://localhost/api/records");
+    const options = parseQueryOptions(url);
+    expect(options.filterExpr).toBeUndefined();
+  });
+});
+
+// =============================================================================
+// buildListQuery filterExpr integration
+// =============================================================================
+
+describe("buildListQuery filterExpr", () => {
+  test("includes OR SQL from filterExpr", () => {
+    const options = { filterExpr: "status='active'||status='draft'" };
+    const result = buildListQuery("posts", options, mockFields);
+
+    expect(result.sql).toContain('"status" = $fe_0 OR "status" = $fe_1');
+    expect(result.params).toMatchObject({ fe_0: "active", fe_1: "draft" });
+  });
+
+  test("ANDs filterExpr with field-based filters", () => {
+    const options = {
+      filter: [{ field: "views", operator: ">" as const, value: "10" }],
+      filterExpr: "status='active'||status='draft'",
+    };
+    const result = buildListQuery("posts", options, mockFields);
+
+    expect(result.sql).toContain('"views" > $filter_0');
+    expect(result.sql).toContain('"status" = $fe_0 OR "status" = $fe_1');
+    expect(result.sql).toMatch(/WHERE.*AND/);
+  });
+
+  test("filterExpr appears in countSql too", () => {
+    const options = { filterExpr: "status='active'||status='draft'" };
+    const result = buildListQuery("posts", options, mockFields);
+
+    expect(result.countSql).toContain('"status" = $fe_0 OR "status" = $fe_1');
+  });
+
+  test("throws for invalid field in filterExpr", () => {
+    const options = { filterExpr: "nonexistent='x'" };
+    expect(() => buildListQuery("posts", options, mockFields)).toThrow(
+      'Invalid filter field: "nonexistent"'
+    );
   });
 });

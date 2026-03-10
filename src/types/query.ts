@@ -52,6 +52,10 @@ export interface QueryOptions {
   perPage?: number;
   /** Relation fields to expand */
   expand?: string[];
+  /** Cross-field search term (searches across all text fields with OR logic) */
+  search?: string;
+  /** Filter expression string with full AND/OR logic (e.g. `status='active'||status='draft'`) */
+  filterExpr?: string;
 }
 
 /**

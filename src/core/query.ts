@@ -14,12 +14,16 @@ import type {
   FilterOperator,
 } from "../types/query.ts";
 import type { SqlFilter } from "../auth/rules.ts";
+import { parseFilterExpression } from "./filter-parser.ts";
 
 /** System fields that are always valid for filtering/sorting */
 const SYSTEM_FIELDS = ["id", "created_at", "updated_at"];
 
 /** Reserved query parameters that should not be treated as filters */
-const RESERVED_PARAMS = ["page", "perPage", "sort", "expand"];
+const RESERVED_PARAMS = ["page", "perPage", "sort", "expand", "search", "filter"];
+
+/** Field types whose values are stored as text and are meaningful to search */
+const SEARCHABLE_FIELD_TYPES = new Set(["text", "datetime"]);
 
 /**
  * Parse query options from a URL's search parameters.
@@ -36,10 +40,14 @@ export function parseQueryOptions(url: URL): QueryOptions {
   const pageParam = url.searchParams.get("page");
   const perPageParam = url.searchParams.get("perPage");
 
-  options.page = pageParam ? parseInt(pageParam, 10) : 1;
-  options.perPage = perPageParam ? parseInt(perPageParam, 10) : 30;
+  const parsedPage = pageParam ? parseInt(pageParam, 10) : 1;
+  const parsedPerPage = perPageParam ? parseInt(perPageParam, 10) : 30;
 
-  // Enforce bounds
+  // Fall back to defaults for non-numeric inputs (parseInt returns NaN for "abc")
+  options.page = Number.isFinite(parsedPage) ? parsedPage : 1;
+  options.perPage = Number.isFinite(parsedPerPage) ? parsedPerPage : 30;
+
+  // Clamp to bounds (silently, consistent with PocketBase behavior)
   if (options.page < 1) options.page = 1;
   if (options.perPage < 1) options.perPage = 1;
   if (options.perPage > 500) options.perPage = 500;
@@ -64,6 +72,18 @@ export function parseQueryOptions(url: URL): QueryOptions {
     options.expand = expandParam.split(",").map((e) => e.trim());
   }
 
+  // Parse cross-field search term
+  const searchParam = url.searchParams.get("search");
+  if (searchParam) {
+    options.search = searchParam;
+  }
+
+  // Parse filter expression (supports && and || operators)
+  const filterParam = url.searchParams.get("filter");
+  if (filterParam) {
+    options.filterExpr = filterParam;
+  }
+
   // Parse filter conditions from remaining parameters
   for (const [key, value] of url.searchParams.entries()) {
     if (RESERVED_PARAMS.includes(key)) continue;
@@ -71,8 +91,14 @@ export function parseQueryOptions(url: URL): QueryOptions {
     // Parse operator from key
     // Supports: field=value, field>=value, field<=value, field>value, field<value
     // Supports: field!=value, field~=value (like), field!~=value (not like)
+    //
+    // URL encoding variants for != :
+    //   field!=value  → URL splits on =, key="field!", value="value"
+    //   field%21=value → %21 decodes to !, key="field!", value="value"  (same)
+    //   field%21%3Dvalue → both encoded, key="field!=value", value="" (handled below)
     let field: string;
     let operator: FilterOperator = "=";
+    let filterValue: string = value;
 
     // Check for operator suffixes
     if (key.endsWith(">=")) {
@@ -100,6 +126,13 @@ export function parseQueryOptions(url: URL): QueryOptions {
       // Handle != operator (URL splits on =, so title!=value becomes key=title!, value=value)
       field = key.slice(0, -1);
       operator = "!=";
+    } else if (key.includes("!=")) {
+      // Handle fully percent-encoded != (field%21%3Dvalue → key="field!=value", value="")
+      // The value is embedded in the key after !=
+      const idx = key.indexOf("!=");
+      field = key.slice(0, idx);
+      operator = "!=";
+      filterValue = key.slice(idx + 2);
     } else {
       field = key;
       operator = "=";
@@ -107,7 +140,7 @@ export function parseQueryOptions(url: URL): QueryOptions {
 
     // Validate field name format (basic alphanumeric with underscore)
     if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(field)) {
-      options.filter!.push({ field, operator, value });
+      options.filter!.push({ field, operator, value: filterValue });
     }
   }
 
@@ -145,6 +178,34 @@ function escapeLikeValue(value: string): string {
 }
 
 /**
+ * Build a cross-field search clause that OR-matches a term across all
+ * text/datetime fields and the system `id` field.
+ *
+ * @param searchTerm - The term to search for
+ * @param fields - Field definitions for the collection
+ * @returns Object with SQL fragment (no WHERE keyword) and params, or null if not applicable
+ */
+export function buildSearchClause(
+  searchTerm: string,
+  fields: Field[]
+): { sql: string; params: Record<string, unknown> } | null {
+  if (!searchTerm) return null;
+
+  const searchableFieldNames = [
+    "id",
+    ...fields.filter((f) => SEARCHABLE_FIELD_TYPES.has(f.type)).map((f) => f.name),
+  ];
+
+  const clauses = searchableFieldNames.map((name) => `"${name}" LIKE $search`);
+  const escapedTerm = `%${escapeLikeValue(searchTerm)}%`;
+
+  return {
+    sql: `(${clauses.join(" OR ")})`,
+    params: { search: escapedTerm },
+  };
+}
+
+/**
  * Build a WHERE clause from filter conditions.
  *
  * @param conditions - Array of filter conditions
@@ -171,42 +232,53 @@ export function buildWhereClause(
       throw new Error(`Invalid filter field: "${field}"`);
     }
 
+    // Coerce value for boolean fields: "true"/"false" → 1/0 (SQLite stores booleans as integers)
+    const fieldDef = fields.find((f) => f.name === field);
+    const coercedValue =
+      fieldDef?.type === "boolean" && typeof value === "string"
+        ? value === "true" || value === "1"
+          ? 1
+          : value === "false" || value === "0"
+          ? 0
+          : value
+        : value;
+
     const paramName = `filter_${i}`;
 
     switch (operator) {
       case "=":
         clauses.push(`"${field}" = $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case "!=":
         clauses.push(`"${field}" != $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case ">":
         clauses.push(`"${field}" > $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case "<":
         clauses.push(`"${field}" < $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case ">=":
         clauses.push(`"${field}" >= $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case "<=":
         clauses.push(`"${field}" <= $${paramName}`);
-        params[paramName] = value;
+        params[paramName] = coercedValue;
         break;
       case "~":
         // LIKE with wildcards, escape special characters
         clauses.push(`"${field}" LIKE $${paramName} ESCAPE '\\'`);
-        params[paramName] = `%${escapeLikeValue(String(value))}%`;
+        params[paramName] = `%${escapeLikeValue(String(coercedValue))}%`;
         break;
       case "!~":
         // NOT LIKE with wildcards
         clauses.push(`"${field}" NOT LIKE $${paramName} ESCAPE '\\'`);
-        params[paramName] = `%${escapeLikeValue(String(value))}%`;
+        params[paramName] = `%${escapeLikeValue(String(coercedValue))}%`;
         break;
     }
   }
@@ -281,18 +353,34 @@ export function buildListQuery(
   // Build WHERE clause from user-provided filters
   const whereResult = buildWhereClause(options.filter || [], fields);
 
-  // Merge rule-based SQL filter with user filters
-  const mergedParams = { ...whereResult.params, ...(ruleFilter?.params ?? {}) };
+  // Build cross-field search clause if search term provided
+  const searchResult = options.search
+    ? buildSearchClause(options.search, fields)
+    : null;
+
+  // Parse filter expression (supports && and || operators)
+  const filterExprResult = options.filterExpr
+    ? parseFilterExpression(options.filterExpr, fields)
+    : null;
+
+  // Merge all conditions: field filters, filter expression, search, and rule filter
+  const mergedParams = {
+    ...whereResult.params,
+    ...(filterExprResult?.params ?? {}),
+    ...(searchResult?.params ?? {}),
+    ...(ruleFilter?.params ?? {}),
+  };
   let mergedWhere = '';
   const userConds = whereResult.sql ? whereResult.sql.slice(6) : ''; // strip leading "WHERE "
+  const filterExprConds = filterExprResult?.sql ?? '';
+  const searchConds = searchResult?.sql ?? '';
   const ruleConds = ruleFilter?.sql ?? '';
 
-  if (userConds && ruleConds) {
-    mergedWhere = `WHERE (${userConds}) AND (${ruleConds})`;
-  } else if (userConds) {
-    mergedWhere = `WHERE ${userConds}`;
-  } else if (ruleConds) {
-    mergedWhere = `WHERE ${ruleConds}`;
+  const allConds = [userConds, filterExprConds, searchConds, ruleConds].filter(Boolean);
+  if (allConds.length === 1) {
+    mergedWhere = `WHERE ${allConds[0]}`;
+  } else if (allConds.length > 1) {
+    mergedWhere = `WHERE ${allConds.map((c) => `(${c})`).join(" AND ")}`;
   }
 
   // Validate and build ORDER BY clause
