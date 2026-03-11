@@ -3,16 +3,15 @@ import { nanoid } from "nanoid";
 import { getDatabase } from "../core/database";
 import type { UserTokenPayload, RefreshTokenPayload } from "../types/auth";
 
+// Import shared fallback from jwt.ts
+import { getJwtSecret } from "./jwt";
+
 /**
  * Get JWT secret from environment variable.
  * Uses the same secret as admin tokens for simplicity.
  */
 function getSecret(): Uint8Array {
-  const secret = Bun.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET environment variable is required");
-  }
-  return new TextEncoder().encode(secret);
+  return getJwtSecret();
 }
 
 /**

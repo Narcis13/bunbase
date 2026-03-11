@@ -95,7 +95,7 @@ describe("requireAdmin", () => {
     const response = result as Response;
     expect(response.status).toBe(401);
     const body = await response.json();
-    expect(body.error).toBe("Unauthorized");
+    expect(body.error).toBe("No authentication credentials provided");
   });
 
   test("returns 401 Response when invalid token provided", async () => {
@@ -111,7 +111,7 @@ describe("requireAdmin", () => {
     const response = result as Response;
     expect(response.status).toBe(401);
     const body = await response.json();
-    expect(body.error).toBe("Unauthorized");
+    expect(body.error).toBe("Invalid or expired admin token");
   });
 
   test("returns 401 Response when admin not found", async () => {
@@ -130,7 +130,7 @@ describe("requireAdmin", () => {
     const response = result as Response;
     expect(response.status).toBe(401);
     const body = await response.json();
-    expect(body.error).toBe("Unauthorized");
+    expect(body.error).toBe("Admin account not found");
   });
 
   test("returns Admin when valid token and admin exists", async () => {
@@ -228,7 +228,7 @@ describe("requireUser", () => {
     const response = result as Response;
     expect(response.status).toBe(401);
     const body = await response.json();
-    expect(body.error).toBe("Unauthorized");
+    expect(body.error).toBe("No authentication credentials provided");
   });
 
   test("returns 401 for invalid token", async () => {
@@ -244,7 +244,7 @@ describe("requireUser", () => {
     const response = result as Response;
     expect(response.status).toBe(401);
     const body = await response.json();
-    expect(body.error).toBe("Unauthorized");
+    expect(body.error).toBe("Invalid or expired user token");
   });
 
   test("returns 401 for expired token", async () => {

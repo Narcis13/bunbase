@@ -1,18 +1,27 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 
+// Random fallback secret generated once per process (won't persist across restarts)
+let fallbackSecret: string | null = null;
+
 /**
  * Get the JWT secret from environment variable.
- * Fails fast if JWT_SECRET is not set.
+ * Falls back to a random secret if JWT_SECRET is not set (tokens won't persist across restarts).
  *
  * @returns The secret as Uint8Array for use with jose
- * @throws Error if JWT_SECRET environment variable is not set
  */
+export function getJwtSecret(): Uint8Array {
+  return getSecret();
+}
+
 function getSecret(): Uint8Array {
   const secret = Bun.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET environment variable is required");
+  if (secret) {
+    return new TextEncoder().encode(secret);
   }
-  return new TextEncoder().encode(secret);
+  if (!fallbackSecret) {
+    fallbackSecret = crypto.randomUUID() + crypto.randomUUID();
+  }
+  return new TextEncoder().encode(fallbackSecret);
 }
 
 /**

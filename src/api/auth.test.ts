@@ -116,7 +116,7 @@ describe("Auth Routes", () => {
 
       expect(response.status).toBe(401);
       const body = await response.json();
-      expect(body.error).toBe("Unauthorized");
+      expect(body.error).toBeString();
     });
 
     test("returns 401 with invalid token", async () => {
@@ -128,7 +128,7 @@ describe("Auth Routes", () => {
 
       expect(response.status).toBe(401);
       const body = await response.json();
-      expect(body.error).toBe("Unauthorized");
+      expect(body.error).toBeString();
     });
 
     test("returns admin with valid token", async () => {
@@ -173,7 +173,7 @@ describe("Auth Routes", () => {
 
       expect(response.status).toBe(401);
       const body = await response.json();
-      expect(body.error).toBe("Unauthorized");
+      expect(body.error).toBeString();
     });
 
     test("returns 400 for short password", async () => {

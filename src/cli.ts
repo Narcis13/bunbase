@@ -15,6 +15,9 @@ Usage: bunbase <command> [options]
 
 Commands:
   serve             Start the HTTP server (default)
+  init              Bootstrap database from schema/seed files
+  status            Show database status and configuration
+  schema            Export/import collection schemas
   collections       Manage collections
   records           Manage records
   admin             Manage admin accounts
@@ -25,6 +28,11 @@ Global Options:
   --format <fmt>    Output format: json or table (default: json)
   --quiet           Suppress non-essential output
   -h, --help        Show this help message
+
+Environment Variables:
+  BUNBASE_DB                Database file path
+  BUNBASE_ADMIN_PASSWORD    Deterministic admin password (recommended for agents)
+  JWT_SECRET                JWT signing secret (required for persistent tokens)
 
 Run 'bunbase <command> --help' for command-specific help.`);
   process.exit(0);
@@ -73,6 +81,24 @@ async function main(): Promise<void> {
       const serveArgs = serveIdx >= 0 ? [...rawArgs.slice(0, serveIdx), ...rawArgs.slice(serveIdx + 1)] : rawArgs;
       const { execute } = await import("./cli/commands/serve");
       await execute(serveArgs);
+      break;
+    }
+    case "init": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/init");
+      await execute(cmdArgs, values.format as "json" | "table");
+      break;
+    }
+    case "status": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/status");
+      await execute(cmdArgs, values.format as "json" | "table", values.db as string | undefined);
+      break;
+    }
+    case "schema": {
+      initForCli(values.db as string | undefined);
+      const { execute } = await import("./cli/commands/schema");
+      await execute(cmdArgs, values.format as "json" | "table");
       break;
     }
     case "collections": {

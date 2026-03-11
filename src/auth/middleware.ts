@@ -2,7 +2,15 @@ import { verifyAdminToken } from "./jwt";
 import { getAdminById, Admin } from "./admin";
 import { verifyUserToken } from "./user-jwt";
 import { getUserById } from "./user";
+import { verifyApiKey } from "./apikeys";
 import type { User } from "../types/auth";
+
+/**
+ * Create a 401 response with a specific error message.
+ */
+function authError(message: string): Response {
+  return Response.json({ error: message }, { status: 401 });
+}
 
 /**
  * Extract Bearer token from Authorization header.
@@ -47,19 +55,35 @@ export function extractToken(req: Request): string | null {
  * @returns Admin (without password_hash) if valid, or 401 Response if not
  */
 export async function requireAdmin(req: Request): Promise<Admin | Response> {
+  // Check API key first — API keys have admin-level access
+  const apiKey = req.headers.get("X-API-Key");
+  if (apiKey) {
+    const verified = await verifyApiKey(apiKey);
+    if (verified) {
+      return {
+        id: verified.id,
+        email: `apikey:${verified.name}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } satisfies Admin;
+    }
+    return authError("Invalid API key");
+  }
+
+  // Check Bearer token (admin JWT)
   const token = extractBearerToken(req);
   if (!token) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("No authentication credentials provided");
   }
 
   const payload = await verifyAdminToken(token);
   if (!payload) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("Invalid or expired admin token");
   }
 
   const admin = getAdminById(payload.adminId);
   if (!admin) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("Admin account not found");
   }
 
   // Return admin without password_hash
@@ -82,17 +106,17 @@ export interface AuthenticatedUser extends User {
 export async function requireUser(req: Request): Promise<AuthenticatedUser | Response> {
   const token = extractBearerToken(req);
   if (!token) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("No authentication credentials provided");
   }
 
   const payload = await verifyUserToken(token, 'access');
   if (!payload) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("Invalid or expired user token");
   }
 
   const user = getUserById(payload.collectionName, payload.userId);
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return authError("User account not found");
   }
 
   // Return user without password_hash, with collection context

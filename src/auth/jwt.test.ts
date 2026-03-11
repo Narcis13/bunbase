@@ -36,17 +36,16 @@ describe("jwt module", () => {
       expect(parts.length).toBe(3); // header.payload.signature
     });
 
-    test("throws if JWT_SECRET not set", async () => {
-      // Temporarily remove JWT_SECRET
+    test("uses fallback secret if JWT_SECRET not set", async () => {
       const backup = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
 
       try {
-        await expect(createAdminToken("admin-123")).rejects.toThrow(
-          "JWT_SECRET environment variable is required"
-        );
+        // Should succeed with a random fallback secret
+        const token = await createAdminToken("admin-123");
+        expect(typeof token).toBe("string");
+        expect(token.length).toBeGreaterThan(0);
       } finally {
-        // Restore JWT_SECRET
         process.env.JWT_SECRET = backup;
       }
     });

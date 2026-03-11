@@ -59,14 +59,15 @@ describe("user-jwt module", () => {
       expect(parts.length).toBe(3); // header.payload.signature
     });
 
-    test("throws if JWT_SECRET not set", async () => {
+    test("uses fallback secret if JWT_SECRET not set", async () => {
       const backup = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
 
       try {
-        await expect(
-          createUserAccessToken("user-123", "collection-456", "users")
-        ).rejects.toThrow("JWT_SECRET environment variable is required");
+        // Should succeed with a random fallback secret
+        const token = await createUserAccessToken("user-123", "collection-456", "users");
+        expect(typeof token).toBe("string");
+        expect(token.length).toBeGreaterThan(0);
       } finally {
         process.env.JWT_SECRET = backup;
       }

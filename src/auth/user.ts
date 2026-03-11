@@ -84,7 +84,8 @@ export function getUserByEmail(collectionName: string, email: string): UserWithH
 export async function createUser(
   collectionName: string,
   email: string,
-  password: string
+  password: string,
+  extraFields?: Record<string, unknown>
 ): Promise<SignupResult> {
   // Validate collection is auth type
   const collection = getCollection(collectionName);
@@ -121,13 +122,29 @@ export async function createUser(
   const id = generateId();
   const now = new Date().toISOString();
 
+  // Build columns and values, merging extra fields
+  const columns = ["id", "email", "password_hash", "verified", "created_at", "updated_at"];
+  const values: unknown[] = [id, email, password_hash, 0, now, now];
+
+  // Filter out system fields and empty extra fields
+  const systemFields = new Set(["id", "email", "password", "password_hash", "verified", "created_at", "updated_at"]);
+  if (extraFields && Object.keys(extraFields).length > 0) {
+    for (const [key, value] of Object.entries(extraFields)) {
+      if (!systemFields.has(key) && value !== undefined) {
+        columns.push(key);
+        values.push(value);
+      }
+    }
+  }
+
   // Insert user
   const db = getDatabase();
+  const placeholders = columns.map(() => "?").join(", ");
+  const columnList = columns.map((c) => `"${c}"`).join(", ");
   try {
     db.run(
-      `INSERT INTO "${collectionName}" (id, email, password_hash, verified, created_at, updated_at)
-       VALUES (?, ?, ?, 0, ?, ?)`,
-      [id, email, password_hash, now, now]
+      `INSERT INTO "${collectionName}" (${columnList}) VALUES (${placeholders})`,
+      values
     );
   } catch (error: unknown) {
     if (error instanceof Error && error.message.includes("UNIQUE constraint")) {
@@ -136,9 +153,19 @@ export async function createUser(
     throw error;
   }
 
+  // Build user response with extra fields
+  const userResponse: Record<string, unknown> = { id, email, verified: false, created_at: now, updated_at: now };
+  if (extraFields) {
+    for (const [key, value] of Object.entries(extraFields)) {
+      if (!systemFields.has(key) && value !== undefined) {
+        userResponse[key] = value;
+      }
+    }
+  }
+
   return {
     success: true,
-    user: { id, email, verified: false, created_at: now, updated_at: now },
+    user: userResponse as User,
   };
 }
 

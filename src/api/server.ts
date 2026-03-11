@@ -10,9 +10,11 @@ import { initDatabase } from "../core/database";
 import {
   getRecord,
   listRecordsWithQuery,
+  createRecord,
   createRecordWithHooks,
   updateRecordWithHooks,
   updateRecord,
+  deleteRecord,
   deleteRecordWithHooks,
   createRecordWithFiles,
   updateRecordWithFiles,
@@ -603,12 +605,12 @@ export function createServer(
               return errorResponse(`"${name}" is not an auth collection`, 400);
             }
 
-            const { email, password } = await req.json();
+            const { email, password, ...extraFields } = await req.json();
             if (!email || !password) {
               return errorResponse("Email and password required", 400);
             }
 
-            const result = await createUser(name, email, password);
+            const result = await createUser(name, email, password, extraFields);
             if (!result.success) {
               return errorResponse(result.error!, 400);
             }
@@ -1304,13 +1306,180 @@ export function createServer(
           const adminOrError = await requireAdmin(req);
           if (adminOrError instanceof Response) return adminOrError;
           try {
-            const { name, fields, type } = await req.json();
+            const { name, fields, type, rules } = await req.json();
             if (!name || typeof name !== "string") {
               return errorResponse("Collection name is required", 400);
             }
-            const options = type ? { type } : undefined;
-            const collection = createCollection(name, fields || [], options);
+            const options = {
+              ...(type ? { type } : {}),
+              ...(rules ? { rules } : {}),
+            };
+            const collection = createCollection(name, fields || [], Object.keys(options).length > 0 ? options : undefined);
             return Response.json(collection, { status: 201 });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
+      /**
+       * POST /_/api/bulk
+       * Transaction-safe bulk operations (requires admin auth)
+       *
+       * Accepts an array of operations that are executed atomically.
+       * If any operation fails, all changes are rolled back.
+       *
+       * Request body:
+       * {
+       *   "operations": [
+       *     { "action": "createCollection", "name": "tasks", "fields": [...], "type": "base", "rules": {...} },
+       *     { "action": "createRecord", "collection": "tasks", "data": { "title": "Hello" } },
+       *     { "action": "updateRules", "collection": "tasks", "rules": {...} },
+       *     { "action": "deleteCollection", "name": "tasks" },
+       *     { "action": "deleteRecord", "collection": "tasks", "id": "abc123" }
+       *   ]
+       * }
+       */
+      "/_/api/bulk": {
+        POST: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+
+          try {
+            const { operations } = await req.json();
+
+            if (!Array.isArray(operations) || operations.length === 0) {
+              return errorResponse("Request body must include a non-empty 'operations' array", 400);
+            }
+
+            // Validate all operations before executing
+            for (let i = 0; i < operations.length; i++) {
+              const op = operations[i];
+              if (!op || !op.action) {
+                return errorResponse(`Operation at index ${i} must have an 'action' field`, 400);
+              }
+              const validActions = ["createCollection", "createRecord", "updateRules", "deleteCollection", "deleteRecord"];
+              if (!validActions.includes(op.action)) {
+                return errorResponse(
+                  `Invalid action "${op.action}" at index ${i}. Valid: ${validActions.join(", ")}`,
+                  400
+                );
+              }
+            }
+
+            const db = getDatabase();
+            const results: Array<{ action: string; index: number; result: unknown }> = [];
+
+            const bulkTransaction = db.transaction(() => {
+              for (let i = 0; i < operations.length; i++) {
+                const op = operations[i];
+                switch (op.action) {
+                  case "createCollection": {
+                    if (!op.name) throw new Error(`Operation ${i}: 'name' is required for createCollection`);
+                    const opts: Record<string, unknown> = {};
+                    if (op.type) opts.type = op.type;
+                    if (op.rules) opts.rules = op.rules;
+                    const collection = createCollection(
+                      op.name,
+                      op.fields || [],
+                      Object.keys(opts).length > 0 ? opts as any : undefined
+                    );
+                    results.push({ action: op.action, index: i, result: { name: collection.name, type: collection.type } });
+                    break;
+                  }
+                  case "createRecord": {
+                    if (!op.collection) throw new Error(`Operation ${i}: 'collection' is required for createRecord`);
+                    if (!op.data) throw new Error(`Operation ${i}: 'data' is required for createRecord`);
+                    const records = Array.isArray(op.data) ? op.data : [op.data];
+                    const created: Record<string, unknown>[] = [];
+                    for (const data of records) {
+                      created.push(createRecord(op.collection, data));
+                    }
+                    results.push({
+                      action: op.action,
+                      index: i,
+                      result: { collection: op.collection, count: created.length, records: created },
+                    });
+                    break;
+                  }
+                  case "updateRules": {
+                    if (!op.collection) throw new Error(`Operation ${i}: 'collection' is required for updateRules`);
+                    if (!op.rules) throw new Error(`Operation ${i}: 'rules' is required for updateRules`);
+                    const updated = updateCollectionRules(op.collection, op.rules);
+                    results.push({ action: op.action, index: i, result: { collection: op.collection, rules: updated.rules } });
+                    break;
+                  }
+                  case "deleteCollection": {
+                    if (!op.name) throw new Error(`Operation ${i}: 'name' is required for deleteCollection`);
+                    deleteCollection(op.name);
+                    results.push({ action: op.action, index: i, result: { deleted: op.name } });
+                    break;
+                  }
+                  case "deleteRecord": {
+                    if (!op.collection) throw new Error(`Operation ${i}: 'collection' is required for deleteRecord`);
+                    if (!op.id) throw new Error(`Operation ${i}: 'id' is required for deleteRecord`);
+                    deleteRecord(op.collection, op.id);
+                    results.push({ action: op.action, index: i, result: { collection: op.collection, deleted: op.id } });
+                    break;
+                  }
+                }
+              }
+            });
+
+            bulkTransaction();
+            return Response.json({ success: true, results }, { status: 200 });
+          } catch (error) {
+            const err = error as Error;
+            return errorResponse(err.message, mapErrorToStatus(err));
+          }
+        },
+      },
+
+      /**
+       * GET /_/api/status
+       * Show database status and configuration (requires admin auth)
+       */
+      "/_/api/status": {
+        GET: async (req) => {
+          const adminOrError = await requireAdmin(req);
+          if (adminOrError instanceof Response) return adminOrError;
+
+          try {
+            const collections = getAllCollections();
+            const collectionDetails = collections.map((c) => ({
+              name: c.name,
+              type: c.type,
+              fields: getFields(c.name).length,
+              records: getRecordCount(c.name),
+              hasRules: c.rules != null,
+            }));
+
+            let adminCount = 0;
+            try {
+              const db = getDatabase();
+              const result = db.prepare("SELECT COUNT(*) as count FROM _admins").get() as { count: number };
+              adminCount = result.count;
+            } catch { /* ignore */ }
+
+            let apiKeyCount = 0;
+            try {
+              const db = getDatabase();
+              const result = db.prepare("SELECT COUNT(*) as count FROM _api_keys").get() as { count: number };
+              apiKeyCount = result.count;
+            } catch { /* ignore */ }
+
+            return Response.json({
+              collections: {
+                count: collections.length,
+                details: collectionDetails,
+              },
+              auth: {
+                jwt_secret_set: !!Bun.env.JWT_SECRET,
+                admin_accounts: adminCount,
+                api_keys: apiKeyCount,
+              },
+            });
           } catch (error) {
             const err = error as Error;
             return errorResponse(err.message, mapErrorToStatus(err));
@@ -1418,6 +1587,12 @@ export async function startServer(
         `Set BUNBASE_ADMIN_PASSWORD env var to use a specific password.`
       );
     }
+  }
+
+  if (!Bun.env.JWT_SECRET) {
+    console.warn(
+      `⚠️  JWT_SECRET not set — using random secret (tokens won't persist across restarts)`
+    );
   }
 
   const server = createServer(port, hookManager, realtimeManager, customRoutes);
